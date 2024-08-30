@@ -29,6 +29,11 @@ NEXT_PUBLIC_BUCKET_ID
 - Click on Create Bucket
 - Give name like carepulse_storage and copy its ID
 
+## appwrite DB-Collections. Adding attributes and permissions
+- Go to patient collection and add all the attributes (Eg. name, address etc)
+- with a collection go to settings then go to permission. Select Any and check all the boxes
+- Click Update button.
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
