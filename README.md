@@ -23,6 +23,12 @@ PATIENT_COLLECTION_ID, DOCTOR_COLLECTION_ID, APPOINTMENT_COLLECTION_ID
 - Give some name like patient, doctor, appointment and create
 - copy collection id
 
+## We also need storage to upload documents of people
+NEXT_PUBLIC_BUCKET_ID
+- In appwrite, go to Storage
+- Click on Create Bucket
+- Give name like carepulse_storage and copy its ID
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
