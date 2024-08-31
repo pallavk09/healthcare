@@ -1,3 +1,39 @@
+## This Project referenced from 
+https://www.youtube.com/watch?v=lEflo_sc82g 
+
+## Details needed from appwrite and to be updated under env variables
+PROJECT_ID
+project id you will find at the top left corner of appwrite
+
+API_KEY
+- Go to **Integrate with your server** under appwrite
+- Click on api key
+- provide name and next
+- click select all (it gives full scope) and next
+- copy the api key secrete
+
+DATABASE_ID
+- Go to Databases
+- Click on Create Database
+- Give database a name leave Entry Id empty and click Create
+- It will create a database ID, copy it
+
+PATIENT_COLLECTION_ID, DOCTOR_COLLECTION_ID, APPOINTMENT_COLLECTION_ID
+- Once Database created above click on create collection
+- Give some name like patient, doctor, appointment and create
+- copy collection id
+
+## We also need storage to upload documents of people
+NEXT_PUBLIC_BUCKET_ID
+- In appwrite, go to Storage
+- Click on Create Bucket
+- Give name like carepulse_storage and copy its ID
+
+## appwrite DB-Collections. Adding attributes and permissions
+- Go to patient collection and add all the attributes (Eg. name, address etc)
+- with a collection go to settings then go to permission. Select Any and check all the boxes
+- Click Update button.
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
