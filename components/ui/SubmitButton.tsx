@@ -15,21 +15,20 @@ const SubmitButton = ({ isLoading, className, children }: ButtonProps) => {
       disabled={isLoading}
       className={className ?? "shad-primary-btn w-full"}
     >
-      <div className="flex items-center flex-4">
-        {isLoading ? (
+      {isLoading ? (
+        <div className="flex items-center flex-4">
           <Image
             src="/assets/icons/loader.svg"
             alt="loader"
             height={24}
             width={24}
             className="animate-spin"
-          >
-            Loading...
-          </Image>
-        ) : (
-          children
-        )}
-      </div>
+          />
+          Loading...
+        </div>
+      ) : (
+        children
+      )}
     </Button>
   );
 };

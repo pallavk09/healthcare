@@ -11,6 +11,8 @@ import SubmitButton from "../ui/SubmitButton";
 import { UserFormValidation } from "@/lib/validation";
 import { useRouter } from "next/navigation";
 
+import { createUser } from "@/lib/actions/patient.actions";
+
 export enum FormFieldTypes {
   INPUT = "input",
   TEXTAREA = "textarea",
@@ -43,14 +45,15 @@ const PatientForm = () => {
     setIsLoading(true);
     try {
       //Destructured user data which are required to create User
-      // const { name, email, phone } = values;
-      // const userData = { name, email, phone };
-      // //Pass this userData to create new User
-      // await user = createUser(userData)
-      // //Once user created then call it to register
-      // if (user) router.push(`/patients/${user.$id}/register`)
+      const { name, email, phone } = values;
+      const userData = { name, email, phone };
+      //Pass this userData to create new User
+      const user = await createUser(userData);
+      //Once user created then call it to register
+      if (user) router.push(`/patients/${user.$id}/register`);
+      setIsLoading(false);
     } catch (error) {
-      console.log(error);
+      console.log("Some error on Submit:", error);
     }
   }
 
