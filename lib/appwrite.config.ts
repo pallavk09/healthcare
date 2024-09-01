@@ -13,7 +13,6 @@ export const {
 } = process.env;
 
 console.log("From appwrite.config.ts");
-console.log(process.env);
 
 const client = new sdk.Client();
 
