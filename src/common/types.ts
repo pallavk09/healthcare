@@ -34,3 +34,16 @@ export interface validateProps {
   message: string;
   email: string;
 }
+
+// Define the shape of your state
+export interface userState {
+  data: any[];
+  showLoginForm: boolean;
+  error: string | null;
+}
+
+// Define the action types
+export type userAction =
+  | { type: "SHOW_LOGIN_FORM" }
+  | { type: "FETCH_SUCCESS"; payload: any[] }
+  | { type: "FETCH_ERROR"; payload: string };

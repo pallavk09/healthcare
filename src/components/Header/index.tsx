@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { Row, Col, Drawer } from "antd";
 import { withTranslation } from "react-i18next";
 import Container from "../../common/Container";
@@ -17,11 +18,22 @@ import {
   Span,
 } from "./styles";
 
+import ApiContext from "../../store/context";
+
 const Header = ({ t }: { t: TFunction }) => {
   const [visible, setVisibility] = useState(false);
 
+  const ctx = useContext(ApiContext);
+  const navigate = useNavigate();
+
   const toggleButton = () => {
     setVisibility(!visible);
+  };
+  const showLoginformHandler = () => {
+    console.log("Login clicked");
+    console.log(ctx?.state?.showLoginForm);
+    navigate("/Login");
+    // ctx?.dispatch({ type: "SHOW_LOGIN_FORM" });
   };
 
   const MenuItem = () => {
@@ -48,7 +60,7 @@ const Header = ({ t }: { t: TFunction }) => {
           // onClick={() => scrollTo("contact")}
         >
           <Span>
-            <Button>{t("Login")}</Button>
+            <Button onClick={showLoginformHandler}>{t("Login")}</Button>
           </Span>
         </CustomNavLinkSmall>
       </>

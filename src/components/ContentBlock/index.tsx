@@ -30,7 +30,6 @@ const ContentBlock = ({
       behavior: "smooth",
     });
   };
-
   return (
     <ContentSection>
       <Fade direction={direction} triggerOnce>
