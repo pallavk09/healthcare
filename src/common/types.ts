@@ -39,11 +39,13 @@ export interface validateProps {
 export interface userState {
   data: any[];
   showLoginForm: boolean;
+  isOtpSend: boolean;
+  isUserVerified: boolean;
   error: string | null;
 }
 
 // Define the action types
 export type userAction =
   | { type: "SHOW_LOGIN_FORM" }
-  | { type: "FETCH_SUCCESS"; payload: any[] }
-  | { type: "FETCH_ERROR"; payload: string };
+  | { type: "IS_OPT_SEND" }
+  | { type: "IS_USER_VERIFIED"; payload: any[] };

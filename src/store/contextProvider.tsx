@@ -6,6 +6,8 @@ import { userAction, userState } from "../common/types";
 const initialState: userState = {
   data: [],
   showLoginForm: false,
+  isOtpSend: false,
+  isUserVerified: false,
   error: null,
 };
 
@@ -13,7 +15,17 @@ const initialState: userState = {
 const apiReducer = (state: userState, action: userAction): userState => {
   switch (action.type) {
     case "SHOW_LOGIN_FORM":
-      return { ...state, showLoginForm: true, error: null };
+      return {
+        ...state,
+        showLoginForm: true,
+        isOtpSend: false,
+        isUserVerified: false,
+        error: null,
+      };
+    case "IS_OPT_SEND":
+      return { ...state, isOtpSend: true, isUserVerified: false, error: null };
+    case "IS_USER_VERIFIED":
+      return { ...state, isUserVerified: true, error: null };
     default:
       return state;
   }
