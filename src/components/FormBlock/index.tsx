@@ -10,8 +10,10 @@ import { Button } from "../../common/Button";
 import { PhoneOutlined } from "@ant-design/icons";
 import { Input } from "antd";
 import ApiContext from "../../store/context";
+import { useNavigate } from "react-router-dom";
 
 const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
+  const navigate = useNavigate();
   const ctx = useContext(ApiContext);
   const [form] = Form.useForm();
 
@@ -26,6 +28,8 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
     if (values?.otp) {
       console.log("Success:", values);
       console.log(values.otp);
+      // ctx?.dispatch({ type: "IS_USER_VERIFIED", payload: { phoneNumber: "" } });
+      navigate("/studentregistration");
     }
 
     //2. Validate OTP

@@ -115,7 +115,7 @@ const Footer = ({ t }: { t: TFunction }) => {
       <Extra>
         <Container border={true}>
           <Row
-            justify="space-between"
+            justify="space-evenly"
             align="middle"
             style={{ paddingTop: "3rem" }}
           >
@@ -146,7 +146,7 @@ const Footer = ({ t }: { t: TFunction }) => {
                 href="https://medium.com/@lashakakabadze/"
                 src="medium.svg"
               />
-              <a
+              {/* <a
                 href="https://ko-fi.com/Y8Y7H8BNJ"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -157,7 +157,7 @@ const Footer = ({ t }: { t: TFunction }) => {
                   src="https://storage.ko-fi.com/cdn/kofi3.png?v=3"
                   alt="Buy Me a Coffee at ko-fi.com"
                 />
-              </a>
+              </a> */}
             </FooterContainer>
           </Row>
         </Container>
