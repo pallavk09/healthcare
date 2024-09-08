@@ -1,175 +1,110 @@
-import { useState, useEffect } from "react";
-import {
-  Col,
-  Divider,
-  Steps,
-  Form,
-  Input,
-  FormInstance,
-  Button,
-  Space,
-  Select,
-  InputNumber,
-} from "antd";
+import * as React from "react";
+import { Box, Button } from "@mui/material";
+import TopStepper from "../TopStepper";
 import { Fade } from "react-awesome-reveal";
 
-import { ContentSection, StyledRow, Empty, Language, Para } from "./styles";
-import { SvgIcon } from "../../common/SvgIcon";
-// import { Button } from "../../common/Button";
-import { PhoneOutlined } from "@ant-design/icons";
+import { ContentSection } from "./styles";
+import StudentDetailsForm from "./Forms/StudentDetails";
+import GuardianDetails from "./Forms/GuardianDetails";
+import AcademicsDetails from "./Forms/AcademicsDetails";
+
+import { useNavigate } from "react-router-dom";
 
 const RegistrationBlock = () => {
-  const [form] = Form.useForm();
-  const [current, setCurrent] = useState(0);
-  const onChange = (value: number) => {
-    console.log("onChange:", value);
-    setCurrent(value);
-  };
+  const steps = ["Personal Info", "Guardian Info", "Academics", "Save"];
+  const [activeStep, setActiveStep] = React.useState(0);
+  const navigate = useNavigate();
 
+  const formArray = [
+    <StudentDetailsForm />,
+    <GuardianDetails />,
+    <AcademicsDetails />,
+    "This for Review and Submit page",
+  ];
+
+  const handleBack = () => {
+    setActiveStep((previousStep) => previousStep - 1);
+  };
+  const handleNext = () => {
+    if (activeStep < steps.length - 1)
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+
+    if (activeStep === steps.length - 1) {
+      console.log("Review and Submit screen. Navigate to dashboard");
+      navigate("/studentDashboard");
+    }
+  };
   return (
     <ContentSection>
-      <Fade direction={"right"} triggerOnce>
-        <StyledRow
-          justify="space-between"
-          align="stretch"
-          id={"id"}
-          direction={"left"}
+      {/* This is Container Box */}
+      <Box
+        sx={{
+          display: "flex",
+          width: "100vw",
+          height: "75vh",
+          margin: "auto",
+        }}
+      >
+        {/* This is Box for stepper */}
+        <Box
+          sx={{
+            width: "15%",
+            backgroundColor: "#fff",
+            boxShadow: 3,
+            borderRadius: 2,
+          }}
         >
-          <Col lg={8} md={8} sm={12} xs={24}>
-            <Steps
-              current={current}
-              onChange={onChange}
-              direction="vertical"
-              style={{ marginTop: "1rem", height: "300px" }}
-              items={[
-                {
-                  title: "Academic Details",
-                  //   description:
-                  //     "Educational background and current academic preferences",
-                },
-                {
-                  title: "Personal Details",
-                  //   description: "Personal details of the student",
-                },
-                {
-                  title: "Setup Payment",
-                  //   description: "Configure preferred payment method",
-                },
-                {
-                  title: "Review and Submit",
-                  //   description: "Configure preferred payment method",
-                },
-              ]}
-            />
-          </Col>
-          <Col
-            lg={11}
-            md={11}
-            sm={12}
-            xs={24}
-            style={{ marginRight: "1.5rem" }}
+          <TopStepper steps={steps} activeStep={activeStep} />
+        </Box>
+        {/* This is Box for Forms and Button */}
+        <Box
+          sx={{
+            width: "80%",
+            padding: 3,
+          }}
+        >
+          {/* This is Form container Box*/}
+          <Box
+            sx={{
+              width: "60%",
+              height: "95%",
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
-            <Form
-              form={form}
-              name="login_form"
-              layout="vertical"
-              initialValues={{ remember: true }}
+            {/* This block is for showing form based on activestep number */}
+            <Fade direction={"right"} triggerOnce>
+              {formArray[activeStep]}
+            </Fade>
+          </Box>
+          {/* This is buttons container box*/}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              width: "80%",
+              height: "10%",
+            }}
+          >
+            <Button
+              variant="contained"
+              disabled={activeStep === 0}
+              onClick={handleBack}
+              sx={{ mr: 1 }}
             >
-              {/* Row 1: Student name */}
-              <Form.Item
-                label="Student Name"
-                name="studentname"
-                rules={[{ required: true, message: "Required" }]}
-              >
-                <Form.Item
-                  name="firstname"
-                  style={{
-                    display: "inline-block",
-                    width: "calc(35% - 8px)",
-                    marginRight: "3px",
-                  }}
-                >
-                  <Input placeholder="First Name" />
-                </Form.Item>
-
-                <Form.Item
-                  name="middlename"
-                  rules={[{ required: false }]}
-                  style={{
-                    display: "inline-block",
-                    width: "calc(30% - 8px)",
-                    marginLeft: "3px",
-                    marginRight: "3px",
-                  }}
-                >
-                  <Input placeholder="Middle Name" />
-                </Form.Item>
-
-                <Form.Item
-                  name="lastname"
-                  rules={[{ required: true }]}
-                  style={{
-                    display: "inline-block",
-                    width: "calc(35% - 8px)",
-                    marginLeft: "3px",
-                  }}
-                >
-                  <Input placeholder="Last Name" />
-                </Form.Item>
-              </Form.Item>
-
-              {/* Row 1: Roll number, Class and House Name */}
-              <Form.Item>
-                <Form.Item
-                  name="rollnumber"
-                  label="Roll Number"
-                  rules={[{ required: true, message: "Required" }]}
-                  style={{
-                    display: "inline-block",
-                    width: "calc(20% - 8px)",
-                    marginRight: "-6px",
-                  }}
-                >
-                  <InputNumber placeholder="Roll No" />
-                </Form.Item>
-                <Form.Item
-                  label="Which class do you study ?"
-                  rules={[{ required: true, message: "Required" }]}
-                  name="class"
-                  style={{
-                    display: "inline-block",
-                    width: "calc(50% - 8px)",
-                    marginRight: "3px",
-                  }}
-                >
-                  <Select placeholder="Select class">
-                    <Select.Option value="lkg">LKG</Select.Option>
-                    <Select.Option value="ukg">UKG</Select.Option>
-                    <Select.Option value="class1">CLASS I</Select.Option>
-                    <Select.Option value="class2">CLASS II</Select.Option>
-                    <Select.Option value="class4">CLASS III</Select.Option>
-                    <Select.Option value="class4">CLASS IV</Select.Option>
-                    <Select.Option value="class5">CLASS V</Select.Option>
-                    <Select.Option value="class6">CLASS VI</Select.Option>
-                  </Select>
-                </Form.Item>
-                <Form.Item
-                  name="housename"
-                  label="House Name"
-                  rules={[{ required: true, message: "Required" }]}
-                  style={{
-                    display: "inline-block",
-                    width: "calc(30% - 8px)",
-                    marginLeft: "3px",
-                  }}
-                >
-                  <Input placeholder="House Name" />
-                </Form.Item>
-              </Form.Item>
-            </Form>
-          </Col>
-        </StyledRow>
-      </Fade>
+              Back
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              sx={{ mr: "2rem" }}
+            >
+              {activeStep === steps.length - 1 ? "Save" : "Next"}
+            </Button>
+          </Box>
+        </Box>
+      </Box>
     </ContentSection>
   );
 };

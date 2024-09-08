@@ -14,6 +14,11 @@ const routes = [
     exact: true,
     component: "StudentRegistration",
   },
+  {
+    path: "/studentdashboard",
+    exact: true,
+    component: "StudentDashboard",
+  },
 ];
 
 export default routes;

@@ -8,7 +8,8 @@ export const StyledContainer = styled("div")<{
   max-width: 1200px;
   margin-right: auto;
   margin-left: auto;
-  padding: 0 60px;
+  // padding: 0 60px;
+  // margin-left: 2rem;
   border-top: ${(p) => (p.border ? "1px solid #CDD1D4" : "")};
 
   @media only screen and (max-width: 1024px) {
