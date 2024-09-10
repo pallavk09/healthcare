@@ -117,7 +117,6 @@ const TopStepper = ({
                 fontSize: "1.2rem",
                 color: "#18216d",
                 fontWeight: "Bold",
-                // color: "red",
               },
             }}
           >
