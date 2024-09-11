@@ -12,11 +12,13 @@ import { StepIconProps } from "@mui/material/StepIcon";
 import { styled } from "@mui/material/styles";
 import Check from "@mui/icons-material/Check";
 
+import { StudentRegistrationFormsType } from "../../common/types";
+
 const TopStepper = ({
   steps,
   activeStep,
 }: {
-  steps: string[];
+  steps: StudentRegistrationFormsType[];
   activeStep: any;
 }) => {
   // Detect if the screen size is "small" (mobile)
@@ -108,8 +110,8 @@ const TopStepper = ({
       style={{ height: "100%" }}
       sx={{ alignItems: "center", alignContent: "center" }}
     >
-      {steps.map((label, index) => (
-        <Step key={label}>
+      {steps.map((formItem, index) => (
+        <Step key={index}>
           <StepLabel
             StepIconComponent={QontoStepIcon}
             sx={{
@@ -120,7 +122,7 @@ const TopStepper = ({
               },
             }}
           >
-            {label}
+            {formItem.title}
             {/* <Typography variant={isSmallScreen ? "body2" : "h6"}>
               {label}
             </Typography> */}

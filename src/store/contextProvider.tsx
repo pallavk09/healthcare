@@ -4,7 +4,7 @@ import { userAction, userState } from "../common/types";
 
 // Initial state
 const initialState: userState = {
-  data: [],
+  data: null,
   showLoginForm: false,
   isOtpSend: false,
   isUserVerified: false,
@@ -26,6 +26,10 @@ const apiReducer = (state: userState, action: userAction): userState => {
       return { ...state, isOtpSend: true, isUserVerified: false, error: null };
     case "IS_USER_VERIFIED":
       return { ...state, isUserVerified: true, error: null };
+    case "SAVE_STUDENT_DATA":
+      const freshdata = { ...state, data: [action.payload] };
+      console.log(freshdata);
+      return { ...state, data: action.payload };
     default:
       return state;
   }

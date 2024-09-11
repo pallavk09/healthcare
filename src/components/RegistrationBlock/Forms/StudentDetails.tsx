@@ -187,7 +187,7 @@ const StudentDetailsForm = () => {
           xs={12}
           display={"flex"}
           flexDirection={"row"}
-          justifyContent={"space-between"}
+          justifyContent={"normal"}
           sx={{ mt: 0 }}
         >
           <DatePicker format="DD-MM-YYYY" />
@@ -196,7 +196,7 @@ const StudentDetailsForm = () => {
           <FormControl
             size="small"
             variant="standard"
-            sx={{ width: "60%", mt: 0 }}
+            sx={{ width: "31%", mt: 0 }}
           >
             <InputLabel id="lblgender" required>
               Gender
@@ -218,9 +218,9 @@ const StudentDetailsForm = () => {
                     <MenuItem value="">
                       <em>Select</em>
                     </MenuItem>
-                    <MenuItem value={10}>Male</MenuItem>
-                    <MenuItem value={20}>Female</MenuItem>
-                    <MenuItem value={30}>Other</MenuItem>
+                    <MenuItem value={"Male"}>Male</MenuItem>
+                    <MenuItem value={"Female"}>Female</MenuItem>
+                    <MenuItem value={"Other"}>Other</MenuItem>
                   </Select>
                 </>
               )}

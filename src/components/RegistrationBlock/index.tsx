@@ -1,30 +1,21 @@
 import * as React from "react";
-import { Box, Button } from "@mui/material";
+import { Box } from "@mui/material";
 import TopStepper from "../TopStepper";
 import { Fade } from "react-awesome-reveal";
-
 import { ContentSection } from "./styles";
-import StudentDetailsForm from "./Forms/StudentDetails";
-import GuardianDetails from "./Forms/GuardianDetails";
-import AcademicsDetails from "./Forms/AcademicsDetails";
-import SummaryPage from "./Forms/SummaryPage";
-
 import { useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
+import { Button } from "../../common/Button";
+import { StudentRegistrationForms as steps } from "../../Config/config";
+import ApiContext from "../../store/context";
+import { studentData } from "../../common/types";
+import PerfectScrollbar from "react-perfect-scrollbar";
 
 const RegistrationBlock = () => {
-  const steps = ["Personal Info", "Guardian Info", "Academics", "Save"];
+  const ctx = React.useContext(ApiContext);
   const [activeStep, setActiveStep] = React.useState(0);
-  const [registrationDetails, setRegistrationDetails] = React.useState({});
   const navigate = useNavigate();
   const methods = useForm();
-
-  const formArray = [
-    <StudentDetailsForm />,
-    <GuardianDetails />,
-    <AcademicsDetails />,
-    <SummaryPage registrationDetails={registrationDetails} />,
-  ];
 
   const handleBack = () => {
     setActiveStep((previousStep) => previousStep - 1);
@@ -41,7 +32,11 @@ const RegistrationBlock = () => {
         console.log("Review and Submit screen. Show summary");
         const values = methods.getValues();
         console.log("Form Values: ", values);
-        setRegistrationDetails(values);
+        //Save data in context
+        ctx?.dispatch({
+          type: "SAVE_STUDENT_DATA",
+          payload: values as studentData,
+        });
       }
 
       if (activeStep === steps.length - 1) {
@@ -73,7 +68,7 @@ const RegistrationBlock = () => {
         {/* This is Box for stepper */}
         <Box
           sx={{
-            width: "15%",
+            width: "15vw",
             backgroundColor: "#f9f9f9",
             boxShadow: 3,
             borderRadius: 2,
@@ -84,7 +79,7 @@ const RegistrationBlock = () => {
         {/* This is Box for Forms and Button */}
         <Box
           sx={{
-            width: "80%",
+            width: "90vw",
             padding: 3,
             paddingBottom: 0,
           }}
@@ -109,7 +104,8 @@ const RegistrationBlock = () => {
                 >
                   {/* This block is for showing form based on activestep number */}
                   <Fade direction={"right"} triggerOnce>
-                    {formArray[activeStep]}
+                    {/* {formArray[activeStep]} */}
+                    {steps[activeStep].formComponent}
                   </Fade>
                 </Box>
                 {/* This is buttons container box*/}
@@ -123,6 +119,14 @@ const RegistrationBlock = () => {
                   }}
                 >
                   <Button
+                    disabled={activeStep === 0}
+                    onClick={handleBack}
+                    max_width="100px"
+                  >
+                    Back
+                  </Button>
+                  <Button onClick={handleNext} max_width="100px">
+                    {/* <Button
                     variant="contained"
                     disabled={activeStep === 0}
                     onClick={handleBack}
@@ -134,7 +138,7 @@ const RegistrationBlock = () => {
                     variant="contained"
                     onClick={handleNext}
                     // sx={{ mr: "2rem" }}
-                  >
+                  > */}
                     {activeStep === steps.length - 1 ? "Save" : "Next"}
                   </Button>
                 </Box>

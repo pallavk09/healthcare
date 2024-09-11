@@ -84,10 +84,10 @@ const AcademicsDetails = () => {
                   <MenuItem value="">
                     <em>Select</em>
                   </MenuItem>
-                  <MenuItem value={10}>Section A</MenuItem>
-                  <MenuItem value={20}>Section B</MenuItem>
-                  <MenuItem value={30}>Section C</MenuItem>
-                  <MenuItem value={30}>Section D</MenuItem>
+                  <MenuItem value={"a"}>A</MenuItem>
+                  <MenuItem value={"b"}>B</MenuItem>
+                  <MenuItem value={"c"}>C</MenuItem>
+                  <MenuItem value={"d"}>D</MenuItem>
                 </Select>
               </>
             )}

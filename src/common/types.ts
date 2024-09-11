@@ -7,8 +7,10 @@ export interface ContainerProps {
 export interface ButtonProps {
   color?: string;
   name?: string;
+  disabled?: boolean;
+  max_width?: string;
   children: React.ReactNode;
-  onClick?: () => void;
+  onClick?: (event?: React.MouseEvent<HTMLElement>) => void;
 }
 
 export interface SvgIconProps {
@@ -35,9 +37,30 @@ export interface validateProps {
   email: string;
 }
 
+export interface studentData {
+  studentfullname: string;
+  addressline1: string;
+  addressline2: string;
+  addresscity: string;
+  addressstate: string;
+  addresspincode: string;
+  studentdob: string;
+  studentgender: string;
+  guardianname: string;
+  studentrelation: string;
+  occupation: string;
+  guardianphoneno: string;
+  guardianemailid: string;
+  class: string;
+  section: string;
+  rollnumber: string;
+  housename: string;
+  busnumber: string;
+}
+
 // Define the shape of your state
 export interface userState {
-  data: any[];
+  data: studentData | null;
   showLoginForm: boolean;
   isOtpSend: boolean;
   isUserVerified: boolean;
@@ -48,4 +71,22 @@ export interface userState {
 export type userAction =
   | { type: "SHOW_LOGIN_FORM" }
   | { type: "IS_OPT_SEND" }
-  | { type: "IS_USER_VERIFIED"; payload: any[] };
+  | { type: "IS_USER_VERIFIED"; payload: any[] }
+  | { type: "SAVE_STUDENT_DATA"; payload: studentData };
+
+export type PersonalInfoType = {
+  studentfullname: string | "";
+  addressline1: string | "";
+  addressline2: string | "";
+  addresscity: string | "";
+  addressstate: string | "";
+  addresspincode: string | "";
+  studentdob: string | "";
+  studentgender: string | "";
+};
+export type StudentRegistrationFormsType = {
+  id: string;
+  title: string;
+  formComponent: React.ReactNode;
+  data: {};
+};

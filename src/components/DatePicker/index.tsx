@@ -27,7 +27,7 @@ const DatePicker = ({ format }: any) => {
               aria-placeholder="DD-MM-YYYY"
               size="small"
               itemType="standard"
-              sx={{ mt: 0 }}
+              sx={{ mt: 0, width: "31%", mr: 4 }}
               variant="standard"
               required
               {...field}
