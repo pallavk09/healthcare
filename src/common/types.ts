@@ -38,6 +38,7 @@ export interface validateProps {
 }
 
 export interface studentData {
+  id: string;
   studentfullname: string;
   addressline1: string;
   addressline2: string;
@@ -60,6 +61,7 @@ export interface studentData {
 
 // Define the shape of your state
 export interface userState {
+  studentMasterData: studentData[];
   data: studentData | null;
   showLoginForm: boolean;
   isOtpSend: boolean;

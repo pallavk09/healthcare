@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { lazy, useState, useContext } from "react";
+import ApiContext from "../../../store/context";
 import {
   Card,
   CardContent,
@@ -12,7 +13,10 @@ import {
 } from "@mui/material";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import "react-perfect-scrollbar/dist/css/styles.css";
-import AdmissionAndPaymentForm from "../../NewAdmission";
+// import FeePaymentForm from "../../Services/FeePayment";
+
+const NewAdmissionForm = lazy(() => import("../../Services/NewAdmission"));
+const FeePaymentForm = lazy(() => import("../../Services/FeePayment"));
 
 function TabPanel({ children, value, index, ...other }: any) {
   return (
@@ -28,9 +32,10 @@ function TabPanel({ children, value, index, ...other }: any) {
   );
 }
 
-const StudentRegistrationSummary = ({ student }: any) => {
+const StudentProfileDashboard = ({ student }: any) => {
   const [tabValue, setTabValue] = useState(0);
   const theme = useTheme();
+  const ctx = useContext(ApiContext);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Check if the screen is small (mobile)
 
   const handleChange = (event: any, newValue: any) => {
@@ -76,32 +81,24 @@ const StudentRegistrationSummary = ({ student }: any) => {
         <TabPanel value={tabValue} index={0}>
           {/* Scrollable Student Details */}
           <PerfectScrollbar style={{ maxHeight: "400px" }}>
-            {/* <Typography variant="h6">Class: {student.class}</Typography>
-            <Typography variant="body1" sx={{ marginTop: "10px" }}>
-              {student.details}
-            </Typography> */}
-            <AdmissionAndPaymentForm />
+            <Typography variant="h6">Student Details</Typography>
           </PerfectScrollbar>
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          {/* Apply for Admission Form */}
-          <Typography variant="h6">Apply for Admission</Typography>
-          <Typography variant="body1" sx={{ marginTop: "10px" }}>
-            Admission form and instructions will go here.
-          </Typography>
+          <PerfectScrollbar style={{ maxHeight: "400px" }}>
+            <NewAdmissionForm />
+          </PerfectScrollbar>
         </TabPanel>
 
         <TabPanel value={tabValue} index={2}>
-          {/* Fee Payment Details */}
-          <Typography variant="h6">Fee Payment</Typography>
-          <Typography variant="body1" sx={{ marginTop: "10px" }}>
-            Fee payment details and options will go here.
-          </Typography>
+          <PerfectScrollbar style={{ maxHeight: "400px" }}>
+            <FeePaymentForm />
+          </PerfectScrollbar>
         </TabPanel>
       </CardContent>
     </Card>
   );
 };
 
-export default StudentRegistrationSummary;
+export default StudentProfileDashboard;

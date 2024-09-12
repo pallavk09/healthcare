@@ -1,19 +1,12 @@
 import { Box, Grid, Typography } from "@mui/material";
 import { useContext } from "react";
 import ApiContext from "../../../store/context";
+import formatDate from "../../../common/utils/formatDate";
 
 const SummaryPage = () => {
   const ctx = useContext(ApiContext);
   console.log("Under Summary Page");
   console.log(ctx?.state.data);
-  const formatDate = (isoString: string): string => {
-    const date = new Date(isoString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
-    const year = date.getFullYear();
-
-    return `${day}-${month}-${year}`;
-  };
 
   return (
     <Box

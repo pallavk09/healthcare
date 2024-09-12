@@ -1,14 +1,34 @@
 import { useReducer, ReactNode } from "react";
 import ApiContext from "./context";
-import { userAction, userState } from "../common/types";
+import { userAction, userState, studentData } from "../common/types";
 
 // Initial state
 const initialState: userState = {
+  studentMasterData: [],
   data: null,
   showLoginForm: false,
   isOtpSend: false,
   isUserVerified: false,
   error: null,
+};
+
+const addUpdateMasterStudentData = (
+  studentMasterData: studentData[],
+  studentData: studentData
+): studentData[] => {
+  const studentIndex = studentMasterData.findIndex(
+    (student) => student.id === studentData.id
+  );
+
+  //New Student
+  if (studentIndex === -1) {
+    return [...studentMasterData, studentData];
+  } else {
+    //Update existing student
+    return studentMasterData.map((student, index) =>
+      index === studentIndex ? studentData : student
+    );
+  }
 };
 
 // Reducer function
@@ -27,9 +47,14 @@ const apiReducer = (state: userState, action: userAction): userState => {
     case "IS_USER_VERIFIED":
       return { ...state, isUserVerified: true, error: null };
     case "SAVE_STUDENT_DATA":
-      const freshdata = { ...state, data: [action.payload] };
-      console.log(freshdata);
-      return { ...state, data: action.payload };
+      return {
+        ...state,
+        data: action.payload,
+        studentMasterData: addUpdateMasterStudentData(
+          state.studentMasterData,
+          action.payload
+        ),
+      };
     default:
       return state;
   }

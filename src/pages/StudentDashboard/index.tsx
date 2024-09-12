@@ -1,4 +1,5 @@
-import { lazy, useState } from "react";
+import { lazy, useState, useContext } from "react";
+import ApiContext from "../../store/context";
 import {
   Avatar,
   // Button,
@@ -14,13 +15,16 @@ import {
   // Container,
 } from "@mui/material";
 import Carousel from "react-material-ui-carousel";
-import StudentRegistrationSummary from "../../components/RegistrationBlock/Forms/StudentRegistrationSummary";
-
+import StudentProfileDashboard from "../../components/Dashboard/StudentProfileDashboard";
 import { Button } from "../../common/Button";
+import formatDate from "../../common/utils/formatDate";
 
 const Container = lazy(() => import("../../common/Container"));
 
 const StudentDashboard = () => {
+  const ctx = useContext(ApiContext);
+  console.log(ctx?.state?.studentMasterData);
+
   const initialStudents = [
     {
       id: 1,
@@ -46,6 +50,7 @@ const StudentDashboard = () => {
         "Tom is an 11th-grade student who excels in sports and leadership.",
     },
   ];
+
   const [selectedStudent, setSelectedStudent] = useState(initialStudents[0]);
   const [open, setOpen] = useState(false);
   const [students, setStudents] = useState(initialStudents);
@@ -95,13 +100,21 @@ const StudentDashboard = () => {
             autoPlay={false}
             animation="slide"
             onChange={(currentIndex) => handleCarouselChange(currentIndex)}
+            // indicatorContainerProps={{
+            //   style: {
+            //     // zIndex: 1,
+            //     // marginTop: "50px",
+            //     // position: "relative",
+            //     // bottom: "10px",
+            //   },
+            // }}
           >
-            {students.map((student) => (
+            {ctx?.state?.studentMasterData.map((student) => (
               <Card
                 key={student.id}
                 // onClick={() => handleStudentSelect(student)}
                 sx={{
-                  marginBottom: "10px",
+                  // marginBottom: "20px",
                   cursor: "pointer",
                   border: "2px solid #f5f5f5",
                 }}
@@ -109,11 +122,85 @@ const StudentDashboard = () => {
                 <CardContent>
                   <Grid container alignItems="center">
                     <Grid item xs={4}>
-                      <Avatar src={student.photo} alt={student.name} />
+                      <Avatar
+                        src={"https://via.placeholder.com/150"}
+                        alt={student.studentfullname}
+                      />
                     </Grid>
                     <Grid item xs={8}>
-                      <Typography variant="h6">{student.name}</Typography>
-                      <Typography variant="body2">{student.class}</Typography>
+                      <Typography variant="h6" fontWeight="bold">
+                        {student.studentfullname}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        display={"inline"}
+                        fontWeight="bold"
+                      >
+                        DOB:
+                      </Typography>{" "}
+                      <Typography variant="body2" display={"inline"}>
+                        {formatDate(student?.studentdob)}
+                      </Typography>
+                    </Grid>
+
+                    {/*2nd Row */}
+                    <Grid item xs={12} sx={{ mt: 2 }}>
+                      <Typography
+                        variant="body2"
+                        display={"inline"}
+                        fontWeight="bold"
+                      >
+                        Guardian's Name:
+                      </Typography>{" "}
+                      <Typography variant="body2" display={"inline"}>
+                        {student?.guardianname}
+                      </Typography>
+                    </Grid>
+
+                    {/*3rd Row */}
+                    <Grid item xs={4} sx={{ mt: 2 }}>
+                      <Typography
+                        variant="body2"
+                        display={"inline"}
+                        fontWeight="bold"
+                      >
+                        Gender:
+                      </Typography>{" "}
+                      <Typography variant="body2" display={"inline"}>
+                        {student?.studentgender?.toUpperCase()}
+                      </Typography>
+                    </Grid>
+
+                    <Grid item xs={4} sx={{ mt: 2 }}>
+                      <Typography variant="body2" display={"inline"}>
+                        {`${student?.class?.toUpperCase()} - ${student?.section.toUpperCase()}`}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4} sx={{ mt: 2 }}>
+                      <Typography
+                        variant="body2"
+                        display={"inline"}
+                        fontWeight="bold"
+                      >
+                        Roll No:
+                      </Typography>{" "}
+                      <Typography variant="body2" display={"inline"}>
+                        {student?.rollnumber}
+                      </Typography>
+                    </Grid>
+
+                    {/**4th Row */}
+                    <Grid item xs={6} sx={{ mt: 2 }}>
+                      <Typography
+                        variant="body2"
+                        display={"inline"}
+                        fontWeight="bold"
+                      >
+                        House Name:
+                      </Typography>{" "}
+                      <Typography variant="body2" display={"inline"}>
+                        {student?.housename?.toUpperCase()}
+                      </Typography>
                     </Grid>
                   </Grid>
                 </CardContent>
@@ -125,7 +212,7 @@ const StudentDashboard = () => {
         </Grid>
 
         <Grid item xs={8}>
-          <StudentRegistrationSummary student={selectedStudent} />
+          <StudentProfileDashboard student={selectedStudent} />
         </Grid>
       </Grid>
 

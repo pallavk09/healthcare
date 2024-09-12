@@ -9,7 +9,7 @@ import { Button } from "../../common/Button";
 import { StudentRegistrationForms as steps } from "../../Config/config";
 import ApiContext from "../../store/context";
 import { studentData } from "../../common/types";
-import PerfectScrollbar from "react-perfect-scrollbar";
+import { v4 as uuid } from "uuid";
 
 const RegistrationBlock = () => {
   const ctx = React.useContext(ApiContext);
@@ -32,17 +32,22 @@ const RegistrationBlock = () => {
         console.log("Review and Submit screen. Show summary");
         const values = methods.getValues();
         console.log("Form Values: ", values);
+
+        //Generate Unique ID and update object
+        const unique_id = uuid();
+        const studentData = { ...values, id: unique_id };
+
         //Save data in context
         ctx?.dispatch({
           type: "SAVE_STUDENT_DATA",
-          payload: values as studentData,
+          payload: studentData as studentData,
         });
       }
 
       if (activeStep === steps.length - 1) {
         console.log("Clicked on Save. Navigate to dashboard");
 
-        // navigate("/studentDashboard");
+        navigate("/studentDashboard");
       }
     } else {
       console.log("Mandatory fields are empty");
