@@ -1,12 +1,17 @@
 import { Box, Grid, Typography } from "@mui/material";
-import { useContext } from "react";
-import ApiContext from "../../../store/context";
+// import { useContext } from "react";
+// import ApiContext from "../../../store/context";
 import formatDate from "../../../common/utils/formatDate";
+import { studentData } from "../../../common/types";
 
-const SummaryPage = () => {
-  const ctx = useContext(ApiContext);
+interface StudentDataPropsType {
+  studentdata: studentData | null;
+}
+
+const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
+  // const ctx = useContext(ApiContext);
   console.log("Under Summary Page");
-  console.log(ctx?.state.data);
+  // console.log(ctx?.state.data);
 
   return (
     <Box
@@ -55,7 +60,8 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.studentfullname}
+            {/* {studentdata?.studentfullname} */}
+            {studentdata?.studentfullname}
           </Typography>
         </Grid>
 
@@ -73,7 +79,8 @@ const SummaryPage = () => {
             display={"inline"}
             sx={{ color: "#2B2B2B" }}
           >
-            {formatDate(ctx?.state?.data?.studentdob!)}
+            {/* {formatDate(studentdata?.studentdob!)} */}
+            {formatDate(studentdata?.studentdob)}
           </Typography>
         </Grid>
 
@@ -91,7 +98,8 @@ const SummaryPage = () => {
             display={"inline"}
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.studentgender}
+            {/* {studentdata?.studentgender} */}
+            {studentdata?.studentgender}
           </Typography>
         </Grid>
 
@@ -105,25 +113,17 @@ const SummaryPage = () => {
             Address:
           </Typography>{" "}
           <Typography variant="body1" sx={{ color: "#2B2B2B" }}>
-            {ctx?.state?.data?.addressline1}
+            {studentdata?.addressline1}
           </Typography>
           <Typography variant="body1" sx={{ color: "#2B2B2B" }}>
-            {ctx?.state?.data?.addressline2}
+            {studentdata?.addressline2}
           </Typography>
           <Typography
             variant="body1"
             display={"inline"}
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.addresscity}
-          </Typography>
-          {","}
-          <Typography
-            variant="body1"
-            display={"inline"}
-            sx={{ color: "#2B2B2B" }}
-          >
-            {ctx?.state?.data?.addressstate}
+            {studentdata?.addresscity}
           </Typography>
           {","}
           <Typography
@@ -131,7 +131,15 @@ const SummaryPage = () => {
             display={"inline"}
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.addresspincode}
+            {studentdata?.addressstate}
+          </Typography>
+          {","}
+          <Typography
+            variant="body1"
+            display={"inline"}
+            sx={{ color: "#2B2B2B" }}
+          >
+            {studentdata?.addresspincode}
           </Typography>
         </Grid>
       </Grid>
@@ -159,7 +167,7 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.guardianname?.toUpperCase()}
+            {studentdata?.guardianname?.toUpperCase()}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={4}>
@@ -176,7 +184,7 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.studentrelation?.toUpperCase()}
+            {studentdata?.studentrelation?.toUpperCase()}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={4}>
@@ -193,7 +201,7 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.occupation?.toUpperCase()}
+            {studentdata?.occupation?.toUpperCase()}
           </Typography>
         </Grid>
         {/* Second Row: Phone and Email */}
@@ -211,7 +219,7 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.guardianphoneno}
+            {studentdata?.guardianphoneno}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={4}>
@@ -228,7 +236,7 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.guardianemailid}
+            {studentdata?.guardianemailid}
           </Typography>
         </Grid>
       </Grid>
@@ -255,7 +263,7 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {`${ctx?.state?.data?.class!.toUpperCase()} - ${ctx?.state?.data?.section!.toUpperCase()}`}
+            {`${studentdata?.class!.toUpperCase()} - ${studentdata?.section!.toUpperCase()}`}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={3}>
@@ -272,7 +280,7 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.rollnumber}
+            {studentdata?.rollnumber}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -289,7 +297,7 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.housename?.toUpperCase()}
+            {studentdata?.housename?.toUpperCase()}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={3}>
@@ -306,7 +314,7 @@ const SummaryPage = () => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {ctx?.state?.data?.busnumber?.toUpperCase()}
+            {studentdata?.busnumber?.toUpperCase()}
           </Typography>
         </Grid>
       </Grid>

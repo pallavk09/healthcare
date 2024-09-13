@@ -2,54 +2,71 @@
 // import dayjs from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateField } from "@mui/x-date-pickers/DateField";
-import { Controller, useFormContext } from "react-hook-form";
-import { FormHelperText } from "@mui/material";
+// import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+// import { DateField } from "@mui/x-date-pickers/DateField";
+import { Controller, Control, FieldErrors } from "react-hook-form";
+import { TextField, FormControl } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
-const DatePicker = ({ format }: any) => {
-  const {
-    control,
-    formState: { errors },
-    trigger,
-  } = useFormContext();
+interface CustomDatePickerType {
+  name: string;
+  label: string;
+  format: string;
+  control: Control<any>;
+  errors: FieldErrors<any>;
+  rules?: Object;
+  defaultValue?: Date | null;
+}
+
+const CustomDatePicker: React.FC<CustomDatePickerType> = ({
+  name,
+  label,
+  format,
+  control,
+  errors,
+  rules = {},
+  defaultValue = null,
+}) => {
+  // const {
+  //   control,
+  //   formState: { errors },
+  //   trigger,
+  // } = useFormContext();
   return (
-    <Controller
-      name="studentdob"
-      control={control}
-      rules={{ required: "required" }}
-      render={({ field, fieldState }) => (
-        <>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateField
-              label="DOB"
-              //   defaultValue={dayjs("2022-04-17")}
-              format={format}
-              aria-placeholder="DD-MM-YYYY"
-              size="small"
-              itemType="standard"
-              sx={{ mt: 0, width: "31%", mr: 4 }}
-              variant="standard"
-              required
-              {...field}
-              // error={Boolean(errors?.studentdob)}
-              onBlur={() => trigger("studentdob")}
-              onError={() => trigger("studentdob")}
-            />
-            {/* {errors?.studentdob?.message && (
-              <FormHelperText error={Boolean(errors?.studentdob)}>
-                Required
-              </FormHelperText>
-            )} */}
-          </LocalizationProvider>
-          {errors?.studentdob?.message && (
-            <FormHelperText
-              error={Boolean(errors?.studentdob)}
-            ></FormHelperText>
+    <FormControl sx={{ width: "33%", mt: 2 }} error={Boolean(errors?.[name])}>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Controller
+          name={name}
+          control={control}
+          defaultValue={defaultValue}
+          rules={rules}
+          render={({ field }) => (
+            <>
+              <DatePicker
+                label={label}
+                value={field.value}
+                onChange={(newvalue) => field.onChange(newvalue)}
+                slots={{
+                  textField: (textFieldProps) => (
+                    <TextField
+                      {...textFieldProps}
+                      size="small"
+                      variant="standard"
+                      sx={{
+                        mr: 3,
+                      }}
+                      error={Boolean(errors?.[name])}
+                      // helperText={errors?.[name]?.message || ""}
+                    />
+                  ),
+                }}
+              />
+            </>
           )}
-        </>
-      )}
-    />
+        />
+      </LocalizationProvider>
+    </FormControl>
   );
 };
 
-export default DatePicker;
+export default CustomDatePicker;

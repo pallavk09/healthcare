@@ -10,6 +10,7 @@ export interface ButtonProps {
   disabled?: boolean;
   max_width?: string;
   children: React.ReactNode;
+  type?: "submit" | "button" | "reset";
   onClick?: (event?: React.MouseEvent<HTMLElement>) => void;
 }
 
@@ -89,6 +90,6 @@ export type PersonalInfoType = {
 export type StudentRegistrationFormsType = {
   id: string;
   title: string;
-  formComponent: React.ReactNode;
+  // formComponent: React.ReactNode;
   data: {};
 };

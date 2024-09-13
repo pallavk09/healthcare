@@ -3,11 +3,13 @@ import styled from "styled-components";
 export const StyledButton = styled("button")<{
   color?: string;
   max_width?: string;
+  type?: string;
 }>`
   background: ${(p) => p.color || "#2e186a"};
   color: ${(p) => (p.color ? "#2E186A" : "#fff")};
-  ${(p) => p.max_width && "max-width: 180px"};
-  // max-width: ${(p) => p.max_width || "180px"};
+  ${(p) => p.max_width && `max-width: ${p.max_width}`};
+  ${(p) => p.max_width || "180px"};
+  ${(p) => p.type || `type:${p.type}`}
   font-size: 1rem;
   font-weight: 700;
   width: 100%;
