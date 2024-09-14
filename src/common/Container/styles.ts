@@ -4,8 +4,8 @@ export const StyledContainer = styled("div")<{
   border?: boolean;
 }>`
   position: relative;
-  width: 100%;
-  max-width: 1200px;
+  width: 95vw;
+  // max-width: 1200px;
   margin-right: auto;
   margin-left: auto;
   // padding: 0 60px;
