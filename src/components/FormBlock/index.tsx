@@ -86,7 +86,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
                   />
                 </Form.Item>
                 <Form.Item {...tailLayout}>
-                  <Button>Send OTP</Button>
+                  <Button max_width="100px">Send OTP</Button>
                 </Form.Item>
               </Form>
             )}
@@ -107,7 +107,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
                     <Input.OTP size="large" style={{ width: "80%" }} />
                   </Form.Item>
                   <Form.Item {...tailLayout}>
-                    <Button>Verify</Button>
+                    <Button max_width="100px">Verify</Button>
                   </Form.Item>
                 </Form>
               </Fade>

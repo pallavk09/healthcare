@@ -19,6 +19,21 @@ const routes = [
     exact: true,
     component: "StudentDashboard",
   },
+  {
+    path: "/schooladmin",
+    exact: true,
+    component: "SchoolAdmin",
+  },
+  {
+    path: "/admission-details",
+    exact: true,
+    component: "AdmissionDetails",
+  },
+  {
+    path: "/fees-details",
+    exact: true,
+    component: "FeePaymentsScreen",
+  },
 ];
 
 export default routes;
