@@ -1,0 +1,30 @@
+/* Center the tick mark */
+.tick-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2px;
+  margin-bottom: 16px;
+}
+
+/* Animated tick mark */
+.tick-mark {
+  font-size: 100px;
+  color: green;
+  animation: tickAnimation 1s ease-in-out forwards;
+}
+
+/* Animation for tick mark */
+@keyframes tickAnimation {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

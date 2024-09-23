@@ -19,11 +19,13 @@ import StudentProfileDashboard from "../../components/Dashboard/StudentProfileDa
 import { Button } from "../../common/Button";
 import formatDate from "../../common/utils/formatDate";
 
+import HeaderLogin from "../../components/HeaderLogin";
+import FooterLogin from "../../components/FooterLogin";
+
 const Container = lazy(() => import("../../common/Container"));
 
 const StudentDashboard = () => {
   const ctx = useContext(ApiContext);
-  console.log(ctx?.state?.studentMasterData);
 
   const initialStudents = [
     {
@@ -93,179 +95,79 @@ const StudentDashboard = () => {
   };
 
   return (
-    <Container>
-      <Grid container spacing={2} sx={{ height: "100vh" }}>
-        <Grid item xs={4} sx={{ padding: "5px" }}>
-          <Carousel
-            autoPlay={false}
-            animation="slide"
-            onChange={(currentIndex) => handleCarouselChange(currentIndex)}
-            // indicatorContainerProps={{
-            //   style: {
-            //     // zIndex: 1,
-            //     // marginTop: "50px",
-            //     // position: "relative",
-            //     // bottom: "10px",
-            //   },
-            // }}
-          >
-            {ctx?.state?.studentMasterData.map((student) => (
-              <Card
-                key={student.id}
-                // onClick={() => handleStudentSelect(student)}
-                sx={{
-                  // marginBottom: "20px",
-                  cursor: "pointer",
-                  border: "2px solid #f5f5f5",
-                }}
-              >
-                <CardContent>
-                  <Grid container alignItems="center">
-                    <Grid item xs={4}>
-                      <Avatar
-                        src={"https://via.placeholder.com/150"}
-                        alt={student.studentfullname}
-                      />
-                    </Grid>
-                    <Grid item xs={8}>
-                      <Typography variant="h6" fontWeight="bold">
-                        {student.studentfullname}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        display={"inline"}
-                        fontWeight="bold"
-                      >
-                        DOB:
-                      </Typography>{" "}
-                      <Typography variant="body2" display={"inline"}>
-                        {formatDate(student?.studentdob)}
-                      </Typography>
-                    </Grid>
+    <>
+      <HeaderLogin />
+      <Container>
+        <Grid container spacing={2} sx={{ height: "100vh" }}>
+          <Grid item xs={4} sx={{ padding: "5px" }}>
+            <Carousel
+              autoPlay={false}
+              animation="slide"
+              onChange={(currentIndex) => handleCarouselChange(currentIndex)}
+            >
+              <p>Data will come soon here</p>
+            </Carousel>
+            {/* Button to add a new student */}
+            <Button onClick={handleClickOpen}>Add My Sibling</Button>
+          </Grid>
 
-                    {/*2nd Row */}
-                    <Grid item xs={12} sx={{ mt: 2 }}>
-                      <Typography
-                        variant="body2"
-                        display={"inline"}
-                        fontWeight="bold"
-                      >
-                        Guardian's Name:
-                      </Typography>{" "}
-                      <Typography variant="body2" display={"inline"}>
-                        {student?.guardianname}
-                      </Typography>
-                    </Grid>
-
-                    {/*3rd Row */}
-                    <Grid item xs={4} sx={{ mt: 2 }}>
-                      <Typography
-                        variant="body2"
-                        display={"inline"}
-                        fontWeight="bold"
-                      >
-                        Gender:
-                      </Typography>{" "}
-                      <Typography variant="body2" display={"inline"}>
-                        {student?.studentgender?.toUpperCase()}
-                      </Typography>
-                    </Grid>
-
-                    <Grid item xs={4} sx={{ mt: 2 }}>
-                      <Typography variant="body2" display={"inline"}>
-                        {`${student?.class?.toUpperCase()} - ${student?.section.toUpperCase()}`}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={4} sx={{ mt: 2 }}>
-                      <Typography
-                        variant="body2"
-                        display={"inline"}
-                        fontWeight="bold"
-                      >
-                        Roll No:
-                      </Typography>{" "}
-                      <Typography variant="body2" display={"inline"}>
-                        {student?.rollnumber}
-                      </Typography>
-                    </Grid>
-
-                    {/**4th Row */}
-                    <Grid item xs={6} sx={{ mt: 2 }}>
-                      <Typography
-                        variant="body2"
-                        display={"inline"}
-                        fontWeight="bold"
-                      >
-                        House Name:
-                      </Typography>{" "}
-                      <Typography variant="body2" display={"inline"}>
-                        {student?.housename?.toUpperCase()}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            ))}
-          </Carousel>
-          {/* Button to add a new student */}
-          <Button onClick={handleClickOpen}>Add Student</Button>
+          <Grid item xs={8}>
+            <StudentProfileDashboard student={selectedStudent} />
+          </Grid>
         </Grid>
 
-        <Grid item xs={8}>
-          <StudentProfileDashboard student={selectedStudent} />
-        </Grid>
-      </Grid>
-
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Add a New Student</DialogTitle>
-        <DialogContent>
-          <TextField
-            margin="dense"
-            name="name"
-            label="Student Name"
-            fullWidth
-            variant="outlined"
-            value={newStudent.name}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="class"
-            label="Class"
-            fullWidth
-            variant="outlined"
-            value={newStudent.class}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="photo"
-            label="Photo URL"
-            fullWidth
-            variant="outlined"
-            value={newStudent.photo}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="details"
-            label="Student Details"
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={4}
-            value={newStudent.details}
-            onChange={handleInputChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleAddStudent} color="primary">
-            Add
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+        <Dialog open={open} onClose={handleClose}>
+          <DialogTitle>Add a New Student</DialogTitle>
+          <DialogContent>
+            <TextField
+              margin="dense"
+              name="name"
+              label="Student Name"
+              fullWidth
+              variant="outlined"
+              value={newStudent.name}
+              onChange={handleInputChange}
+            />
+            <TextField
+              margin="dense"
+              name="class"
+              label="Class"
+              fullWidth
+              variant="outlined"
+              value={newStudent.class}
+              onChange={handleInputChange}
+            />
+            <TextField
+              margin="dense"
+              name="photo"
+              label="Photo URL"
+              fullWidth
+              variant="outlined"
+              value={newStudent.photo}
+              onChange={handleInputChange}
+            />
+            <TextField
+              margin="dense"
+              name="details"
+              label="Student Details"
+              fullWidth
+              variant="outlined"
+              multiline
+              rows={4}
+              value={newStudent.details}
+              onChange={handleInputChange}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleAddStudent} color="primary">
+              Add
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+      <FooterLogin />
+    </>
   );
 };
 

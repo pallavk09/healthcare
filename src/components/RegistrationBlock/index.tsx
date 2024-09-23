@@ -1,14 +1,15 @@
 import * as React from "react";
-import { Box } from "@mui/material";
+import { useEffect } from "react";
+import { Box, styled, Button, CircularProgress } from "@mui/material";
 import TopStepper from "../TopStepper";
 import { Fade } from "react-awesome-reveal";
 import { ContentSection } from "./styles";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
-import { Button } from "../../common/Button";
+// import { Button } from "../../common/Button";
 import { StudentRegistrationForms as steps } from "../../Config/config";
 import ApiContext from "../../store/context";
-import { studentData } from "../../common/types";
+import { studentData, userState } from "../../common/types";
 import { v4 as uuid } from "uuid";
 
 import StudentDetailsForm from "./Forms/StudentDetails";
@@ -16,12 +17,66 @@ import GuardianDetails from "./Forms/GuardianDetails";
 import AcademicsDetails from "./Forms/AcademicsDetails";
 import SummaryPage from "./Forms/SummaryPage";
 
+import { FormatNewStudentPayload } from "../../helper/formatPayload";
+import { CreateNewStudent } from "../../api/students";
+import SuccessPopup from "../../common/SuccessPopup";
+
+const MyCustomButton = styled(Button)(({ theme }) => ({
+  fontFamily: "Motiva Sans Bold",
+  fontSize: "0.80rem",
+  fontWeight: "700",
+  border: "1px solid #edf3f5",
+  borderRadius: "4px",
+  background: "#2e186a",
+  boxShadow: "0 16px 30px rgb(23 31 114 / 20%)",
+  marginTop: "0rem",
+  "&:hover": {
+    color: "#fff",
+    border: "1px solid rgb(255, 130, 92)",
+    backgroundColor: "rgb(255, 130, 92)",
+  },
+}));
+
 const RegistrationBlock = () => {
   const ctx = React.useContext(ApiContext);
   const [activeStep, setActiveStep] = React.useState(0);
+  const [_userId, setUserId] = React.useState<string | undefined>();
   const [studentDataState, SetStudentDataState] =
     React.useState<studentData | null>(null);
+
+  const [isPopupOpen, setIsPopupOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const userObj: userState = {
+    userId: "",
+    phone: "",
+    role: "student",
+    otpVerified: false,
+    siblings: [],
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+
+    //New User. Need to add students
+    navigate(`/studentdashboard?userId=${_userId}`);
+  };
+
+  const getQueryParams = (search: string) => {
+    return new URLSearchParams(search);
+  };
+  useEffect(() => {
+    const queryParams = getQueryParams(location.search);
+    const userId = queryParams.get("userId");
+    console.log(`UserID as ${userId}`);
+    ctx?.dispatch({
+      type: "UPDATE_USERID",
+      payload: { ...userObj, userId: userId! },
+    });
+    setUserId(userId!);
+  }, []);
 
   const methods = useForm({
     mode: "onTouched",
@@ -36,18 +91,36 @@ const RegistrationBlock = () => {
   } = methods;
 
   // Function to submit the form for the final step
-  const onSubmit = (data: any) => {
-    if (activeStep === steps.length - 1) {
-      console.log("Final form submission data:", data);
-      const unique_id = uuid();
-      const studentData = { ...studentDataState, id: unique_id };
-      ctx?.dispatch({
-        type: "SAVE_STUDENT_DATA",
-        payload: studentData as studentData,
-      });
-      navigate("/studentDashboard");
-    } else {
-      handleNext(); // Go to next step
+  const onSubmit = async (data: any) => {
+    try {
+      if (activeStep === steps.length - 1) {
+        setLoading(true);
+        console.log("Final form submission data:", studentDataState);
+
+        //Call API to create this student
+        const _newStudent = await CreateNewStudent(studentDataState);
+        if (_newStudent && _newStudent.newStudent) {
+          console.log("New Student created");
+          console.log(_newStudent);
+
+          //Update context with this data
+          ctx?.dispatch({
+            type: "ADD_NEW_STUDENT",
+            payload: studentDataState,
+          });
+
+          //context updated. Show Dialog and Navigate to Dashboard
+          setIsPopupOpen(true);
+        } else {
+          console.log("Error adding new student");
+          console.log(_newStudent);
+        }
+      } else {
+        handleNext();
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,38 +129,18 @@ const RegistrationBlock = () => {
     if (isValid) {
       if (activeStep === steps.length - 2) {
         console.log("Review and Submit screen. Show summary");
-        const values = methods.getValues();
-        console.log("Form Values: ", values);
-        SetStudentDataState(values as studentData);
-        //Check if this student already exist
-        // if (
-        //   ctx?.state?.studentMasterData &&
-        //   ctx?.state?.studentMasterData.length > 0
-        // ) {
-        //   const findStudent = ctx?.state?.studentMasterData.findIndex(
-        //     (student) => student.id === values.id
-        //   );
-
-        //   if (findStudent === -1) {
-        //     //New Student
-        //   } else {
-        //     //existing student
-        //   }
-        // }
-        // if (!Object.keys(values).includes("id")) {
-        //   const unique_id = uuid();
-        //   const studentData = { ...values, id: unique_id };
-        //   ctx?.dispatch({
-        //     type: "SAVE_STUDENT_DATA",
-        //     payload: studentData as studentData,
-        //   });
-        // } else {
-        //   // Save data in context
-        //   ctx?.dispatch({
-        //     type: "SAVE_STUDENT_DATA",
-        //     payload: values as studentData,
-        //   });
-        // }
+        const newStudentData = methods.getValues();
+        console.log("Form Values: ", newStudentData);
+        const studentId = `studid${uuid()}`;
+        const value_Formatted = FormatNewStudentPayload(
+          newStudentData,
+          _userId,
+          studentId
+        );
+        console.log(`Formatted value`);
+        console.log(value_Formatted);
+        // SetStudentDataState(value_Formatted as studentData);
+        SetStudentDataState(value_Formatted as studentData);
       }
       setActiveStep((prevStep) => prevStep + 1);
     }
@@ -98,47 +151,6 @@ const RegistrationBlock = () => {
     console.log("Handle Back: ");
     setActiveStep((previousStep) => previousStep - 1);
   };
-  // const handleNext = (e: any) => {
-  //   // e.preventDefault();
-  //   methods.trigger();
-  //   console.log("Inside Handle Next");
-  //   console.log(methods.getValues());
-  //   const hasEmptyValues = hasUndefinedNullOrEmptyValue(methods.getValues());
-  //   if (!hasEmptyValues) {
-  //     if (activeStep < steps.length - 1)
-  //       setActiveStep((prevActiveStep) => prevActiveStep + 1);
-
-  //     if (activeStep === steps.length - 2) {
-  //       console.log("Review and Submit screen. Show summary");
-  //       const values = methods.getValues();
-  //       console.log("Form Values: ", values);
-
-  //       //Generate Unique ID and update object
-  //       const unique_id = uuid();
-  //       const studentData = { ...values, id: unique_id };
-
-  //       //Save data in context
-  //       ctx?.dispatch({
-  //         type: "SAVE_STUDENT_DATA",
-  //         payload: studentData as studentData,
-  //       });
-  //     }
-
-  //     // if (activeStep === steps.length - 1) {
-  //     //   console.log("Clicked on Save. Navigate to dashboard");
-
-  //     //   navigate("/studentDashboard");
-  //     // }
-  //   } else {
-  //     console.log("Mandatory fields are empty");
-  //   }
-  // };
-
-  // const hasUndefinedNullOrEmptyValue = (obj: Record<string, any>): boolean => {
-  //   return Object.values(obj).some(
-  //     (value) => value === undefined || value === null || value === ""
-  //   );
-  // };
 
   const getStepContent = (step: number) => {
     switch (step) {
@@ -237,30 +249,38 @@ const RegistrationBlock = () => {
                   }}
                 >
                   {activeStep > 0 && (
-                    <Button onClick={handleBack} max_width="100px">
+                    <MyCustomButton
+                      type="button"
+                      color="primary"
+                      variant="contained"
+                      onClick={handleBack}
+                    >
                       Previous
-                    </Button>
+                    </MyCustomButton>
                   )}
-                  <Button type="submit" max_width="100px">
-                    {activeStep === steps.length - 1 ? "Submit" : "Next"}
-                  </Button>
-
-                  {/* <Button
-                    disabled={activeStep === 0}
-                    onClick={handleBack}
-                    max_width="100px"
+                  <MyCustomButton
+                    type="submit"
+                    color="primary"
+                    variant="contained"
+                    disabled={loading}
+                    startIcon={loading ? <CircularProgress size={20} /> : null}
                   >
-                    Back
-                  </Button>
-                  <Button onClick={handleNext} max_width="100px">
-                    {activeStep === steps.length - 1 ? "Save" : "Next"}
-                  </Button> */}
+                    {activeStep === steps.length - 1 && loading && "WAIT..."}
+                    {activeStep === steps.length - 1 ? "Submit" : "Next"}
+                  </MyCustomButton>
                 </Box>
               </Box>
             </form>
           </FormProvider>
         </Box>
       </Box>
+      <SuccessPopup
+        open={isPopupOpen}
+        onClose={handleClosePopup}
+        title="Student Added Successfully"
+        message="Go to My Dashboard to manage you details and Services"
+        buttonText="View My Dashboard"
+      />
     </ContentSection>
   );
 };

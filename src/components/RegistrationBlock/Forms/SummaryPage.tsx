@@ -1,6 +1,4 @@
 import { Box, Grid, Typography } from "@mui/material";
-// import { useContext } from "react";
-// import ApiContext from "../../../store/context";
 import formatDate from "../../../common/utils/formatDate";
 import { studentData } from "../../../common/types";
 
@@ -10,8 +8,9 @@ interface StudentDataPropsType {
 
 const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
   // const ctx = useContext(ApiContext);
-  console.log("Under Summary Page");
+  console.log("Under Summary Page. Printing student Data");
   // console.log(ctx?.state.data);
+  console.log(studentdata);
 
   return (
     <Box
@@ -61,7 +60,7 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             sx={{ color: "#2B2B2B" }}
           >
             {/* {studentdata?.studentfullname} */}
-            {studentdata?.studentfullname}
+            {studentdata?.studentObj.personalDetails.studentfullname}
           </Typography>
         </Grid>
 
@@ -80,7 +79,7 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             sx={{ color: "#2B2B2B" }}
           >
             {/* {formatDate(studentdata?.studentdob!)} */}
-            {formatDate(studentdata?.studentdob)}
+            {formatDate(studentdata?.studentObj.personalDetails.studentdob)}
           </Typography>
         </Grid>
 
@@ -99,7 +98,7 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             sx={{ color: "#2B2B2B" }}
           >
             {/* {studentdata?.studentgender} */}
-            {studentdata?.studentgender}
+            {studentdata?.studentObj.personalDetails.studentgender}
           </Typography>
         </Grid>
 
@@ -113,25 +112,17 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             Address:
           </Typography>{" "}
           <Typography variant="body1" sx={{ color: "#2B2B2B" }}>
-            {studentdata?.addressline1}
+            {studentdata?.studentObj.personalDetails.addressline1}
           </Typography>
           <Typography variant="body1" sx={{ color: "#2B2B2B" }}>
-            {studentdata?.addressline2}
+            {studentdata?.studentObj.personalDetails.addressline2}
           </Typography>
           <Typography
             variant="body1"
             display={"inline"}
             sx={{ color: "#2B2B2B" }}
           >
-            {studentdata?.addresscity}
-          </Typography>
-          {","}
-          <Typography
-            variant="body1"
-            display={"inline"}
-            sx={{ color: "#2B2B2B" }}
-          >
-            {studentdata?.addressstate}
+            {studentdata?.studentObj.personalDetails.addresscity}
           </Typography>
           {","}
           <Typography
@@ -139,7 +130,15 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             display={"inline"}
             sx={{ color: "#2B2B2B" }}
           >
-            {studentdata?.addresspincode}
+            {studentdata?.studentObj.personalDetails.addressstate}
+          </Typography>
+          {","}
+          <Typography
+            variant="body1"
+            display={"inline"}
+            sx={{ color: "#2B2B2B" }}
+          >
+            {studentdata?.studentObj.personalDetails.addresspincode}
           </Typography>
         </Grid>
       </Grid>
@@ -167,7 +166,7 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {studentdata?.guardianname?.toUpperCase()}
+            {studentdata?.studentObj.guardianDetails.guardianname?.toUpperCase()}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={4}>
@@ -184,7 +183,7 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {studentdata?.studentrelation?.toUpperCase()}
+            {studentdata?.studentObj.guardianDetails.studentrelation?.toUpperCase()}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={4}>
@@ -201,7 +200,7 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {studentdata?.occupation?.toUpperCase()}
+            {studentdata?.studentObj.guardianDetails.occupation?.toUpperCase()}
           </Typography>
         </Grid>
         {/* Second Row: Phone and Email */}
@@ -219,7 +218,7 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {studentdata?.guardianphoneno}
+            {studentdata?.studentObj.guardianDetails.guardianphoneno}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={4}>
@@ -236,88 +235,91 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             display="inline"
             sx={{ color: "#2B2B2B" }}
           >
-            {studentdata?.guardianemailid}
+            {studentdata?.studentObj.guardianDetails.guardianemailid}
           </Typography>
         </Grid>
       </Grid>
-
-      <Typography
-        variant="h6"
-        gutterBottom
-        sx={{ fontSize: 27, fontWeight: 600, mt: 2 }}
-      >
-        Academics
-      </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={3}>
+      {!studentdata?.studentObj.newAdmission && (
+        <>
           <Typography
-            variant="body1"
-            fontWeight="bold"
-            display="inline"
-            sx={{ color: "#2B2B2B" }}
+            variant="h6"
+            gutterBottom
+            sx={{ fontSize: 27, fontWeight: 600, mt: 2 }}
           >
-            Studying in:
-          </Typography>{" "}
-          <Typography
-            variant="body1"
-            display="inline"
-            sx={{ color: "#2B2B2B" }}
-          >
-            {`${studentdata?.class!.toUpperCase()} - ${studentdata?.section!.toUpperCase()}`}
+            Academics
           </Typography>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <Typography
-            variant="body1"
-            fontWeight="bold"
-            display="inline"
-            sx={{ color: "#2B2B2B" }}
-          >
-            Roll No:
-          </Typography>{" "}
-          <Typography
-            variant="body1"
-            display="inline"
-            sx={{ color: "#2B2B2B" }}
-          >
-            {studentdata?.rollnumber}
-          </Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography
-            variant="body1"
-            fontWeight="bold"
-            display="inline"
-            sx={{ color: "#2B2B2B" }}
-          >
-            House Name:
-          </Typography>{" "}
-          <Typography
-            variant="body1"
-            display="inline"
-            sx={{ color: "#2B2B2B" }}
-          >
-            {studentdata?.housename?.toUpperCase()}
-          </Typography>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <Typography
-            variant="body1"
-            fontWeight="bold"
-            display="inline"
-            sx={{ color: "#2B2B2B" }}
-          >
-            Bus Number:
-          </Typography>{" "}
-          <Typography
-            variant="body1"
-            display="inline"
-            sx={{ color: "#2B2B2B" }}
-          >
-            {studentdata?.busnumber?.toUpperCase()}
-          </Typography>
-        </Grid>
-      </Grid>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={3}>
+              <Typography
+                variant="body1"
+                fontWeight="bold"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                Studying in:
+              </Typography>{" "}
+              <Typography
+                variant="body1"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                {`${studentdata?.studentObj.academicsDetails.class!.toUpperCase()} - ${studentdata?.studentObj.academicsDetails.section!.toUpperCase()}`}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Typography
+                variant="body1"
+                fontWeight="bold"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                Roll No:
+              </Typography>{" "}
+              <Typography
+                variant="body1"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                {studentdata?.studentObj.academicsDetails.rollnumber}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography
+                variant="body1"
+                fontWeight="bold"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                House Name:
+              </Typography>{" "}
+              <Typography
+                variant="body1"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                {studentdata?.studentObj.academicsDetails.housename?.toUpperCase()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Typography
+                variant="body1"
+                fontWeight="bold"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                Bus Number:
+              </Typography>{" "}
+              <Typography
+                variant="body1"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                {studentdata?.studentObj.academicsDetails.busnumber?.toUpperCase()}
+              </Typography>
+            </Grid>
+          </Grid>
+        </>
+      )}
     </Box>
   );
 };

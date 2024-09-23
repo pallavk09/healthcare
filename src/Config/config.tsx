@@ -9,7 +9,7 @@ import { StudentRegistrationFormsType } from "../common/types";
 export const StudentRegistrationForms: StudentRegistrationFormsType[] = [
   {
     id: "0",
-    title: "Personal Info",
+    title: "Student Info",
     data: {},
   },
   {

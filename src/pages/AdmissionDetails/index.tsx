@@ -10,6 +10,9 @@ import {
 } from "@mui/x-data-grid";
 import { Button, Modal, Typography, Box, Grid } from "@mui/material";
 
+import HeaderLogin from "../../components/HeaderLogin";
+import FooterLogin from "../../components/FooterLogin";
+
 const CustomToolbar: React.FC = () => {
   return (
     <GridToolbarContainer>
@@ -209,6 +212,7 @@ const AdmissionDetails: React.FC = () => {
 
   return (
     <>
+      <HeaderLogin />
       <Box
         display={"flex"}
         flexDirection={"column"}
@@ -347,6 +351,7 @@ const AdmissionDetails: React.FC = () => {
           </Grid>
         </Grid>
       </Box>
+      <FooterLogin />
     </>
   );
 };

@@ -1,4 +1,6 @@
 import { lazy } from "react";
+import HeaderLogin from "../../components/HeaderLogin";
+import FooterLogin from "../../components/FooterLogin";
 
 const Container = lazy(() => import("../../common/Container"));
 const RegistrationBlock = lazy(
@@ -7,9 +9,13 @@ const RegistrationBlock = lazy(
 
 const StudentRegistration = () => {
   return (
-    <Container>
-      <RegistrationBlock />
-    </Container>
+    <>
+      <HeaderLogin />
+      <Container>
+        <RegistrationBlock />
+      </Container>
+      <FooterLogin />
+    </>
   );
 };
 

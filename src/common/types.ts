@@ -39,39 +39,51 @@ export interface validateProps {
 }
 
 export interface studentData {
-  id: string;
-  studentfullname: string;
-  addressline1: string;
-  addressline2: string;
-  addresscity: string;
-  addressstate: string;
-  addresspincode: string;
-  studentdob: string;
-  studentgender: string;
-  guardianname: string;
-  studentrelation: string;
-  occupation: string;
-  guardianphoneno: string;
-  guardianemailid: string;
-  class: string;
-  section: string;
-  rollnumber: string;
-  housename: string;
-  busnumber: string;
+  userId: string;
+  studentObj: {
+    id: string;
+    personalDetails: {
+      studentfullname: string;
+      addressline1: string;
+      addressline2: string;
+      addresscity: string;
+      addressstate: string;
+      addresspincode: string;
+      studentdob: string;
+      studentgender: string;
+    };
+    guardianDetails: {
+      guardianname: string;
+      studentrelation: string;
+      occupation: string;
+      guardianphoneno: string;
+      guardianemailid: string;
+    };
+    academicsDetails: {
+      class: string;
+      section: string;
+      rollnumber: string;
+      housename: string;
+      busnumber: string;
+    };
+    newAdmission: boolean;
+    fees: string[];
+  };
 }
 
 // Define the shape of your state
 export interface userState {
-  studentMasterData: studentData[];
-  data: studentData | null;
-  showLoginForm: boolean;
-  isOtpSend: boolean;
-  isUserVerified: boolean;
-  error: string | null;
+  userId: string;
+  phone: string;
+  role: "student" | "schooladmin" | "superadmin";
+  otpVerified: boolean;
+  siblings: studentData[];
 }
 
 // Define the action types
 export type userAction =
+  | { type: "UPDATE_USERID"; payload: userState }
+  | { type: "ADD_NEW_STUDENT"; payload: studentData | null }
   | { type: "SHOW_LOGIN_FORM" }
   | { type: "IS_OPT_SEND" }
   | { type: "IS_USER_VERIFIED"; payload: any[] }

@@ -32,7 +32,7 @@ const Header = ({ t }: { t: TFunction }) => {
   const showLoginformHandler = () => {
     console.log("Login clicked");
     // console.log(ctx?.state?.showLoginForm);
-    ctx?.dispatch({ type: "SHOW_LOGIN_FORM" });
+    // ctx?.dispatch({ type: "SHOW_LOGIN_FORM" });
     navigate("/Login");
     //
   };

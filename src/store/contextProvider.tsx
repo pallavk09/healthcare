@@ -4,57 +4,66 @@ import { userAction, userState, studentData } from "../common/types";
 
 // Initial state
 const initialState: userState = {
-  studentMasterData: [],
-  data: null,
-  showLoginForm: false,
-  isOtpSend: false,
-  isUserVerified: false,
-  error: null,
+  userId: "",
+  phone: "",
+  role: "student",
+  otpVerified: false,
+  siblings: [],
 };
 
-const addUpdateMasterStudentData = (
-  studentMasterData: studentData[],
+const addUpdateSiblings = (
+  siblings: studentData[],
   studentData: studentData
 ): studentData[] => {
-  const studentIndex = studentMasterData.findIndex(
-    (student) => student.id === studentData.id
-  );
+  return [...siblings, studentData];
+  // const studentIndex = siblings.findIndex(
+  //   (student) => student.id === studentData.id
+  // );
 
-  //New Student
-  if (studentIndex === -1) {
-    return [...studentMasterData, studentData];
-  } else {
-    //Update existing student
-    return studentMasterData.map((student, index) =>
-      index === studentIndex ? studentData : student
-    );
-  }
+  // //New Student
+  // if (studentIndex === -1) {
+  //   return [...studentMasterData, studentData];
+  // } else {
+  //   //Update existing student
+  //   return studentMasterData.map((student, index) =>
+  //     index === studentIndex ? studentData : student
+  //   );
+  // }
 };
 
 // Reducer function
 const apiReducer = (state: userState, action: userAction): userState => {
   switch (action.type) {
-    case "SHOW_LOGIN_FORM":
+    case "UPDATE_USERID":
+      return {
+        ...action.payload,
+      };
+    case "ADD_NEW_STUDENT":
       return {
         ...state,
-        showLoginForm: true,
-        isOtpSend: false,
-        isUserVerified: false,
-        error: null,
+        siblings: addUpdateSiblings(state.siblings, action.payload!),
       };
-    case "IS_OPT_SEND":
-      return { ...state, isOtpSend: true, isUserVerified: false, error: null };
-    case "IS_USER_VERIFIED":
-      return { ...state, isUserVerified: true, error: null };
-    case "SAVE_STUDENT_DATA":
-      return {
-        ...state,
-        data: action.payload,
-        studentMasterData: addUpdateMasterStudentData(
-          state.studentMasterData,
-          action.payload
-        ),
-      };
+    // case "SHOW_LOGIN_FORM":
+    //   return {
+    //     ...state,
+    //     showLoginForm: true,
+    //     isOtpSend: false,
+    //     isUserVerified: false,
+    //     error: null,
+    //   };
+    // case "IS_OPT_SEND":
+    //   return { ...state, isOtpSend: true, isUserVerified: false, error: null };
+    // case "IS_USER_VERIFIED":
+    //   return { ...state, isUserVerified: true, error: null };
+    // case "SAVE_STUDENT_DATA":
+    //   return {
+    //     ...state,
+    //     data: action.payload,
+    //     studentMasterData: addUpdateMasterStudentData(
+    //       state.studentMasterData,
+    //       action.payload
+    //     ),
+    //   };
     default:
       return state;
   }
@@ -76,47 +85,3 @@ const ApiProvider = ({ children }: ApiProviderProps) => {
 };
 
 export default ApiProvider;
-
-//=========================================================================
-
-// import {
-//   createContext,
-//   Dispatch,
-//   SetStateAction,
-//   ReactNode,
-//   useState,
-// } from "react";
-
-// export type User = {
-//   phoneNumber: string;
-//   email: string;
-// };
-
-// export interface UserContextInterface {
-//   user: User;
-//   setUser: Dispatch<SetStateAction<User>>;
-// }
-
-// const initialUserState = {
-//   user: {
-//     phoneNumber: "",
-//     email: "",
-//   },
-//   setUser: (user: User) => {},
-// } as UserContextInterface;
-
-// export const userContext = createContext(initialUserState);
-
-// type UserProviderProps = {
-//   children: ReactNode;
-// };
-
-// export default function UserProvider({ children }: UserProviderProps) {
-//   const [user, setUser] = useState<User>(initialUserState.user);
-
-//   return (
-//     <userContext.Provider value={{ user, setUser }}>
-//       {children}
-//     </userContext.Provider>
-//   );
-// }
