@@ -3,7 +3,8 @@
 const FormatNewStudentPayload = (
   payload: any,
   userId: string | undefined,
-  studentId: string
+  studentId: string,
+  phone: string
 ) => {
   const personalDetails = {
     studentfullname: payload.studentfullname,
@@ -43,6 +44,7 @@ const FormatNewStudentPayload = (
 
   const formattedPayload = {
     userId: userId,
+    phone: phone,
     studentObj,
   };
 

@@ -5,6 +5,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Typography,
+  Box,
 } from "@mui/material";
 import CustomDatePicker from "../../DatePicker";
 import { UseFormRegister, FieldErrors, Controller } from "react-hook-form";
@@ -29,8 +31,20 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
 
   return (
     <>
+      {/* <Box
+        display={"flex"}
+        flexDirection={"row"}
+        alignItems={"center"}
+        justifyContent={"center"}
+        mt={-3}
+      >
+        <Typography variant="h5" color="#cb3d64" fontWeight={"Bold"}>
+          Student's Personal Details
+        </Typography>
+      </Box> */}
+
       {/* Student's Name */}
-      <Grid container spacing={4} sx={{ mt: -4 }}>
+      <Grid container spacing={4} sx={{ mt: -3 }}>
         <Grid item xs={12}>
           <TextField
             {...register("studentfullname", {

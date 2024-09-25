@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { Col, Form } from "antd";
 import { Fade } from "react-awesome-reveal";
 
@@ -23,6 +23,7 @@ import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import { SendOtp, ValidateOtp } from "../../api/login";
 import { ListStudents } from "../../api/students";
 import SuccessPopup from "../../common/SuccessPopup";
+import ApiContext from "../../store/context";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -51,7 +52,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
   const [_userId, setUserId] = useState();
 
   const navigate = useNavigate();
-  // const ctx = useContext(ApiContext);
+  const ctx = useContext(ApiContext);
   const [form] = Form.useForm();
 
   const snackbarRef = useRef<SnackbarHandle>(null);
@@ -62,7 +63,8 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
     setIsPopupOpen(false);
 
     //New User. Need to add students
-    navigate(`/studentregistration?userId=${_userId}`);
+    // navigate(`/studentregistration?userId=${_userId}`);
+    navigate(`/studentregistration/${_userId}`);
   };
 
   const startTimer = () => {
@@ -104,33 +106,43 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
       }
 
       if (values?.otp && isOtpSent) {
-        console.log("Success:", values);
-        console.log(values.otp);
         const response = await ValidateOtp(userPhone, values.otp);
-        console.log(response);
-        if (response?.message === "User logged in") {
-          setUserId(response?.userId);
-          console.log("User already registered.", response?.userId);
-          const studentList = await ListStudents(response?.userId);
-          console.log("Student List");
-          console.log(studentList);
-          if (
-            studentList &&
-            studentList?.result &&
-            studentList?.result?.length === 0
-          )
-            navigate(`/studentregistration?userId=${response?.userId}`);
-          else if (
-            studentList &&
-            studentList?.result &&
-            studentList?.result?.length > 0
-          )
-            // navigate(`/studentdashboard?userId=${response?.userId}`);
-            console.log("Student already present");
-        } else if (response?.message === "User registered") {
-          console.log("New user registered", response?.userId);
-          setUserId(response?.userId);
-          setIsPopupOpen(true);
+        if (response?.status === "SUCCESS") {
+          //UPDATE CONTEXT WITH USER LOGGED IN TRUE
+          ctx?.dispatch({
+            type: "UPDATE_USER_LOGGEDIN",
+            payload: { phone: userPhone!, userId: response?.userId! },
+          });
+          if (response?.message === "User logged in") {
+            setUserId(response?.userId);
+            //USER ALREADY REGISTERED
+            //CHECKING IF STUDENT PRESENT FOR THIS USER
+            console.log("printing response - user logged in");
+            console.log(response);
+            const studentList = await ListStudents(response?.userId);
+            console.log("printing student list - user logged in");
+            console.log(studentList);
+            if (
+              //NO STUDENT PRESENT FOR THIS USER
+              //NAVIGATING TO REGISTRATION PAGE
+              studentList &&
+              studentList?.result &&
+              studentList?.result?.length === 0
+            )
+              navigate(`/studentregistration/${response?.userId}`);
+            else if (
+              studentList &&
+              studentList?.result &&
+              studentList?.result?.length > 0
+            )
+              //STUDENT PRESENT FOR THIS USER
+              //NAVIGATING TO DASHBOARD
+              navigate(`/studentdashboard/${response?.userId}`);
+          } else if (response?.message === "User registered") {
+            console.log("New user registered", response?.userId);
+            setUserId(response?.userId);
+            setIsPopupOpen(true);
+          }
         }
       }
     } catch (error) {

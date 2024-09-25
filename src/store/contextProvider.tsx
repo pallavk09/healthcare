@@ -6,6 +6,7 @@ import { userAction, userState, studentData } from "../common/types";
 const initialState: userState = {
   userId: "",
   phone: "",
+  isLoggedIn: false,
   role: "student",
   otpVerified: false,
   siblings: [],
@@ -36,7 +37,26 @@ const apiReducer = (state: userState, action: userAction): userState => {
   switch (action.type) {
     case "UPDATE_USERID":
       return {
-        ...action.payload,
+        ...state,
+        userId: action.payload,
+      };
+    case "UPDATE_USER_LOGGEDIN":
+      return {
+        ...state,
+        isLoggedIn: true,
+        otpVerified: true,
+        phone: action.payload.phone,
+        userId: action.payload.userId,
+      };
+    case "RESET_USER":
+      return {
+        ...state,
+        userId: "",
+        phone: "",
+        isLoggedIn: false,
+        role: "student",
+        otpVerified: false,
+        siblings: [],
       };
     case "ADD_NEW_STUDENT":
       return {

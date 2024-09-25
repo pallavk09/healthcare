@@ -4,7 +4,7 @@ import { Box, styled, Button, CircularProgress } from "@mui/material";
 import TopStepper from "../TopStepper";
 import { Fade } from "react-awesome-reveal";
 import { ContentSection } from "./styles";
-import { useNavigate, useLocation } from "react-router-dom";
+import { json, useNavigate, useParams, useLoaderData } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 // import { Button } from "../../common/Button";
 import { StudentRegistrationForms as steps } from "../../Config/config";
@@ -20,6 +20,7 @@ import SummaryPage from "./Forms/SummaryPage";
 import { FormatNewStudentPayload } from "../../helper/formatPayload";
 import { CreateNewStudent } from "../../api/students";
 import SuccessPopup from "../../common/SuccessPopup";
+import { GetRegisteredUser } from "../../api/registration";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -37,6 +38,23 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
   },
 }));
 
+export async function Loader({ params }: { params: any }) {
+  try {
+    const registeredUser = await GetRegisteredUser(params.userId!);
+
+    if (registeredUser?.user && registeredUser?.user?.length > 0) {
+      return registeredUser?.user;
+    } else {
+      throw json({ message: "Could not fetch students" }, { status: 500 });
+    }
+  } catch (error: any) {
+    throw json(
+      { message: `Could not fetch registered user. Error${error.message}` },
+      { status: 500 }
+    );
+  }
+}
+
 const RegistrationBlock = () => {
   const ctx = React.useContext(ApiContext);
   const [activeStep, setActiveStep] = React.useState(0);
@@ -47,34 +65,41 @@ const RegistrationBlock = () => {
   const [isPopupOpen, setIsPopupOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
+  const params = useParams();
+  const registeredUserData = useLoaderData() as any;
 
-  const userObj: userState = {
-    userId: "",
-    phone: "",
-    role: "student",
-    otpVerified: false,
-    siblings: [],
-  };
+  console.log("Loader Data");
+  console.log(JSON.stringify(registeredUserData));
+  console.log("Loader Data ----- Phone");
+  console.log(registeredUserData[0].phone);
+
+  // const userObj: userState = {
+  //   userId: "",
+  //   phone: "",
+  //   isLoggedIn: false,
+  //   role: "student",
+  //   otpVerified: false,
+  //   siblings: [],
+  // };
 
   const handleClosePopup = () => {
     setIsPopupOpen(false);
 
     //New User. Need to add students
-    navigate(`/studentdashboard?userId=${_userId}`);
+    navigate(`/studentdashboard/${_userId}`);
   };
 
-  const getQueryParams = (search: string) => {
-    return new URLSearchParams(search);
-  };
   useEffect(() => {
-    const queryParams = getQueryParams(location.search);
-    const userId = queryParams.get("userId");
-    console.log(`UserID as ${userId}`);
-    ctx?.dispatch({
-      type: "UPDATE_USERID",
-      payload: { ...userObj, userId: userId! },
-    });
+    console.log("Under useEffect of Registration block");
+    const userId = params.userId;
+    console.log(ctx?.state);
+    // console.log(`UserID as ${userId}`);
+    // console.log("Context Updated");
+    // ctx?.dispatch({
+    //   type: "UPDATE_USERID",
+    //   payload: userId,
+    // });
     setUserId(userId!);
   }, []);
 
@@ -132,14 +157,16 @@ const RegistrationBlock = () => {
         const newStudentData = methods.getValues();
         console.log("Form Values: ", newStudentData);
         const studentId = `studid${uuid()}`;
+        const phone = registeredUserData[0]?.phone;
+        console.log("handleNext: userId -------------> ", _userId);
         const value_Formatted = FormatNewStudentPayload(
           newStudentData,
           _userId,
-          studentId
+          studentId,
+          phone
         );
         console.log(`Formatted value`);
         console.log(value_Formatted);
-        // SetStudentDataState(value_Formatted as studentData);
         SetStudentDataState(value_Formatted as studentData);
       }
       setActiveStep((prevStep) => prevStep + 1);

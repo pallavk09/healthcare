@@ -8,7 +8,7 @@ const FormBlock = lazy(() => import("../../components/FormBlock"));
 const Login = () => {
   return (
     <>
-      <HeaderLogin />
+      {/* <HeaderLogin /> */}
       <Container>
         <FormBlock icon="waving.svg" id="loginform" direction="left" />
       </Container>

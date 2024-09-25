@@ -40,6 +40,7 @@ export interface validateProps {
 
 export interface studentData {
   userId: string;
+  phone: string;
   studentObj: {
     id: string;
     personalDetails: {
@@ -73,8 +74,9 @@ export interface studentData {
 
 // Define the shape of your state
 export interface userState {
-  userId: string;
+  userId: string | undefined;
   phone: string;
+  isLoggedIn: boolean;
   role: "student" | "schooladmin" | "superadmin";
   otpVerified: boolean;
   siblings: studentData[];
@@ -82,7 +84,9 @@ export interface userState {
 
 // Define the action types
 export type userAction =
-  | { type: "UPDATE_USERID"; payload: userState }
+  | { type: "UPDATE_USERID"; payload: string | undefined }
+  | { type: "UPDATE_USER_LOGGEDIN"; payload: { phone: string; userId: string } }
+  | { type: "RESET_USER" }
   | { type: "ADD_NEW_STUDENT"; payload: studentData | null }
   | { type: "SHOW_LOGIN_FORM" }
   | { type: "IS_OPT_SEND" }

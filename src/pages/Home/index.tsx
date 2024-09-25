@@ -21,7 +21,7 @@ const ContentBlock = lazy(() => import("../../components/ContentBlock"));
 const Home = () => {
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       <Container>
         <ScrollToTop />
         <ContentBlock

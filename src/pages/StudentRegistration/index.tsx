@@ -10,7 +10,6 @@ const RegistrationBlock = lazy(
 const StudentRegistration = () => {
   return (
     <>
-      <HeaderLogin />
       <Container>
         <RegistrationBlock />
       </Container>

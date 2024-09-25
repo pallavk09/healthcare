@@ -22,8 +22,13 @@ const ValidateOtp = async (phoneNumber: string | null, otp: string | null) => {
   const response = await axios_instance.post("/auth/validate-otp", data);
   console.log(response);
   if (response?.data?.status === "SUCCESS") {
+    console.log("Printing Login Response");
+    console.log(response);
+    localStorage.setItem("token", response?.data?.token);
+
     return response.data;
   } else {
+    console.error("Error verifying OTP", response);
     return null;
   }
 };

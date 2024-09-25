@@ -42,7 +42,6 @@ const SchoolAdmin: React.FC = () => {
   };
   return (
     <>
-      <HeaderLogin />
       <Grid
         container
         spacing={3}

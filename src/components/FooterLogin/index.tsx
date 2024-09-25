@@ -18,7 +18,9 @@ const FooterLogin = ({ t }: { t: TFunction }) => {
             alignItems: "center",
           }}
         >
-          <Typography variant="body2">Powered By Asaan</Typography>
+          <Typography variant="body2">
+            Powered By <strong> Asaan</strong>
+          </Typography>
         </Box>
       </FooterSection>
     </>

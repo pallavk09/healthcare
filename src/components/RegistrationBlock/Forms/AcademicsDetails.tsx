@@ -5,6 +5,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Box,
+  Typography,
 } from "@mui/material";
 import React from "react";
 import { UseFormRegister, FieldErrors, Controller } from "react-hook-form";
@@ -23,185 +25,199 @@ const AcademicsDetails: React.FC<AcademicsDetailsType> = ({
   trigger,
 }) => {
   return (
-    <Grid container spacing={2} sx={{ mt: -4 }}>
-      {/**Class, Section and Roll Number*/}
-      <Grid
-        item
-        xs={12}
+    <>
+      {/* <Box
         display={"flex"}
         flexDirection={"row"}
-        justifyContent={"space-between"}
+        alignItems={"center"}
+        justifyContent={"center"}
+        mt={-3}
       >
-        <FormControl
-          size="small"
-          variant="standard"
-          sx={{ width: "30%", mt: 0 }}
+        <Typography variant="h5" color="#cb3d64" fontWeight={"Bold"}>
+          Student's Academic Details
+        </Typography>
+      </Box> */}
+
+      <Grid container spacing={2} sx={{ mt: 0 }}>
+        {/**Class, Section and Roll Number*/}
+        <Grid
+          item
+          xs={12}
+          display={"flex"}
+          flexDirection={"row"}
+          justifyContent={"space-between"}
         >
-          <InputLabel
-            id="lblclass"
-            error={Boolean(errors?.class)}
-            onBlur={() => trigger("class")}
-            required
+          <FormControl
+            size="small"
+            variant="standard"
+            sx={{ width: "30%", mt: 0 }}
           >
-            Class
-          </InputLabel>
-          <Controller
-            name="class"
-            control={control}
-            rules={{ required: "required" }}
-            render={({ field }) => (
-              <>
-                <Select
-                  labelId="lblclass"
-                  id="class"
-                  label="Class"
-                  {...field}
-                  error={Boolean(errors?.class)}
-                  onBlur={() => trigger("class")}
-                >
-                  <MenuItem value="">
-                    <em>Select</em>
-                  </MenuItem>
-                  <MenuItem value={"lkg"}>LKG</MenuItem>
-                  <MenuItem value={"ukg"}>UKG</MenuItem>
-                  <MenuItem value={"class-I"}>CLASS-I</MenuItem>
-                </Select>
-              </>
-            )}
-          />
-        </FormControl>
+            <InputLabel
+              id="lblclass"
+              error={Boolean(errors?.class)}
+              onBlur={() => trigger("class")}
+              required
+            >
+              Class
+            </InputLabel>
+            <Controller
+              name="class"
+              control={control}
+              rules={{ required: "required" }}
+              render={({ field }) => (
+                <>
+                  <Select
+                    labelId="lblclass"
+                    id="class"
+                    label="Class"
+                    {...field}
+                    error={Boolean(errors?.class)}
+                    onBlur={() => trigger("class")}
+                  >
+                    <MenuItem value="">
+                      <em>Select</em>
+                    </MenuItem>
+                    <MenuItem value={"lkg"}>LKG</MenuItem>
+                    <MenuItem value={"ukg"}>UKG</MenuItem>
+                    <MenuItem value={"class-I"}>CLASS-I</MenuItem>
+                  </Select>
+                </>
+              )}
+            />
+          </FormControl>
 
-        <FormControl
-          size="small"
-          variant="standard"
-          sx={{ width: "30%", mt: 0 }}
-        >
-          <InputLabel
-            id="lblsection"
-            error={Boolean(errors?.section)}
-            onBlur={() => trigger("section")}
-            required
+          <FormControl
+            size="small"
+            variant="standard"
+            sx={{ width: "30%", mt: 0 }}
           >
-            Section
-          </InputLabel>
-          <Controller
-            name="section"
-            control={control}
-            rules={{ required: "required" }}
-            render={({ field }) => (
-              <>
-                <Select
-                  labelId="lblsection"
-                  id="section"
-                  label="Section"
-                  {...field}
-                  error={Boolean(errors?.section)}
-                  onBlur={() => trigger("section")}
-                >
-                  <MenuItem value="">
-                    <em>Select</em>
-                  </MenuItem>
-                  <MenuItem value={"a"}>A</MenuItem>
-                  <MenuItem value={"b"}>B</MenuItem>
-                  <MenuItem value={"c"}>C</MenuItem>
-                  <MenuItem value={"d"}>D</MenuItem>
-                </Select>
-              </>
-            )}
+            <InputLabel
+              id="lblsection"
+              error={Boolean(errors?.section)}
+              onBlur={() => trigger("section")}
+              required
+            >
+              Section
+            </InputLabel>
+            <Controller
+              name="section"
+              control={control}
+              rules={{ required: "required" }}
+              render={({ field }) => (
+                <>
+                  <Select
+                    labelId="lblsection"
+                    id="section"
+                    label="Section"
+                    {...field}
+                    error={Boolean(errors?.section)}
+                    onBlur={() => trigger("section")}
+                  >
+                    <MenuItem value="">
+                      <em>Select</em>
+                    </MenuItem>
+                    <MenuItem value={"a"}>A</MenuItem>
+                    <MenuItem value={"b"}>B</MenuItem>
+                    <MenuItem value={"c"}>C</MenuItem>
+                    <MenuItem value={"d"}>D</MenuItem>
+                  </Select>
+                </>
+              )}
+            />
+          </FormControl>
+          <TextField
+            {...register("rollnumber", { required: "required" })}
+            sx={{ width: "30%", mt: 0 }}
+            label="Roll Number"
+            variant="standard"
+            size="small"
+            type="number"
+            error={Boolean(errors?.rollnumber)}
+            onBlur={() => trigger("rollnumber")}
+            required
           />
-        </FormControl>
-        <TextField
-          {...register("rollnumber", { required: "required" })}
-          sx={{ width: "30%", mt: 0 }}
-          label="Roll Number"
-          variant="standard"
-          size="small"
-          type="number"
-          error={Boolean(errors?.rollnumber)}
-          onBlur={() => trigger("rollnumber")}
-          required
-        />
+        </Grid>
+
+        {/**House Name */}
+
+        <Grid item xs={12}>
+          <FormControl size="small" variant="standard" fullWidth>
+            <InputLabel
+              id="lblhousename"
+              error={Boolean(errors?.housename)}
+              onBlur={() => trigger("housename")}
+              required
+            >
+              House Name
+            </InputLabel>
+            <Controller
+              name="housename"
+              control={control}
+              rules={{ required: "required" }}
+              render={({ field }) => (
+                <>
+                  <Select
+                    labelId="lblhousename"
+                    id="housename"
+                    label="HouseName"
+                    {...field}
+                    error={Boolean(errors?.housename)}
+                    onBlur={() => trigger("housename")}
+                  >
+                    <MenuItem value="">
+                      <em>Select</em>
+                    </MenuItem>
+                    <MenuItem value={"house1"}>House 1</MenuItem>
+                    <MenuItem value={"house2"}>House 2</MenuItem>
+                    <MenuItem value={"house3"}>House 3</MenuItem>
+                    <MenuItem value={"house4"}>House 4</MenuItem>
+                  </Select>
+                </>
+              )}
+            />
+          </FormControl>
+        </Grid>
+
+        {/* Bus Number */}
+        <Grid item xs={4}>
+          <FormControl size="small" variant="standard" fullWidth>
+            <InputLabel
+              id="lblbusnumber"
+              error={Boolean(errors?.busnumber)}
+              onBlur={() => trigger("busnumber")}
+              required
+            >
+              Bus Number
+            </InputLabel>
+            <Controller
+              name="busnumber"
+              control={control}
+              rules={{ required: "required" }}
+              render={({ field }) => (
+                <>
+                  <Select
+                    labelId="lblbusnumber"
+                    id="busnumber"
+                    label="Busnumber"
+                    {...field}
+                    error={Boolean(errors?.busnumber)}
+                    onBlur={() => trigger("busnumber")}
+                  >
+                    <MenuItem value="">
+                      <em>Select</em>
+                    </MenuItem>
+                    <MenuItem value={"bus1"}>Bus 1</MenuItem>
+                    <MenuItem value={"bus2"}>Bus 2</MenuItem>
+                    <MenuItem value={"bus3"}>Bus 3</MenuItem>
+                    <MenuItem value={"bus4"}>Bus 4</MenuItem>
+                  </Select>
+                </>
+              )}
+            />
+          </FormControl>
+        </Grid>
       </Grid>
-
-      {/**House Name */}
-
-      <Grid item xs={12}>
-        <FormControl size="small" variant="standard" fullWidth>
-          <InputLabel
-            id="lblhousename"
-            error={Boolean(errors?.housename)}
-            onBlur={() => trigger("housename")}
-            required
-          >
-            House Name
-          </InputLabel>
-          <Controller
-            name="housename"
-            control={control}
-            rules={{ required: "required" }}
-            render={({ field }) => (
-              <>
-                <Select
-                  labelId="lblhousename"
-                  id="housename"
-                  label="HouseName"
-                  {...field}
-                  error={Boolean(errors?.housename)}
-                  onBlur={() => trigger("housename")}
-                >
-                  <MenuItem value="">
-                    <em>Select</em>
-                  </MenuItem>
-                  <MenuItem value={"house1"}>House 1</MenuItem>
-                  <MenuItem value={"house2"}>House 2</MenuItem>
-                  <MenuItem value={"house3"}>House 3</MenuItem>
-                  <MenuItem value={"house4"}>House 4</MenuItem>
-                </Select>
-              </>
-            )}
-          />
-        </FormControl>
-      </Grid>
-
-      {/* Bus Number */}
-      <Grid item xs={4}>
-        <FormControl size="small" variant="standard" fullWidth>
-          <InputLabel
-            id="lblbusnumber"
-            error={Boolean(errors?.busnumber)}
-            onBlur={() => trigger("busnumber")}
-            required
-          >
-            Bus Number
-          </InputLabel>
-          <Controller
-            name="busnumber"
-            control={control}
-            rules={{ required: "required" }}
-            render={({ field }) => (
-              <>
-                <Select
-                  labelId="lblbusnumber"
-                  id="busnumber"
-                  label="Busnumber"
-                  {...field}
-                  error={Boolean(errors?.busnumber)}
-                  onBlur={() => trigger("busnumber")}
-                >
-                  <MenuItem value="">
-                    <em>Select</em>
-                  </MenuItem>
-                  <MenuItem value={"bus1"}>Bus 1</MenuItem>
-                  <MenuItem value={"bus2"}>Bus 2</MenuItem>
-                  <MenuItem value={"bus3"}>Bus 3</MenuItem>
-                  <MenuItem value={"bus4"}>Bus 4</MenuItem>
-                </Select>
-              </>
-            )}
-          />
-        </FormControl>
-      </Grid>
-    </Grid>
+    </>
   );
 };
 

@@ -31,10 +31,10 @@ const NewAdmissionForm = () => {
   };
 
   return (
-    <div>
-      <Typography variant="h5" gutterBottom>
+    <Box p={1}>
+      {/* <Typography variant="h5" gutterBottom>
         Apply for Admission
-      </Typography>
+      </Typography> */}
       {/* Apply for Admission Form */}
       <Box
         component="form"
@@ -148,11 +148,11 @@ const NewAdmissionForm = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <Button max_width="200px">Apply</Button>
+            <Button max_width="100px">Apply</Button>
           </Grid>
         </Grid>
       </Box>
-    </div>
+    </Box>
   );
 };
 
