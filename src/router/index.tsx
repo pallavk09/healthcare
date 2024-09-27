@@ -1,19 +1,13 @@
 import { Suspense, lazy } from "react";
 import { Styles } from "../styles/styles";
-import {
-  Routes,
-  Route,
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import routes from "./config";
-// import Header from "../components/Header";
-// import Footer from "../components/Footer";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import ProtectedRoute from "../common/ProtectedRoute";
 
 import { Loader as StudentDashboardLoader } from "../pages/StudentDashboard";
 import { Loader as RegistrationLoader } from "../components/RegistrationBlock";
+import SchoolAdmin from "../pages/SchoolAdmin";
+import NewAdmission from "../pages/NewAdmission";
 
 const RootLayout = lazy(() => import("../pages/RootLayout"));
 const Home = lazy(() => import("../pages/Home"));
@@ -28,6 +22,20 @@ const myRouter = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <Home /> },
+      {
+        path: "newadmission",
+        element: <NewAdmission />,
+        children: [
+          {
+            path: "apply/:userId",
+            element: "",
+          },
+          {
+            path: "trackmyapplication/:userId",
+            element: "",
+          },
+        ],
+      },
       { path: "login", element: <Login /> },
       {
         path: "studentregistration/:userId",
@@ -46,6 +54,10 @@ const myRouter = createBrowserRouter([
           </ProtectedRoute>
         ),
         loader: StudentDashboardLoader,
+      },
+      {
+        path: "schooladmin/",
+        element: <SchoolAdmin />,
       },
     ],
   },

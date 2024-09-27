@@ -41,7 +41,7 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
+const NewAdmissionBlock = ({ icon, id, direction }: ContentBlockProps) => {
   const [loading, setLoading] = useState(false);
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
@@ -106,42 +106,38 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
       }
 
       if (values?.otp && isOtpSent) {
-        const response = await ValidateOtp(userPhone, values.otp, "STUDENT");
+        const response = await ValidateOtp(
+          userPhone,
+          values.otp,
+          "NEWADMISSION"
+        );
         if (response?.status === "SUCCESS") {
-          //UPDATE CONTEXT WITH USER LOGGED IN TRUE
-          ctx?.dispatch({
-            type: "UPDATE_USER_LOGGEDIN",
-            payload: { phone: userPhone!, userId: response?.userId! },
-          });
           if (response?.message === "User logged in") {
             setUserId(response?.userId);
             //USER ALREADY REGISTERED
-            //CHECKING IF STUDENT PRESENT FOR THIS USER
-            console.log("printing response - user logged in");
-            console.log(response);
-            const studentList = await ListStudents(response?.userId);
-            console.log("printing student list - user logged in");
-            console.log(studentList);
+            //CHECKING IF ADMISSION FORM IS FILLED
+            const formList = await ListStudents(response?.userId);
             if (
-              //NO STUDENT PRESENT FOR THIS USER
-              //NAVIGATING TO REGISTRATION PAGE
-              studentList &&
-              studentList?.result &&
-              studentList?.result?.length === 0
+              //ADMISSION FORM NOT FILLED FOR THIS USER
+              //NAVIGATING TO ADMISSION FORM PAGE
+              formList &&
+              formList?.result &&
+              formList?.result?.length === 0
             )
-              navigate(`/studentregistration/${response?.userId}`);
+              navigate(`apply/${response?.userId}`);
             else if (
-              studentList &&
-              studentList?.result &&
-              studentList?.result?.length > 0
+              formList &&
+              formList?.result &&
+              formList?.result?.length > 0
             )
-              //STUDENT PRESENT FOR THIS USER
-              //NAVIGATING TO DASHBOARD
-              navigate(`/studentdashboard/${response?.userId}`);
+              //ADMISSION FORM FILLED FOR THIS USER
+              //NAVIGATING TRACK APPLICATION STATUS PAGE
+              navigate(`trackmyapplication/${response?.userId}`);
           } else if (response?.message === "User registered") {
-            console.log("New user registered", response?.userId);
+            console.log("New admission registered", response?.userId);
             setUserId(response?.userId);
-            setIsPopupOpen(true);
+            //NAVIGATING TO ADMISSION FORM PAGE
+            navigate(`apply/${response?.userId}`);
           }
         }
       }
@@ -183,10 +179,10 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
         >
           {/* <ToastContainer /> */}
           <Col lg={11} md={11} sm={12} xs={24}>
-            <SvgIcon src={icon} width="100%" height="100%" />
+            <SvgIcon src={icon} width="100%" height="90%" />
           </Col>
           <Col lg={11} md={11} sm={12} xs={24}>
-            <h6 style={{ marginBottom: "15px" }}>Hey, There!</h6>
+            <h6 style={{ marginBottom: "15px" }}>Welcome User!</h6>
             {!isOtpSent && (
               <Form
                 form={form}
@@ -316,4 +312,4 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
   );
 };
 
-export default FormBlock;
+export default NewAdmissionBlock;

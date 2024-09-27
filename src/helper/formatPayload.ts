@@ -4,7 +4,8 @@ const FormatNewStudentPayload = (
   payload: any,
   userId: string | undefined,
   studentId: string,
-  phone: string
+  phone: string,
+  newAdmission?: boolean
 ) => {
   const personalDetails = {
     studentfullname: payload.studentfullname,
@@ -26,11 +27,11 @@ const FormatNewStudentPayload = (
   };
 
   const academicsDetails = {
-    class: "",
-    section: "",
-    rollnumber: "",
-    housename: "",
-    busnumber: "",
+    class: payload.class,
+    section: payload.section,
+    rollnumber: payload.rollnumber,
+    housename: payload.housename,
+    busnumber: payload.busnumber,
   };
 
   const studentObj = {
@@ -38,7 +39,7 @@ const FormatNewStudentPayload = (
     personalDetails,
     guardianDetails,
     academicsDetails,
-    newAdmission: true,
+    newAdmission: newAdmission || false,
     fees: [],
   };
 

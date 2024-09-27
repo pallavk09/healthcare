@@ -13,10 +13,15 @@ const SendOtp = async (phoneNumber: string | null) => {
   }
 };
 
-const ValidateOtp = async (phoneNumber: string | null, otp: string | null) => {
+const ValidateOtp = async (
+  phoneNumber: string | null,
+  otp: string | null,
+  type: string
+) => {
   const data = {
     phone: phoneNumber,
     otp: otp,
+    type,
   };
 
   const response = await axios_instance.post("/auth/validate-otp", data);

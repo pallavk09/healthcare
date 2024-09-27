@@ -43,7 +43,6 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
         </Typography>
       </Box> */}
 
-      {/* Student's Name */}
       <Grid container spacing={4} sx={{ mt: -3 }}>
         <Grid item xs={12}>
           <TextField

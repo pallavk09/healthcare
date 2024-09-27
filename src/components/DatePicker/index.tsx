@@ -16,6 +16,7 @@ interface CustomDatePickerType {
   errors: FieldErrors<any>;
   rules?: Object;
   defaultValue?: Date | null;
+  disabled?: boolean;
 }
 
 const CustomDatePicker: React.FC<CustomDatePickerType> = ({
@@ -26,6 +27,7 @@ const CustomDatePicker: React.FC<CustomDatePickerType> = ({
   errors,
   rules = {},
   defaultValue = null,
+  disabled,
 }) => {
   // const {
   //   control,
@@ -44,6 +46,7 @@ const CustomDatePicker: React.FC<CustomDatePickerType> = ({
             <>
               <DatePicker
                 label={label}
+                disabled={disabled}
                 value={field.value}
                 onChange={(newvalue) => field.onChange(newvalue)}
                 slots={{

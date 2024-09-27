@@ -87,7 +87,8 @@ export type userAction =
   | { type: "UPDATE_USERID"; payload: string | undefined }
   | { type: "UPDATE_USER_LOGGEDIN"; payload: { phone: string; userId: string } }
   | { type: "RESET_USER" }
-  | { type: "ADD_NEW_STUDENT"; payload: studentData | null }
+  | { type: "ADD_NEW_STUDENT"; payload: studentData[] | null }
+  | { type: "LOAD_EXISTING_STUDENTS"; payload: studentData[] | null }
   | { type: "SHOW_LOGIN_FORM" }
   | { type: "IS_OPT_SEND" }
   | { type: "IS_USER_VERIFIED"; payload: any[] }

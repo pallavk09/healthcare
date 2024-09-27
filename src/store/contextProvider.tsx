@@ -14,9 +14,9 @@ const initialState: userState = {
 
 const addUpdateSiblings = (
   siblings: studentData[],
-  studentData: studentData
+  studentData: studentData[]
 ): studentData[] => {
-  return [...siblings, studentData];
+  return [...siblings, ...studentData];
   // const studentIndex = siblings.findIndex(
   //   (student) => student.id === studentData.id
   // );
@@ -62,6 +62,11 @@ const apiReducer = (state: userState, action: userAction): userState => {
       return {
         ...state,
         siblings: addUpdateSiblings(state.siblings, action.payload!),
+      };
+    case "LOAD_EXISTING_STUDENTS":
+      return {
+        ...state,
+        siblings: action.payload!,
       };
     // case "SHOW_LOGIN_FORM":
     //   return {

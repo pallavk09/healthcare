@@ -1,48 +1,33 @@
-import { lazy, useState, useContext, useEffect } from "react";
+//#region Import Statements
+import { lazy, useState, useContext, useEffect, useRef } from "react";
 import ApiContext from "../../store/context";
 import {
   Avatar,
   Button,
   Card,
   CardContent,
-  DialogActions,
   Grid,
-  TextField,
   Typography,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  styled,
   Box,
-  // Container,
 } from "@mui/material";
 import Carousel from "react-material-ui-carousel";
 import StudentProfileDashboard from "../../components/Dashboard/StudentProfileDashboard";
-// import { Button } from "../../common/Button";
-import formatDate from "../../common/utils/formatDate";
-
-import HeaderLogin from "../../components/HeaderLogin";
 import FooterLogin from "../../components/FooterLogin";
-import { useParams, useLoaderData, json } from "react-router-dom";
-import { ListStudents } from "../../api/students";
+import { useLoaderData, json } from "react-router-dom";
+import { CreateNewStudent, ListStudents } from "../../api/students";
+import { studentData } from "../../common/types";
+import ProfileDialog from "../../components/ProfileDialog";
+import { MyCustomButton } from "../../common/MyCustomControls";
+import formatDate from "../../common/utils/formatDate";
+import { FormatNewStudentPayload } from "../../helper/formatPayload";
+import { v4 as uuid } from "uuid";
+import { useNavigate } from "react-router-dom";
+import LoadingDialog from "../../common/LoadingDialog";
+import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 
 const Container = lazy(() => import("../../common/Container"));
 
-const MyCustomButton = styled(Button)(({ theme }) => ({
-  fontFamily: "Motiva Sans Bold",
-  fontSize: "0.80rem",
-  fontWeight: "700",
-  border: "1px solid #edf3f5",
-  borderRadius: "4px",
-  background: "#2e186a",
-  boxShadow: "0 16px 30px rgb(23 31 114 / 20%)",
-  marginTop: "0rem",
-  "&:hover": {
-    color: "#fff",
-    border: "1px solid rgb(255, 130, 92)",
-    backgroundColor: "rgb(255, 130, 92)",
-  },
-}));
+//#endregion
 
 const AnimatedButton = ({
   label,
@@ -107,125 +92,186 @@ export async function Loader({ params }: { params: any }) {
 
 const StudentDashboard = () => {
   const ctx = useContext(ApiContext);
-  console.log("Student Dashboard.");
-  console.log(ctx?.state);
+  const navigate = useNavigate();
+  // const [selectedStudent, setSelectedStudent] = useState(initialStudents[0]);
+  const [selectedStudent, setSelectedStudent] = useState<studentData>();
+  const [students, setStudents] = useState<studentData[] | null>();
+  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [addSibling, setAddSibling] = useState(false);
+  const [loading, setLoading] = useState(false);
+  // Reference to control reset from parent
+  const resetFormRef = useRef<() => void>(() => {});
+  const snackbarRef = useRef<SnackbarHandle>(null);
+  const onClose = () => {
+    if (resetFormRef.current) {
+      resetFormRef.current(); // Reset the form to its initial state
+    }
+    setProfileDialogOpen(false);
+    setIsEditing(false);
+  };
+
   const studentData = useLoaderData() as any;
 
-  console.log("Printing student from Loader data");
-  console.log(studentData);
   useEffect(() => {
-    // console.log("Under useEffect of Student dashboard block");
-    // console.log(ctx?.state);
-
     console.log("Under useEffect. Printing student from Loader data");
     console.log(studentData);
-    //Possibility of page refresh
-    //Write function to format structure and updare context
+    const studentFormatted = formatStudentDataForContext(studentData);
+    console.log("Formatted Student Data");
+    console.log(studentFormatted);
+    //Update Context with student data. Go as siblings array
+    setStudents(studentFormatted);
+    console.log(
+      `Prinint studentFormatted![0]: ${JSON.stringify(studentFormatted![0])}`
+    );
+    setSelectedStudent(studentFormatted![0]);
+    ctx?.dispatch({
+      type: "LOAD_EXISTING_STUDENTS",
+      payload: studentFormatted,
+    });
   }, []);
-  const initialStudents = [
-    {
-      id: 1,
-      name: "John Doe",
-      class: "10th Grade",
-      photo: "https://via.placeholder.com/150",
-      details: "John is a 10th-grade student excelling in science and math.",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      class: "9th Grade",
-      photo: "https://via.placeholder.com/150",
-      details:
-        "Jane is a 9th-grade student with a passion for art and literature.",
-    },
-    {
-      id: 3,
-      name: "Tom Hanks",
-      class: "11th Grade",
-      photo: "https://via.placeholder.com/150",
-      details:
-        "Tom is an 11th-grade student who excels in sports and leadership.",
-    },
-  ];
 
-  // const dummyData = [
-  //   {
-  //     userId: "66ed6c390012595e90ab",
-  //     studentObj: {
-  //       id: "1",
-  //       personalDetails: {
-  //         studentfullname: "Pallav Kumar",
-  //         addressline1: "New Delhi Tent House",
-  //         addressline2: "Bus Stand, Jail Hata",
-  //         addresscity: "Daltonganj",
-  //         addressstate: "Jharkhand",
-  //         addresspincode: "822101",
-  //         studentdob: "13/06/1990",
-  //         studentgender: "Male",
-  //       },
-  //       guardianDetails: {
-  //         guardianname: "Mukul Vishwakarma",
-  //         studentrelation: "Father",
-  //         occupation: "Business",
-  //         guardianphoneno: "+918580370340",
-  //         guardianemailid: "pallavk09@gmail.com",
-  //       },
-  //       academicsDetails: {
-  //         class: "CLASS-I",
-  //         section: "B",
-  //         rollnumber: "12",
-  //         housename: "House1",
-  //         busnumber: "Bus1",
-  //       },
-  //       newAdmission: false,
-  //       fees: [],
-  //     },
-  //   },
-  // ];
+  const openProfileDialog = () => {
+    console.log("Manage Profile clicked");
+    setProfileDialogOpen(true);
+  };
 
-  const [selectedStudent, setSelectedStudent] = useState(initialStudents[0]);
-  const [open, setOpen] = useState(false);
-  const [students, setStudents] = useState(initialStudents);
-  const [newStudent, setNewStudent] = useState({
-    name: "",
-    class: "",
-    photo: "",
-    details: "",
-  });
+  const formatStudentDataForContext = (studentArray: any) => {
+    let siblingsArray: studentData[] | null;
+    try {
+      // let siblingsArray: studentData[] | {} = {};
+      siblingsArray = studentArray.map((student: any) => {
+        return {
+          userId: student.userId,
+          phone: student.phone,
+          newAdmission: student.newAdmission,
+          fees: student.fees,
+          studentObj: {
+            id: student.studentId,
+            personalDetails: {
+              ...student.personalDetails,
+              studentdob: formatDate(student.personalDetails.studentdob),
+            },
+            guardianDetails: student.guardianDetails,
+            academicsDetails: student.academicsDetails,
+          },
+        };
+      });
+      return siblingsArray;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  };
 
   const handleCarouselChange = (studentIndex: any) => {
-    setSelectedStudent(students[studentIndex]);
+    console.log(`Student Index is: ${studentIndex}`);
+    if (students && students.length > 0)
+      setSelectedStudent(students[studentIndex]);
   };
 
-  // Handles opening and closing the modal
-  const handleClickOpen = () => {
-    setOpen(true);
+  const handleSaveProfile = async (data: any) => {
+    try {
+      setLoading(true);
+      if (addSibling) {
+        console.log("New Student to be added");
+        console.log("Sibling Data:", data);
+        console.log("Current Context");
+        console.log(ctx?.state);
+        let _userId;
+        const studentId = `studid${uuid()}`;
+        if (ctx?.state?.userId && ctx?.state?.phone) {
+          _userId = ctx?.state?.userId;
+          const value_Formatted = FormatNewStudentPayload(
+            data,
+            ctx?.state.userId,
+            studentId,
+            ctx?.state.phone!
+          );
+          console.log(`Formatted sibling value`);
+          console.log(value_Formatted);
+          const _newStudent = await CreateNewStudent(value_Formatted);
+
+          if (_newStudent && _newStudent.newStudent) {
+            console.log("Sibling created");
+            console.log(_newStudent.newStudent);
+
+            //Refresh the page
+            navigate(0);
+          } else {
+            console.log("Error adding Sibling to userID: ", ctx?.state.userId);
+            console.log(_newStudent);
+          }
+        } else {
+          console.log(
+            `UserID or Phone is null under context. UserId: ${ctx?.state.userId} and phone: ${ctx?.state.phone}`
+          );
+
+          snackbarRef.current?.showSnackbar(`Something went wrong.`, "error");
+        }
+      } else {
+        console.log("Update existing students");
+        console.log("Manage Profile. Saved Data:", data);
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    setNewStudent({
-      ...newStudent,
-      [name]: value,
-    });
-  };
-
-  const handleAddStudent = () => {
-    const newStudentEntry = {
-      ...newStudent,
-      id: students.length + 1, // Generate a new ID based on array length
+  const formatDataforFormInput = (profileData: any) => {
+    let defaultValues = {
+      studentfullname: profileData?.studentObj.personalDetails.studentfullname,
+      addressline1: profileData?.studentObj.personalDetails.addressline1,
+      addressline2: profileData?.studentObj.personalDetails.addressline2,
+      addresscity: profileData?.studentObj.personalDetails.addresscity,
+      addressstate: profileData?.studentObj.personalDetails.addressstate,
+      addresspincode: profileData?.studentObj.personalDetails.addresspincode,
+      studentdob: profileData?.studentObj.personalDetails.studentdob,
+      studentgender: profileData?.studentObj.personalDetails.studentgender,
+      guardianname: profileData?.studentObj.guardianDetails.guardianname,
+      studentrelation: profileData?.studentObj.guardianDetails.studentrelation,
+      occupation: profileData?.studentObj.guardianDetails.occupation,
+      guardianphoneno: profileData?.studentObj.guardianDetails.guardianphoneno,
+      guardianemailid: profileData?.studentObj.guardianDetails.guardianemailid,
+      class: profileData?.studentObj.academicsDetails.class,
+      section: profileData?.studentObj.academicsDetails.section,
+      rollnumber: profileData?.studentObj.academicsDetails.rollnumber,
+      housename: profileData?.studentObj.academicsDetails.housename,
+      busnumber: profileData?.studentObj.academicsDetails.busnumber,
     };
-    setStudents([...students, newStudentEntry]);
-    setSelectedStudent(newStudentEntry);
-    handleClose();
+
+    return defaultValues;
+  };
+
+  const formatDataforSiblings = (profileData: any) => {
+    let defaultValues = {
+      studentfullname: "",
+      addressline1: profileData?.studentObj.personalDetails.addressline1,
+      addressline2: profileData?.studentObj.personalDetails.addressline2,
+      addresscity: profileData?.studentObj.personalDetails.addresscity,
+      addressstate: profileData?.studentObj.personalDetails.addressstate,
+      addresspincode: profileData?.studentObj.personalDetails.addresspincode,
+      studentdob: "",
+      studentgender: "",
+      guardianname: profileData?.studentObj.guardianDetails.guardianname,
+      studentrelation: profileData?.studentObj.guardianDetails.studentrelation,
+      occupation: profileData?.studentObj.guardianDetails.occupation,
+      guardianphoneno: profileData?.studentObj.guardianDetails.guardianphoneno,
+      guardianemailid: profileData?.studentObj.guardianDetails.guardianemailid,
+      class: "",
+      section: "",
+      rollnumber: "",
+      housename: "",
+      busnumber: "",
+    };
+
+    return defaultValues;
   };
 
   return (
     <>
+      <ToastSnackbar ref={snackbarRef} />
       <Container>
         <Grid container spacing={2} sx={{ height: "100vh" }}>
           <Grid item xs={3} sx={{ padding: "5px" }}>
@@ -235,161 +281,95 @@ const StudentDashboard = () => {
               onChange={(currentIndex) => handleCarouselChange(currentIndex)}
             >
               {/* {ctx?.state?.siblings.map((student) => ( */}
-              {studentData.map((student: any) => (
-                <Card
-                  key={student.studentId}
-                  // onClick={() => handleStudentSelect(student)}
-                  sx={{
-                    // marginBottom: "20px",
-                    cursor: "pointer",
-                    border: "2px solid #f5f5f5",
-                  }}
-                >
-                  <CardContent
-                  // sx={{
-                  //   background: "#f7f7f7",
-                  // }}
+              {/* {studentData.map((student: any) => ( */}
+              {students &&
+                students.map((student: studentData) => (
+                  <Card
+                    key={student.studentObj.id}
+                    // onClick={() => handleStudentSelect(student)}
+                    sx={{
+                      cursor: "pointer",
+                      border: "2px solid #f5f5f5",
+                    }}
                   >
-                    <Grid container>
-                      <Grid
-                        item
-                        xs={12}
-                        display={"flex"}
-                        flexDirection={"row"}
-                        justifyContent={"center"}
-                      >
-                        <Avatar
-                          src={`/img/profilepic-formals-whiteBG.jpg`}
-                          alt={student.personalDetails.studentfullname}
-                          // variant="square"
-                          sx={{
-                            width: 150,
-                            height: 150,
-                          }}
-                        />
-                      </Grid>
-                      <Grid
-                        item
-                        xs={12}
-                        display={"flex"}
-                        flexDirection={"row"}
-                        justifyContent={"center"}
-                      >
-                        <Typography variant="h6" color="#df0c0c">
-                          <strong>
-                            {student.personalDetails.studentfullname}
-                          </strong>
-                        </Typography>
-                        {/* <Typography
-                          variant="body2"
-                          display={"inline"}
-                          fontWeight="bold"
+                    <CardContent>
+                      <Grid container>
+                        <Grid
+                          item
+                          xs={12}
+                          display={"flex"}
+                          flexDirection={"row"}
+                          justifyContent={"center"}
                         >
-                          DOB:
-                        </Typography>{" "}
-                        <Typography variant="body2" display={"inline"}>
-                          {formatDate(
-                            student?.studentObj.personalDetails.studentdob
-                          )}
-                        </Typography> */}
-                      </Grid>
+                          <Avatar
+                            src={`/img/profilepic-formals-whiteBG.jpg`}
+                            alt={
+                              student.studentObj.personalDetails.studentfullname
+                            }
+                            // variant="square"
+                            sx={{
+                              width: 150,
+                              height: 150,
+                            }}
+                          />
+                        </Grid>
+                        <Grid
+                          item
+                          xs={12}
+                          display={"flex"}
+                          flexDirection={"row"}
+                          justifyContent={"center"}
+                        >
+                          <Typography variant="h6" color="#df0c0c">
+                            <strong>
+                              {
+                                student.studentObj.personalDetails
+                                  .studentfullname
+                              }
+                            </strong>
+                          </Typography>
+                        </Grid>
 
-                      <Grid
-                        item
-                        xs={12}
-                        display={"flex"}
-                        flexDirection={"row"}
-                        justifyContent={"center"}
-                      >
-                        <AnimatedButton
-                          label="View Profile"
-                          onClick={() => console.log("Clicked")}
-                        />
-                        {"|"}
-                        <AnimatedButton
-                          label="Edit Profile"
-                          onClick={() => console.log("Clicked")}
-                        />
+                        <Grid
+                          item
+                          xs={12}
+                          display={"flex"}
+                          flexDirection={"row"}
+                          justifyContent={"center"}
+                        >
+                          <AnimatedButton
+                            label="Manage Profile"
+                            onClick={() => {
+                              openProfileDialog();
+                              setAddSibling(false);
+                            }}
+                          />
+                          {/* {"|"}
+                          <AnimatedButton
+                            label="Edit Profile"
+                            onClick={() => console.log("Clicked")}
+                          /> */}
+                        </Grid>
                       </Grid>
-
-                      {/*2nd Row */}
-                      {/* <Grid item xs={12} sx={{ mt: 2 }}>
-                        <Typography
-                          variant="body2"
-                          display={"inline"}
-                          fontWeight="bold"
-                        >
-                          Guardian's Name:
-                        </Typography>{" "}
-                        <Typography variant="body2" display={"inline"}>
-                          {student?.studentObj.guardianDetails.guardianname}
-                        </Typography>
-                      </Grid> */}
-                      {/*3rd Row */}
-                      {/* <Grid item xs={4} sx={{ mt: 2 }}>
-                        <Typography
-                          variant="body2"
-                          display={"inline"}
-                          fontWeight="bold"
-                        >
-                          Gender:
-                        </Typography>{" "}
-                        <Typography variant="body2" display={"inline"}>
-                          {student?.studentObj.personalDetails.studentgender?.toUpperCase()}
-                        </Typography>
-                      </Grid> */}
-                      {/* <Grid item xs={4} sx={{ mt: 2 }}>
-                        <Typography variant="body2" display={"inline"}>
-                          {!student?.studentObj.newAdmission &&
-                            `${student?.studentObj.academicsDetails?.class?.toUpperCase()} - ${student?.studentObj.academicsDetails?.section?.toUpperCase()}`}
-                        </Typography>
-                      </Grid> */}
-                      {/* <Grid item xs={4} sx={{ mt: 2 }}>
-                        <Typography
-                          variant="body2"
-                          display={"inline"}
-                          fontWeight="bold"
-                        >
-                          Roll No:
-                        </Typography>{" "}
-                        <Typography variant="body2" display={"inline"}>
-                          {student?.studentObj.academicsDetails?.rollnumber}
-                        </Typography>
-                      </Grid> */}
-                      {/**4th Row */}
-                      {/* <Grid item xs={6} sx={{ mt: 2 }}>
-                        <Typography
-                          variant="body2"
-                          display={"inline"}
-                          fontWeight="bold"
-                        >
-                          House Name:
-                        </Typography>{" "}
-                        <Typography variant="body2" display={"inline"}>
-                          {student?.studentObj.academicsDetails?.housename?.toUpperCase()}
-                        </Typography>
-                      </Grid> */}
-                    </Grid>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
             </Carousel>
-            {/* Button to add a new student */}
             <Box
               display={"flex"}
-              width={"100%"}
               flexDirection={"row"}
               justifyContent={"center"}
+              alignItems={"center"}
             >
               <MyCustomButton
                 variant="contained"
                 color="primary"
-                onClick={handleClickOpen}
-                sx={{
-                  width: "50%",
+                onClick={() => {
+                  openProfileDialog();
+                  setAddSibling(true);
                 }}
               >
-                Add Sibling
+                Add Siblings
               </MyCustomButton>
             </Box>
           </Grid>
@@ -398,57 +378,23 @@ const StudentDashboard = () => {
             <StudentProfileDashboard student={selectedStudent} />
           </Grid>
         </Grid>
-
-        <Dialog open={open} onClose={handleClose}>
-          <DialogTitle>Add a New Student</DialogTitle>
-          <DialogContent>
-            <TextField
-              margin="dense"
-              name="name"
-              label="Student Name"
-              fullWidth
-              variant="outlined"
-              value={newStudent.name}
-              onChange={handleInputChange}
-            />
-            <TextField
-              margin="dense"
-              name="class"
-              label="Class"
-              fullWidth
-              variant="outlined"
-              value={newStudent.class}
-              onChange={handleInputChange}
-            />
-            <TextField
-              margin="dense"
-              name="photo"
-              label="Photo URL"
-              fullWidth
-              variant="outlined"
-              value={newStudent.photo}
-              onChange={handleInputChange}
-            />
-            <TextField
-              margin="dense"
-              name="details"
-              label="Student Details"
-              fullWidth
-              variant="outlined"
-              multiline
-              rows={4}
-              value={newStudent.details}
-              onChange={handleInputChange}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleAddStudent} color="primary">
-              Add
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Container>
+      <ProfileDialog
+        isOpen={isProfileDialogOpen}
+        onClose={onClose}
+        onSubmit={handleSaveProfile}
+        profileData={
+          addSibling
+            ? formatDataforSiblings(selectedStudent!)
+            : formatDataforFormInput(selectedStudent!)
+        }
+        resetFormRef={resetFormRef}
+        isEditing={isEditing}
+        onEdit={() => setIsEditing(true)}
+        addSibling={addSibling}
+      />
+      <LoadingDialog open={loading} />{" "}
+      {/* Show loading dialog during API processing */}
       <FooterLogin />
     </>
   );

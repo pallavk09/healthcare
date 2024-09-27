@@ -70,10 +70,10 @@ const Header = ({ t }: { t: TFunction }) => {
     setOpen(false);
   };
 
-  const newRegistrationHandler = () => {
-    console.log("Header. New Registration Handler function");
-    console.log(ctx?.state);
-  };
+  // const newRegistrationHandler = () => {
+  //   console.log("Header. New Registration Handler function");
+  //   console.log(ctx?.state);
+  // };
 
   const ctx = useContext(ApiContext);
   const navigate = useNavigate();
@@ -84,6 +84,11 @@ const Header = ({ t }: { t: TFunction }) => {
   const showLoginformHandler = () => {
     console.log("Login clicked");
     navigate("Login");
+  };
+
+  const showLoginNewAdmission = () => {
+    console.log("New Admission");
+    navigate("newadmission");
   };
 
   const handleLogout = () => {
@@ -120,7 +125,14 @@ const Header = ({ t }: { t: TFunction }) => {
                 color="primary"
                 onClick={showLoginformHandler}
               >
-                {t("Login")}
+                {t("Student Login")}
+              </MyCustomButton>
+              <MyCustomButton
+                variant="contained"
+                color="primary"
+                onClick={showLoginNewAdmission}
+              >
+                {t("Apply For Admission")}
               </MyCustomButton>
             </Box>
           </>
@@ -174,12 +186,12 @@ const Header = ({ t }: { t: TFunction }) => {
                   {t("My Dashboard")}
                 </Span>
               </CustomNavLinkSmall>
-              <CustomNavLinkSmall onClick={newRegistrationHandler}>
+              {/* <CustomNavLinkSmall onClick={newRegistrationHandler}>
                 <Span>{t("New Admission")}</Span>
-              </CustomNavLinkSmall>
-              <CustomNavLinkSmall>
+              </CustomNavLinkSmall> */}
+              {/* <CustomNavLinkSmall>
                 <Span>{t("Fees Payment")}</Span>
-              </CustomNavLinkSmall>
+              </CustomNavLinkSmall> */}
 
               <MyCustomButton
                 variant="contained"

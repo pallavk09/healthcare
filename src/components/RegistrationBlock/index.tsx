@@ -129,10 +129,10 @@ const RegistrationBlock = () => {
           console.log(_newStudent);
 
           //Update context with this data
-          ctx?.dispatch({
-            type: "ADD_NEW_STUDENT",
-            payload: studentDataState,
-          });
+          // ctx?.dispatch({
+          //   type: "ADD_NEW_STUDENT",
+          //   payload: [studentDataState],
+          // });
 
           //context updated. Show Dialog and Navigate to Dashboard
           setIsPopupOpen(true);
