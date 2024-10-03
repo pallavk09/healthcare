@@ -24,6 +24,12 @@ import { SendOtp, ValidateOtp } from "../../api/login";
 import { ListStudents } from "../../api/students";
 import SuccessPopup from "../../common/SuccessPopup";
 import ApiContext from "../../store/context";
+import newadmissionContext, {
+  newAddmissionApplicationType,
+} from "../../store/newadmissionContext";
+import { ListApplications } from "../../api/newAdmission";
+import { userDataType } from "../../store/userContext";
+import userDataContext from "../../store/userContext";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -52,20 +58,20 @@ const NewAdmissionBlock = ({ icon, id, direction }: ContentBlockProps) => {
   const [_userId, setUserId] = useState();
 
   const navigate = useNavigate();
-  const ctx = useContext(ApiContext);
+  const ctx = useContext(userDataContext);
   const [form] = Form.useForm();
 
   const snackbarRef = useRef<SnackbarHandle>(null);
   const OTP_TIMEOUT = 30; // 30 seconds timer
 
   // Close popup handler
-  const handleClosePopup = () => {
-    setIsPopupOpen(false);
+  // const handleClosePopup = () => {
+  //   setIsPopupOpen(false);
 
-    //New User. Need to add students
-    // navigate(`/studentregistration?userId=${_userId}`);
-    navigate(`/studentregistration/${_userId}`);
-  };
+  //   //New User. Need to add students
+  //   // navigate(`/studentregistration?userId=${_userId}`);
+  //   navigate(`/studentregistration/${_userId}`);
+  // };
 
   const startTimer = () => {
     setOtpResendable(false);
@@ -88,6 +94,7 @@ const NewAdmissionBlock = ({ icon, id, direction }: ContentBlockProps) => {
 
   const onFinish = async (values: any) => {
     try {
+      console.log("NewAdmissionBlock. OnFinish");
       setLoading(true);
       //1. Get Phone number and send OTP
       if (values?.mobilenumber && !isOtpSent) {
@@ -106,44 +113,34 @@ const NewAdmissionBlock = ({ icon, id, direction }: ContentBlockProps) => {
       }
 
       if (values?.otp && isOtpSent) {
+        console.log("NewAdmissionBlock. Validating OTP on Phone: ", userPhone);
         const response = await ValidateOtp(
           userPhone,
           values.otp,
           "NEWADMISSION"
         );
+        console.log("New Admission. OTP sent success");
+
         if (response?.status === "SUCCESS") {
-          if (response?.message === "User logged in") {
-            setUserId(response?.userId);
-            //USER ALREADY REGISTERED
-            //CHECKING IF ADMISSION FORM IS FILLED
-            const formList = await ListStudents(response?.userId);
-            if (
-              //ADMISSION FORM NOT FILLED FOR THIS USER
-              //NAVIGATING TO ADMISSION FORM PAGE
-              formList &&
-              formList?.result &&
-              formList?.result?.length === 0
-            )
-              navigate(`apply/${response?.userId}`);
-            else if (
-              formList &&
-              formList?.result &&
-              formList?.result?.length > 0
-            )
-              //ADMISSION FORM FILLED FOR THIS USER
-              //NAVIGATING TRACK APPLICATION STATUS PAGE
-              navigate(`trackmyapplication/${response?.userId}`);
-          } else if (response?.message === "User registered") {
-            console.log("New admission registered", response?.userId);
-            setUserId(response?.userId);
-            //NAVIGATING TO ADMISSION FORM PAGE
-            navigate(`apply/${response?.userId}`);
-          }
+          // const userState: userDataType = {
+          //   userId: response?.userId,
+          //   phone: userPhone!,
+          // };
+          console.log("New Admission. OTP validation success.");
+          // console.log(userState);
+          // ctx?.user_dispatch({
+          //   type: "ADD_USERID_PHONE",
+          //   payload: userState,
+          // });
+          //NAVIGATING TO ADMISSION FORM PAGE
+          navigate(`apply/${response?.userId}`);
+        } else {
+          console.log("New Admission. OTP validation fail.");
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      snackbarRef.current?.showSnackbar(`Please Re-Generate OTP`, "error");
+      snackbarRef.current?.showSnackbar(`Some error: `, error.message);
     } finally {
       setLoading(false);
     }
@@ -301,13 +298,13 @@ const NewAdmissionBlock = ({ icon, id, direction }: ContentBlockProps) => {
           </Col>
         </Box>
       </Fade>
-      <SuccessPopup
+      {/* <SuccessPopup
         open={isPopupOpen}
         onClose={handleClosePopup}
         title="User Registered Successfully"
         message="Please provide more details to serve you better."
         buttonText="Continue"
-      />
+      /> */}
     </ContentSection>
   );
 };

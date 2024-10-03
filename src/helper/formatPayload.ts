@@ -36,6 +36,7 @@ const FormatNewStudentPayload = (
 
   const studentObj = {
     id: studentId,
+    photoUrl: "",
     personalDetails,
     guardianDetails,
     academicsDetails,

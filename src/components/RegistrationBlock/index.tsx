@@ -21,6 +21,9 @@ import { FormatNewStudentPayload } from "../../helper/formatPayload";
 import { CreateNewStudent } from "../../api/students";
 import SuccessPopup from "../../common/SuccessPopup";
 import { GetRegisteredUser } from "../../api/registration";
+import userDataContext from "../../store/userContext";
+import { jwtDecode } from "jwt-decode";
+import { uploadFile, UploadFileType } from "../../api/upload";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -38,70 +41,86 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-export async function Loader({ params }: { params: any }) {
-  try {
-    const registeredUser = await GetRegisteredUser(params.userId!);
+// export async function Loader({ params }: { params: any }) {
+//   try {
+//     const registeredUser = await GetRegisteredUser(params.userId!);
 
-    if (registeredUser?.user && registeredUser?.user?.length > 0) {
-      return registeredUser?.user;
-    } else {
-      throw json({ message: "Could not fetch students" }, { status: 500 });
-    }
-  } catch (error: any) {
-    throw json(
-      { message: `Could not fetch registered user. Error${error.message}` },
-      { status: 500 }
-    );
-  }
-}
+//     if (registeredUser?.user && registeredUser?.user?.length > 0) {
+//       return registeredUser?.user;
+//     } else {
+//       throw json({ message: "Could not fetch students" }, { status: 500 });
+//     }
+//   } catch (error: any) {
+//     throw json(
+//       { message: `Could not fetch registered user. Error${error.message}` },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 const RegistrationBlock = () => {
   const ctx = React.useContext(ApiContext);
+  const ctx_userData = React.useContext(userDataContext);
   const [activeStep, setActiveStep] = React.useState(0);
   const [_userId, setUserId] = React.useState<string | undefined>();
+  const [_phone, setPhone] = React.useState<string | undefined>();
   const [studentDataState, SetStudentDataState] =
     React.useState<studentData | null>(null);
 
   const [isPopupOpen, setIsPopupOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [photo, setPhoto] = React.useState<string | null>(null);
+  const [photofile, setPhotoFile] = React.useState<File>();
   const navigate = useNavigate();
-  // const location = useLocation();
-  const params = useParams();
-  const registeredUserData = useLoaderData() as any;
-
-  console.log("Loader Data");
-  console.log(JSON.stringify(registeredUserData));
-  console.log("Loader Data ----- Phone");
-  console.log(registeredUserData[0].phone);
-
-  // const userObj: userState = {
-  //   userId: "",
-  //   phone: "",
-  //   isLoggedIn: false,
-  //   role: "student",
-  //   otpVerified: false,
-  //   siblings: [],
-  // };
 
   const handleClosePopup = () => {
     setIsPopupOpen(false);
 
     //New User. Need to add students
-    navigate(`/studentdashboard/${_userId}`);
+    navigate(`/student/studentdashboard/${_userId}`);
   };
 
   useEffect(() => {
-    console.log("Under useEffect of Registration block");
-    const userId = params.userId;
-    console.log(ctx?.state);
-    // console.log(`UserID as ${userId}`);
-    // console.log("Context Updated");
-    // ctx?.dispatch({
-    //   type: "UPDATE_USERID",
-    //   payload: userId,
-    // });
-    setUserId(userId!);
+    console.log("Under useEffect of Registration .");
+    // const userId = params.userId;
+    // console.log(ctx?.state);
+    console.log(ctx_userData?.user_state);
+    const accessToken = localStorage.getItem("token");
+    console.log(accessToken);
+
+    if (ctx_userData?.user_state.phone && ctx_userData?.user_state.userId) {
+      console.log("Phone and userId already present in context");
+      setPhone(ctx_userData?.user_state.phone);
+      setUserId(ctx_userData?.user_state.userId);
+    } else if (accessToken) {
+      console.log("Phone and userId not there in context");
+      console.log("Token found. Updating context");
+      const accessToken_decode = jwtDecode(accessToken) as {
+        phone: string;
+        userId: string;
+      };
+      console.log("Token found. Decoded");
+      console.log(accessToken_decode);
+      setPhone(accessToken_decode.phone);
+      setUserId(accessToken_decode.userId);
+      ctx_userData?.user_dispatch({
+        type: "UPDATE_USER_LOGGEDIN",
+        payload: {
+          phone: accessToken_decode.phone,
+          userId: accessToken_decode.userId,
+        },
+      });
+    } else {
+      console.log("Token not found. Logging out");
+      navigate("/student");
+    }
   }, []);
+
+  const handlePhotoUpload = (file: File) => {
+    const photoURL = URL.createObjectURL(file);
+    setPhotoFile(file);
+    setPhoto(photoURL); // Store photo URL in state
+  };
 
   const methods = useForm({
     mode: "onTouched",
@@ -111,6 +130,7 @@ const RegistrationBlock = () => {
     handleSubmit,
     trigger,
     control,
+    setValue,
     // getValues,
     formState: { errors },
   } = methods;
@@ -120,6 +140,18 @@ const RegistrationBlock = () => {
     try {
       if (activeStep === steps.length - 1) {
         setLoading(true);
+
+        const uploadFileObject: UploadFileType = {
+          filepath: photofile!,
+          bucket_id: process.env.REACT_APP_APPWRITE_NEW_ADMISSION_BUCKET_ID!,
+        };
+        const upload = await uploadFile(uploadFileObject);
+
+        console.log("Photo uploaded. Printing response");
+        console.log(upload);
+        if (studentDataState)
+          studentDataState.studentObj.photoUrl = upload?.$id;
+
         console.log("Final form submission data:", studentDataState);
 
         //Call API to create this student
@@ -128,13 +160,6 @@ const RegistrationBlock = () => {
           console.log("New Student created");
           console.log(_newStudent);
 
-          //Update context with this data
-          // ctx?.dispatch({
-          //   type: "ADD_NEW_STUDENT",
-          //   payload: [studentDataState],
-          // });
-
-          //context updated. Show Dialog and Navigate to Dashboard
           setIsPopupOpen(true);
         } else {
           console.log("Error adding new student");
@@ -150,14 +175,17 @@ const RegistrationBlock = () => {
   };
 
   const handleNext = async () => {
+    console.log(`Handling next. Phone: ${_phone} and UserId: ${_userId}`);
     const isValid = await trigger(); // Validate current step before moving
+    // console.log(methods.getValues());
     if (isValid) {
       if (activeStep === steps.length - 2) {
         console.log("Review and Submit screen. Show summary");
         const newStudentData = methods.getValues();
         console.log("Form Values: ", newStudentData);
         const studentId = `studid${uuid()}`;
-        const phone = registeredUserData[0]?.phone;
+        // const phone = registeredUserData[0]?.phone;
+        const phone = _phone!;
         console.log("handleNext: userId -------------> ", _userId);
         const value_Formatted = FormatNewStudentPayload(
           newStudentData,
@@ -187,6 +215,9 @@ const RegistrationBlock = () => {
             register={methods.register}
             control={control}
             errors={errors}
+            setValue={setValue}
+            photo={photo} // Pass the photo URL or file
+            onPhotoUpload={handlePhotoUpload} // Callback to handle photo upload
           />
         );
       case 1:
@@ -253,7 +284,7 @@ const RegistrationBlock = () => {
                 {/* This is Form container Box*/}
                 <Box
                   sx={{
-                    width: "80%",
+                    width: "90%",
                     height: "95%",
                     display: "flex",
                     flexDirection: "column",

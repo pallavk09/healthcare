@@ -24,6 +24,7 @@ import { SendOtp, ValidateOtp } from "../../api/login";
 import { ListStudents } from "../../api/students";
 import SuccessPopup from "../../common/SuccessPopup";
 import ApiContext from "../../store/context";
+import userDataContext from "../../store/userContext";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -52,7 +53,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
   const [_userId, setUserId] = useState();
 
   const navigate = useNavigate();
-  const ctx = useContext(ApiContext);
+  const ctx = useContext(userDataContext);
   const [form] = Form.useForm();
 
   const snackbarRef = useRef<SnackbarHandle>(null);
@@ -64,7 +65,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
 
     //New User. Need to add students
     // navigate(`/studentregistration?userId=${_userId}`);
-    navigate(`/studentregistration/${_userId}`);
+    navigate(`studentregistration/${_userId}`);
   };
 
   const startTimer = () => {
@@ -109,7 +110,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
         const response = await ValidateOtp(userPhone, values.otp, "STUDENT");
         if (response?.status === "SUCCESS") {
           //UPDATE CONTEXT WITH USER LOGGED IN TRUE
-          ctx?.dispatch({
+          ctx?.user_dispatch({
             type: "UPDATE_USER_LOGGEDIN",
             payload: { phone: userPhone!, userId: response?.userId! },
           });
@@ -129,7 +130,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
               studentList?.result &&
               studentList?.result?.length === 0
             )
-              navigate(`/studentregistration/${response?.userId}`);
+              navigate(`studentregistration/${response?.userId}`);
             else if (
               studentList &&
               studentList?.result &&
@@ -137,7 +138,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
             )
               //STUDENT PRESENT FOR THIS USER
               //NAVIGATING TO DASHBOARD
-              navigate(`/studentdashboard/${response?.userId}`);
+              navigate(`studentdashboard/${response?.userId}`);
           } else if (response?.message === "User registered") {
             console.log("New user registered", response?.userId);
             setUserId(response?.userId);

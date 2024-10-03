@@ -14,9 +14,10 @@ interface ControlledTextFieldProps {
   fullWidth?: boolean; // FullWidth prop for TextField
   rules?: any; // Validation rules for the field
   sx?: any;
-  type?: "text" | "email" | "number" | "password";
+  type?: "text" | "email" | "number" | "password" | "date";
   // value?: string;
   disabled?: boolean;
+  slotProps?: any;
 }
 
 const ControlledTextField: React.FC<ControlledTextFieldProps> = ({
@@ -31,6 +32,7 @@ const ControlledTextField: React.FC<ControlledTextFieldProps> = ({
   rules,
   sx,
   type,
+  slotProps,
   // value,
   disabled,
 }) => {
@@ -53,6 +55,7 @@ const ControlledTextField: React.FC<ControlledTextFieldProps> = ({
           type={type}
           // value={value}
           disabled={disabled}
+          slotProps={slotProps}
         />
       )}
     />

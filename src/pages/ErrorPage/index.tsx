@@ -40,11 +40,11 @@ const ErrorPage = () => {
       >
         <SvgIcon src="pagenotfound.svg" width="75%" height="85%" />
         <Typography variant="h6" fontWeight={600}>
-          {error.data.message || message}
+          {error?.data?.message || message}
         </Typography>
-        <MyCustomButton variant="contained" color="primary">
+        {/* <MyCustomButton variant="contained" color="primary">
           GO BACK
-        </MyCustomButton>
+        </MyCustomButton> */}
       </Box>
     </>
   );

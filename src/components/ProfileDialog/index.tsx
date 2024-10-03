@@ -54,6 +54,8 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({
 
   useEffect(() => {
     if (profileData) {
+      console.log("profileData");
+      console.log(profileData);
       reset(profileData); // Reset form with new profileData
     }
   }, [profileData, reset]);

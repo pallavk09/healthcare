@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Row, Col, Drawer } from "antd";
 import { withTranslation } from "react-i18next";
@@ -70,10 +70,13 @@ const Header = ({ t }: { t: TFunction }) => {
     setOpen(false);
   };
 
-  // const newRegistrationHandler = () => {
-  //   console.log("Header. New Registration Handler function");
-  //   console.log(ctx?.state);
-  // };
+  const newRegistrationHandler = () => {
+    console.log(
+      "Header. New Registration Handler function - CASE NEEDED TO BE HANDLED"
+    );
+    console.log(location);
+    // navigate("/newadmission/");
+  };
 
   const ctx = useContext(ApiContext);
   const navigate = useNavigate();
@@ -83,7 +86,7 @@ const Header = ({ t }: { t: TFunction }) => {
   };
   const showLoginformHandler = () => {
     console.log("Login clicked");
-    navigate("Login");
+    navigate("student");
   };
 
   const showLoginNewAdmission = () => {
@@ -97,7 +100,11 @@ const Header = ({ t }: { t: TFunction }) => {
     ctx?.dispatch({
       type: "RESET_USER",
     });
-    navigate("Login");
+
+    const loginRoute = location.pathname.startsWith("/newadmission")
+      ? "/newadmission"
+      : "/student";
+    navigate(loginRoute);
   };
 
   const MenuItem = () => {
@@ -113,13 +120,19 @@ const Header = ({ t }: { t: TFunction }) => {
         {!localStorage.getItem("token") ? (
           <>
             <Box display={"flex"} flexDirection={"row"} gap={1}>
-              <CustomNavLinkSmall onClick={() => scrollTo("about")}>
-                <Span>{t("About")}</Span>
-              </CustomNavLinkSmall>
-              <CustomNavLinkSmall onClick={() => scrollTo("product")}>
-                <Span>{t("Solutions")}</Span>
-              </CustomNavLinkSmall>
-
+              {location.pathname.startsWith("/student") ||
+              location.pathname.startsWith("/newadmission") ? (
+                ""
+              ) : (
+                <>
+                  <CustomNavLinkSmall onClick={() => scrollTo("about")}>
+                    <Span>{t("About")}</Span>
+                  </CustomNavLinkSmall>
+                  <CustomNavLinkSmall onClick={() => scrollTo("product")}>
+                    <Span>{t("Solutions")}</Span>
+                  </CustomNavLinkSmall>
+                </>
+              )}
               <MyCustomButton
                 variant="contained"
                 color="primary"
@@ -176,19 +189,11 @@ const Header = ({ t }: { t: TFunction }) => {
             </Dialog>
             <Box display={"flex"} flexDirection={"row"} gap={1}>
               <CustomNavLinkSmall>
-                <Span
-                  style={
-                    location.pathname.startsWith("/studentdashboard")
-                      ? styleUnderline
-                      : {}
-                  }
-                >
-                  {t("My Dashboard")}
-                </Span>
+                <Span>My Dashboard</Span>
               </CustomNavLinkSmall>
-              {/* <CustomNavLinkSmall onClick={newRegistrationHandler}>
-                <Span>{t("New Admission")}</Span>
-              </CustomNavLinkSmall> */}
+              <CustomNavLinkSmall onClick={newRegistrationHandler}>
+                <Span>"New Admission"</Span>
+              </CustomNavLinkSmall>
               {/* <CustomNavLinkSmall>
                 <Span>{t("Fees Payment")}</Span>
               </CustomNavLinkSmall> */}

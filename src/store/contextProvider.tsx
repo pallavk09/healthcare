@@ -1,8 +1,18 @@
 import { useReducer, ReactNode } from "react";
 import ApiContext from "./context";
 import { userAction, userState, studentData } from "../common/types";
+import { newAddmissionApplicationType } from "./newadmissionContext";
+import newadmissionContext from "./newadmissionContext";
+import userDataContext, { userDataType } from "./userContext";
 
-// Initial state
+//Initial user data context
+
+const initialUserIdPhone: userDataType = {
+  userId: "",
+  phone: "",
+};
+
+// Initial state Student
 const initialState: userState = {
   userId: "",
   phone: "",
@@ -11,6 +21,25 @@ const initialState: userState = {
   otpVerified: false,
   siblings: [],
 };
+
+//Initial state New Admission
+export const initialState_NewAdmission: newAddmissionApplicationType[] = [
+  {
+    userId: "",
+    phone: "",
+    emailId: "",
+    applicationId: "",
+    status: "",
+    role: "NEWADMISSION",
+    submissionDate: "",
+    createdAt: "",
+    statusUpdatedOn: "",
+    applicationData: "",
+    submissionStatus: "",
+    paymentStatus: "",
+    transactionId: "",
+  },
+];
 
 const addUpdateSiblings = (
   siblings: studentData[],
@@ -29,6 +58,35 @@ const addUpdateSiblings = (
   //   return studentMasterData.map((student, index) =>
   //     index === studentIndex ? studentData : student
   //   );
+  // }
+};
+
+const addNewApplications = (
+  application: newAddmissionApplicationType,
+  currentApplicationData: newAddmissionApplicationType[]
+): newAddmissionApplicationType[] => {
+  console.log("currentApplicationData", currentApplicationData);
+  console.log("application", application);
+  return [...currentApplicationData, application];
+  // if (currentApplicationData.length === 1) {
+  //   return currentApplicationData.map((app, index) => application);
+  // } else {
+  //   const appIndex = currentApplicationData.findIndex(
+  //     (app) => app.userId === application.userId
+  //   );
+
+  //   //New application
+  //   if (appIndex === -1) {
+  //     console.log("New Application");
+  //     currentApplicationData.push(application);
+  //     return [...currentApplicationData, application];
+  //   } else {
+  //     console.log("Existing Application");
+  //     //Update existing application
+  //     return currentApplicationData.map((app, index) =>
+  //       index === appIndex ? application : app
+  //     );
+  //   }
   // }
 };
 
@@ -68,27 +126,49 @@ const apiReducer = (state: userState, action: userAction): userState => {
         ...state,
         siblings: action.payload!,
       };
-    // case "SHOW_LOGIN_FORM":
-    //   return {
-    //     ...state,
-    //     showLoginForm: true,
-    //     isOtpSend: false,
-    //     isUserVerified: false,
-    //     error: null,
-    //   };
-    // case "IS_OPT_SEND":
-    //   return { ...state, isOtpSend: true, isUserVerified: false, error: null };
-    // case "IS_USER_VERIFIED":
-    //   return { ...state, isUserVerified: true, error: null };
-    // case "SAVE_STUDENT_DATA":
-    //   return {
-    //     ...state,
-    //     data: action.payload,
-    //     studentMasterData: addUpdateMasterStudentData(
-    //       state.studentMasterData,
-    //       action.payload
-    //     ),
-    //   };
+
+    default:
+      return state;
+  }
+};
+
+const updateUserState = (
+  state: userDataType,
+  payload: { userId: string; phone: string }
+) => {
+  console.log("Inside updateUserState");
+  console.log(state);
+  console.log(payload);
+  return {
+    ...state,
+    userId: payload.userId,
+    phone: payload.phone,
+  };
+};
+
+const newAdmissionReducer = (
+  state: newAddmissionApplicationType[],
+  action: userAction
+): newAddmissionApplicationType[] => {
+  switch (action.type) {
+    case "ADD_NEW_APPLICATION":
+      return addNewApplications(action.payload, state);
+
+    default:
+      return state;
+  }
+};
+
+const userSessionReducer = (
+  state: userDataType,
+  action: userAction
+): userDataType => {
+  switch (action.type) {
+    case "ADD_USERID_PHONE":
+      console.log("State and Actio as");
+      console.log(state, action);
+      return updateUserState(state, action.payload);
+
     default:
       return state;
   }
@@ -101,11 +181,25 @@ interface ApiProviderProps {
 
 const ApiProvider = ({ children }: ApiProviderProps) => {
   const [state, dispatch] = useReducer(apiReducer, initialState);
+  const [state_newAdmission, dispatch_newadmission] = useReducer(
+    newAdmissionReducer,
+    initialState_NewAdmission
+  );
+  const [user_state, user_dispatch] = useReducer(
+    userSessionReducer,
+    initialUserIdPhone
+  );
 
   return (
-    <ApiContext.Provider value={{ state, dispatch }}>
-      {children}
-    </ApiContext.Provider>
+    <userDataContext.Provider value={{ user_state, user_dispatch }}>
+      <newadmissionContext.Provider
+        value={{ state_newAdmission, dispatch_newadmission }}
+      >
+        <ApiContext.Provider value={{ state, dispatch }}>
+          {children}
+        </ApiContext.Provider>
+      </newadmissionContext.Provider>
+    </userDataContext.Provider>
   );
 };
 

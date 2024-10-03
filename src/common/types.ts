@@ -1,4 +1,5 @@
 import { TFunction } from "i18next";
+import { newAddmissionApplicationType } from "../store/newadmissionContext";
 export interface ContainerProps {
   border?: boolean;
   children: React.ReactNode;
@@ -43,6 +44,7 @@ export interface studentData {
   phone: string;
   studentObj: {
     id: string;
+    photoUrl?: string;
     personalDetails: {
       studentfullname: string;
       addressline1: string;
@@ -89,10 +91,11 @@ export type userAction =
   | { type: "RESET_USER" }
   | { type: "ADD_NEW_STUDENT"; payload: studentData[] | null }
   | { type: "LOAD_EXISTING_STUDENTS"; payload: studentData[] | null }
-  | { type: "SHOW_LOGIN_FORM" }
-  | { type: "IS_OPT_SEND" }
-  | { type: "IS_USER_VERIFIED"; payload: any[] }
-  | { type: "SAVE_STUDENT_DATA"; payload: studentData };
+  | { type: "ADD_USERID_PHONE"; payload: { userId: string; phone: string } }
+  | {
+      type: "ADD_NEW_APPLICATION";
+      payload: newAddmissionApplicationType;
+    };
 
 export type PersonalInfoType = {
   studentfullname: string | "";

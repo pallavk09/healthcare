@@ -24,6 +24,9 @@ import { v4 as uuid } from "uuid";
 import { useNavigate } from "react-router-dom";
 import LoadingDialog from "../../common/LoadingDialog";
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
+import userDataContext from "../../store/userContext";
+import { jwtDecode } from "jwt-decode";
+import { GeneratePrevieUrl } from "../../common/utils/generatePreviewUrl";
 
 const Container = lazy(() => import("../../common/Container"));
 
@@ -73,36 +76,39 @@ const AnimatedButton = ({
   );
 };
 
-export async function Loader({ params }: { params: any }) {
-  try {
-    console.log(`params.userId!: ${params.userId!}`);
-    const studentList = await ListStudents(params.userId!);
-    if (studentList?.result && studentList?.result.length > 0) {
-      return studentList?.result;
-    } else {
-      throw json({ message: "Could not fetch students" }, { status: 500 });
-    }
-  } catch (error: any) {
-    throw json(
-      { message: `Could not fetch students. Error${error.message}` },
-      { status: 500 }
-    );
-  }
-}
+// export async function Loader({ params }: { params: any }) {
+//   try {
+//     console.log(`params.userId!: ${params.userId!}`);
+//     const studentList = await ListStudents(params.userId!);
+//     if (studentList?.result && studentList?.result.length > 0) {
+//       return studentList?.result;
+//     } else {
+//       throw json({ message: "Could not fetch students" }, { status: 500 });
+//     }
+//   } catch (error: any) {
+//     throw json(
+//       { message: `Could not fetch students. Error${error.message}` },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 const StudentDashboard = () => {
   const ctx = useContext(ApiContext);
+  const ctx_userData = useContext(userDataContext);
   const navigate = useNavigate();
-  // const [selectedStudent, setSelectedStudent] = useState(initialStudents[0]);
   const [selectedStudent, setSelectedStudent] = useState<studentData>();
   const [students, setStudents] = useState<studentData[] | null>();
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [addSibling, setAddSibling] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [_userId, setUserId] = useState<string | undefined>();
+  const [_phone, setPhone] = useState<string | undefined>();
   // Reference to control reset from parent
   const resetFormRef = useRef<() => void>(() => {});
   const snackbarRef = useRef<SnackbarHandle>(null);
+
   const onClose = () => {
     if (resetFormRef.current) {
       resetFormRef.current(); // Reset the form to its initial state
@@ -111,24 +117,66 @@ const StudentDashboard = () => {
     setIsEditing(false);
   };
 
-  const studentData = useLoaderData() as any;
+  // const studentData = useLoaderData() as any;
 
   useEffect(() => {
-    console.log("Under useEffect. Printing student from Loader data");
-    console.log(studentData);
-    const studentFormatted = formatStudentDataForContext(studentData);
-    console.log("Formatted Student Data");
-    console.log(studentFormatted);
-    //Update Context with student data. Go as siblings array
-    setStudents(studentFormatted);
-    console.log(
-      `Prinint studentFormatted![0]: ${JSON.stringify(studentFormatted![0])}`
-    );
-    setSelectedStudent(studentFormatted![0]);
-    ctx?.dispatch({
-      type: "LOAD_EXISTING_STUDENTS",
-      payload: studentFormatted,
-    });
+    console.log("Under useEffect of StudentDashboard.");
+    console.log(ctx_userData?.user_state);
+    const accessToken = localStorage.getItem("token");
+    console.log(accessToken);
+    if (ctx_userData?.user_state.phone && ctx_userData?.user_state.userId) {
+      console.log("Phone and userId already present in context");
+      setPhone(ctx_userData?.user_state.phone);
+      setUserId(ctx_userData?.user_state.userId);
+    } else if (accessToken) {
+      console.log("Phone and userId not there in context");
+      console.log("Token found. Updating context");
+      const accessToken_decode = jwtDecode(accessToken) as {
+        phone: string;
+        userId: string;
+      };
+      console.log("Token found. Decoded");
+      console.log(accessToken_decode);
+      setPhone(accessToken_decode.phone);
+      setUserId(accessToken_decode.userId);
+
+      ctx_userData?.user_dispatch({
+        type: "UPDATE_USER_LOGGEDIN",
+        payload: {
+          phone: accessToken_decode.phone,
+          userId: accessToken_decode.userId,
+        },
+      });
+
+      const LoadStudents = async (userId: string) => {
+        try {
+          console.log(`Calling ListStudents. userId!: ${userId}`);
+          const studentList = await ListStudents(userId!);
+          if (studentList?.result && studentList?.result.length > 0) {
+            const studentFormatted = formatStudentDataForContext(
+              studentList?.result
+            );
+            setStudents(studentFormatted);
+            setSelectedStudent(studentFormatted![0]);
+          } else {
+            snackbarRef.current?.showSnackbar(
+              `Something wrong could not data.`,
+              "error"
+            );
+          }
+        } catch (error: any) {
+          snackbarRef.current?.showSnackbar(
+            `Error while fetching data ${error.message}`,
+            "error"
+          );
+        }
+      };
+
+      LoadStudents(accessToken_decode.userId);
+    } else {
+      console.log("Token not found. Logging out");
+      navigate("/student");
+    }
   }, []);
 
   const openProfileDialog = () => {
@@ -139,6 +187,8 @@ const StudentDashboard = () => {
   const formatStudentDataForContext = (studentArray: any) => {
     let siblingsArray: studentData[] | null;
     try {
+      console.log("formatStudentDataForContext. studentArray received as");
+      console.log(studentArray);
       // let siblingsArray: studentData[] | {} = {};
       siblingsArray = studentArray.map((student: any) => {
         return {
@@ -147,6 +197,7 @@ const StudentDashboard = () => {
           newAdmission: student.newAdmission,
           fees: student.fees,
           studentObj: {
+            photoUrl: student.photoUrl,
             id: student.studentId,
             personalDetails: {
               ...student.personalDetails,
@@ -178,15 +229,13 @@ const StudentDashboard = () => {
         console.log("Sibling Data:", data);
         console.log("Current Context");
         console.log(ctx?.state);
-        let _userId;
         const studentId = `studid${uuid()}`;
-        if (ctx?.state?.userId && ctx?.state?.phone) {
-          _userId = ctx?.state?.userId;
+        if (_userId && _phone) {
           const value_Formatted = FormatNewStudentPayload(
             data,
-            ctx?.state.userId,
+            _userId,
             studentId,
-            ctx?.state.phone!
+            _phone
           );
           console.log(`Formatted sibling value`);
           console.log(value_Formatted);
@@ -196,10 +245,39 @@ const StudentDashboard = () => {
             console.log("Sibling created");
             console.log(_newStudent.newStudent);
 
+            const studentObj = {
+              id: _newStudent.newStudent.studentId,
+              personalDetails: JSON.parse(
+                _newStudent.newStudent.personalDetails
+              ),
+              guardianDetails: JSON.parse(
+                _newStudent.newStudent.guardianDetails
+              ),
+              academicsDetails: JSON.parse(
+                _newStudent.newStudent.academicsDetails
+              ),
+            };
+
+            const formattedSibling = {
+              userId: _newStudent.newStudent.userId,
+              phone: _newStudent.newStudent.phone,
+              newAdmission: _newStudent.newStudent.newAdmission,
+              fees: _newStudent.newStudent.fees,
+              studentObj,
+            };
+
+            const updatedStudents = [
+              ...students!,
+              formattedSibling,
+            ] as studentData[];
+
+            console.log(`Updated Student state`);
+            console.log(updatedStudents);
+            setStudents(updatedStudents);
             //Refresh the page
-            navigate(0);
+            // navigate(0);
           } else {
-            console.log("Error adding Sibling to userID: ", ctx?.state.userId);
+            console.log("Error adding Sibling to userID: ", _userId);
             console.log(_newStudent);
           }
         } else {
@@ -239,6 +317,7 @@ const StudentDashboard = () => {
       rollnumber: profileData?.studentObj.academicsDetails.rollnumber,
       housename: profileData?.studentObj.academicsDetails.housename,
       busnumber: profileData?.studentObj.academicsDetails.busnumber,
+      photoUrl: profileData?.studentObj.photoUrl,
     };
 
     return defaultValues;
@@ -264,6 +343,7 @@ const StudentDashboard = () => {
       rollnumber: "",
       housename: "",
       busnumber: "",
+      photoUrl: "",
     };
 
     return defaultValues;
@@ -280,8 +360,6 @@ const StudentDashboard = () => {
               animation="slide"
               onChange={(currentIndex) => handleCarouselChange(currentIndex)}
             >
-              {/* {ctx?.state?.siblings.map((student) => ( */}
-              {/* {studentData.map((student: any) => ( */}
               {students &&
                 students.map((student: studentData) => (
                   <Card
@@ -302,9 +380,12 @@ const StudentDashboard = () => {
                           justifyContent={"center"}
                         >
                           <Avatar
-                            src={`/img/profilepic-formals-whiteBG.jpg`}
+                            src={GeneratePrevieUrl(
+                              student.studentObj.photoUrl!
+                            )}
                             alt={
-                              student.studentObj.personalDetails.studentfullname
+                              student.studentObj.personalDetails
+                                ?.studentfullname
                             }
                             // variant="square"
                             sx={{
@@ -393,7 +474,7 @@ const StudentDashboard = () => {
         onEdit={() => setIsEditing(true)}
         addSibling={addSibling}
       />
-      <LoadingDialog open={loading} />{" "}
+      <LoadingDialog open={loading} />
       {/* Show loading dialog during API processing */}
       <FooterLogin />
     </>

@@ -7,44 +7,47 @@ import {
   MenuItem,
   Typography,
   Box,
+  Avatar,
 } from "@mui/material";
 import CustomDatePicker from "../../DatePicker";
-import { UseFormRegister, FieldErrors, Controller } from "react-hook-form";
-import React from "react";
+import {
+  UseFormRegister,
+  FieldErrors,
+  Controller,
+  UseFormSetValue,
+  FieldValues,
+} from "react-hook-form";
+import React, { useState } from "react";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 
 interface StudentDetailsFormProps {
   register: UseFormRegister<any>;
   control: any;
   errors: FieldErrors<any>;
+  setValue?: UseFormSetValue<FieldValues>;
+  photo?: string | null; // Pass photo URL as prop
+  onPhotoUpload?: (file: File) => void; // Callback for file upload
 }
 
 const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
   register,
   control,
   errors,
+  setValue,
+  photo, // Photo URL from parent
+  onPhotoUpload, // Callback for file upload
 }) => {
-  // const {
-  //   control,
-  //   formState: { errors },
-  //   trigger,
-  // } = useFormContext();
-
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && setValue) {
+      setValue("studentphoto", file); // Store file in react-hook-form
+      if (onPhotoUpload) onPhotoUpload(file); // Call parent callback to update photo state
+    }
+  };
   return (
     <>
-      {/* <Box
-        display={"flex"}
-        flexDirection={"row"}
-        alignItems={"center"}
-        justifyContent={"center"}
-        mt={-3}
-      >
-        <Typography variant="h5" color="#cb3d64" fontWeight={"Bold"}>
-          Student's Personal Details
-        </Typography>
-      </Box> */}
-
       <Grid container spacing={4} sx={{ mt: -3 }}>
-        <Grid item xs={12}>
+        <Grid item xs={9}>
           <TextField
             {...register("studentfullname", {
               required: "required",
@@ -59,6 +62,58 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
           />
           {/* {errors?.studentfullname && <p>{errors.studentfullname?.message}</p>} */}
         </Grid>
+        {/* Photo */}
+        <Grid item xs={2}>
+          <Box
+            sx={{
+              position: { xs: "static", md: "absolute" },
+              top: { md: 16 },
+              right: { md: 16 },
+              mt: { xs: 2, md: 0 },
+              width: 132,
+              height: 150,
+              border: "2px solid #ccc",
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#f5f5f5",
+              overflow: "hidden",
+            }}
+          >
+            {photo ? (
+              <Avatar
+                src={photo as string}
+                alt="Student Photo"
+                sx={{ width: "100%", height: "100%", objectFit: "contain" }}
+                variant="square"
+              />
+            ) : (
+              <label htmlFor="photo-upload">
+                <input
+                  {...register("studentphoto", {
+                    required: "Photo is required",
+                    // min: { value: 18, message: "Minimum age is 18" },
+                  })}
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handlePhotoUpload}
+                />
+                <Box
+                  display={"flex"}
+                  flexDirection={"column"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                >
+                  <PhotoCameraIcon sx={{ fontSize: 40, cursor: "pointer" }} />
+                  <Typography variant="caption">.jpeg .jpg .png</Typography>
+                </Box>
+              </label>
+            )}
+          </Box>
+        </Grid>
 
         {/* Address */}
         <Grid item xs={12} display={"flex"} flexDirection={"column"}>
@@ -69,13 +124,16 @@ const StudentDetailsForm: React.FC<StudentDetailsFormProps> = ({
             size="small"
             error={Boolean(errors?.addressline1)}
             required
+            sx={{
+              width: "80%",
+            }}
           />
           <TextField
-            {...register("addressline2", { required: "required" })}
+            // {...register("addressline2", { required: "required" })}
             label="Address Line2"
             variant="standard"
             size="small"
-            sx={{ mt: 1 }}
+            sx={{ mt: 1, width: "80%" }}
           />
 
           {/* <TextField label="Address Line2" variant="standard" size="small" /> */}
