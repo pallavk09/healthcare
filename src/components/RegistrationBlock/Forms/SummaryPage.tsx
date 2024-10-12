@@ -1,12 +1,16 @@
-import { Box, Grid, Typography } from "@mui/material";
+import { Avatar, Box, Grid, Typography } from "@mui/material";
 import formatDate from "../../../common/utils/formatDate";
 import { studentData } from "../../../common/types";
 
 interface StudentDataPropsType {
   studentdata: studentData | null;
+  photo: string | null;
 }
 
-const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
+const SummaryPage: React.FC<StudentDataPropsType> = ({
+  studentdata,
+  photo,
+}) => {
   // const ctx = useContext(ApiContext);
   console.log("Under Summary Page. Printing student Data");
   // console.log(ctx?.state.data);
@@ -49,74 +53,152 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
           },
         }}
       >
-        <Typography
+        {/* <Typography
           variant="h6"
           gutterBottom
           sx={{ fontSize: 20, fontWeight: 600 }}
         >
           Personal Info
-        </Typography>
-        <Grid container spacing={2}>
-          {/* First Row: Full Name */}
-          <Grid item xs={12} sm={4}>
-            <Typography
-              variant="body1"
-              fontWeight="bold"
-              display="inline"
-              sx={{ color: "#2B2B2B" }}
-            >
-              Full Name:
-            </Typography>{" "}
-            <Typography
-              variant="body1"
-              display="inline"
-              sx={{ color: "#2B2B2B" }}
-            >
-              {/* {studentdata?.studentfullname} */}
-              {studentdata?.studentObj.personalDetails.studentfullname}
-            </Typography>
-          </Grid>
+        </Typography> */}
 
-          <Grid item xs={12} sm={4}>
-            <Typography
-              variant="body1"
-              fontWeight="bold"
-              display={"inline"}
-              sx={{ color: "#2B2B2B" }}
-            >
-              DOB:
-            </Typography>{" "}
-            <Typography
-              variant="body1"
-              display={"inline"}
-              sx={{ color: "#2B2B2B" }}
-            >
-              {/* {formatDate(studentdata?.studentdob!)} */}
-              {formatDate(studentdata?.studentObj.personalDetails.studentdob)}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={12} sm={4}>
-            <Typography
-              variant="body1"
-              display={"inline"}
-              fontWeight="bold"
-              sx={{ color: "#2B2B2B" }}
-            >
-              Gender:
-            </Typography>{" "}
-            <Typography
-              variant="body1"
-              display={"inline"}
-              sx={{ color: "#2B2B2B" }}
-            >
-              {/* {studentdata?.studentgender} */}
-              {studentdata?.studentObj.personalDetails.studentgender}
-            </Typography>
-          </Grid>
-
-          {/* Second Row: Address */}
-          <Grid item xs={12} sm={12}>
+        <Box
+          display={"flex"}
+          flexDirection={"row"}
+          justifyContent={"flex-start"}
+          height={"100%"}
+          width={"100%"}
+        >
+          <Avatar
+            src={photo ? photo : ""}
+            alt="Student Photo"
+            sx={{
+              width: "120px",
+              height: "140px",
+              objectFit: "contain",
+            }}
+            variant="square"
+          />
+          {/**This is details typography Box */}
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            justifyContent={"left"}
+            // bgcolor={"yellow"}
+            p={"0 .5rem"}
+            gap={1}
+            width={"100%"}
+          >
+            <Box sx={{ flex: 0 }} textAlign={"left"}>
+              <Typography
+                variant="body1"
+                fontWeight="bold"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                Full Name:
+              </Typography>{" "}
+              <Typography
+                variant="body1"
+                display="inline"
+                sx={{ color: "#2B2B2B" }}
+              >
+                {/* {studentdata?.studentfullname} */}
+                {studentdata?.studentObj.personalDetails.studentfullname}
+              </Typography>
+            </Box>
+            <Box sx={{ flex: 0 }} textAlign={"left"}>
+              <Typography
+                variant="body1"
+                fontWeight="bold"
+                display={"inline"}
+                sx={{ color: "#2B2B2B" }}
+              >
+                DOB:
+              </Typography>{" "}
+              <Typography
+                variant="body1"
+                display={"inline"}
+                sx={{ color: "#2B2B2B" }}
+              >
+                {/* {formatDate(studentdata?.studentdob!)} */}
+                {formatDate(studentdata?.studentObj.personalDetails.studentdob)}
+              </Typography>
+            </Box>
+            <Box sx={{ flex: 0 }} textAlign={"left"}>
+              <Typography
+                variant="body1"
+                display={"inline"}
+                fontWeight="bold"
+                sx={{ color: "#2B2B2B" }}
+              >
+                Gender:
+              </Typography>{" "}
+              <Typography
+                variant="body1"
+                display={"inline"}
+                sx={{ color: "#2B2B2B" }}
+              >
+                {/* {studentdata?.studentgender} */}
+                {studentdata?.studentObj.personalDetails.studentgender}
+              </Typography>
+            </Box>
+            <Box sx={{ width: "100%" }} textAlign={"left"}>
+              <Typography
+                variant="body1"
+                // fontWeight="bold"
+                sx={{ color: "#2B2B2B" }}
+              >
+                <strong> Address:</strong>
+                {` ${studentdata?.studentObj.personalDetails.addressline1} ${
+                  studentdata?.studentObj.personalDetails.addressline2
+                    ? studentdata?.studentObj.personalDetails.addressline2
+                    : ""
+                } ${studentdata?.studentObj.personalDetails.addresscity} ${
+                  studentdata?.studentObj.personalDetails.addressstate
+                } - Pin: ${
+                  studentdata?.studentObj.personalDetails.addresspincode
+                }`}
+              </Typography>
+              {/* <Typography variant="body1" sx={{ color: "#2B2B2B" }}>
+                {studentdata?.studentObj.personalDetails.addressline1}
+              </Typography>
+              <Typography variant="body1" sx={{ color: "#2B2B2B" }}>
+                {studentdata?.studentObj.personalDetails.addressline2}
+              </Typography>
+              <Typography
+                variant="body1"
+                display={"inline"}
+                sx={{ color: "#2B2B2B" }}
+              >
+                {studentdata?.studentObj.personalDetails.addresscity}
+              </Typography>
+              {","}
+              <Typography
+                variant="body1"
+                display={"inline"}
+                sx={{ color: "#2B2B2B" }}
+              >
+                {studentdata?.studentObj.personalDetails.addressstate}
+              </Typography>
+              {","}
+              <Typography
+                variant="body1"
+                display={"inline"}
+                sx={{ color: "#2B2B2B" }}
+              >
+                {studentdata?.studentObj.personalDetails.addresspincode}
+              </Typography> */}
+            </Box>
+          </Box>
+        </Box>
+        {/**Address */}
+        {/* <Box
+            display={"flex"}
+            flexDirection={"row"}
+            width={"100%"}
+            justifyContent={"flex-start"}
+            pt={1}
+          >
             <Typography
               variant="body1"
               fontWeight="bold"
@@ -153,9 +235,9 @@ const SummaryPage: React.FC<StudentDataPropsType> = ({ studentdata }) => {
             >
               {studentdata?.studentObj.personalDetails.addresspincode}
             </Typography>
-          </Grid>
-        </Grid>
+          </Box> */}
 
+        {/**Guradian Details section */}
         <Typography
           variant="h6"
           gutterBottom

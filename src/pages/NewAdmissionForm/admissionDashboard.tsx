@@ -142,6 +142,8 @@ const AdmissionDashboard = () => {
                 style={{
                   cursor: "pointer",
                   textAlign: "center",
+                  boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .3)",
+                  borderRadius: 4,
                 }}
               >
                 <CardContent>
@@ -242,14 +244,15 @@ const AdmissionDashboard = () => {
                       alignItems={"center"}
                       justifyContent={"center"}
                     >
-                      {application.submissionStatus &&
+                      <ApplicationStepper activeStep={2} />
+                      {/* {application.submissionStatus &&
                       application.submissionStatus === "Payment Pending" ? (
                         <MyCustomButton color="primary" variant="contained">
                           Make Payment
                         </MyCustomButton>
                       ) : (
                         <ApplicationStepper activeStep={2} />
-                      )}
+                      )} */}
 
                       {/* <MyCustomButton color="primary" variant="contained">
                       Make Payment
@@ -300,6 +303,8 @@ const AdmissionDashboard = () => {
                 textAlign: "center",
                 padding: "2rem",
                 minWidth: "120px",
+                boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .3)",
+                borderRadius: 4,
                 // minHeight: "140px",
                 // maxHeight: "150px",
               }}

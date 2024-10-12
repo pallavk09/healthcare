@@ -12,6 +12,10 @@ import NewAdmission from "../pages/NewAdmission";
 // import NewAdmissionform from "../pages/NewAdmissionForm/container";
 import AdmissionDetails from "../pages/AdmissionDetails";
 import FeePaymentsScreen from "../pages/FeePaymentsScreen";
+import FeesOverView from "../pages/StudentFees/FeesOverView";
+import StudentDashboardHome from "../pages/StudentDashboardHome";
+import Payment from "../pages/StudentFees/Payment";
+import FeesPaymentCart from "../pages/PaymentCart/FeesPaymentCart";
 
 const RootLayout = lazy(() => import("../pages/RootLayout"));
 const StudentRootLayout = lazy(() => import("../pages/StudentRootLayout"));
@@ -59,6 +63,7 @@ const myRouter = createBrowserRouter([
             ),
             // loader: RegistrationLoader,
           },
+
           {
             path: "studentdashboard/:userId",
             element: (
@@ -66,8 +71,47 @@ const myRouter = createBrowserRouter([
                 <StudentDashboard />
               </ProtectedRoute>
             ),
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute>
+                    <StudentDashboardHome />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "feespaymentsummary",
+                element: (
+                  <ProtectedRoute>
+                    <FeesOverView />
+                  </ProtectedRoute>
+                ),
+              },
+            ],
+            // element: (
+            //   <ProtectedRoute>
+            //     <StudentDashboard />
+            //   </ProtectedRoute>
+            // ),
             // loader: StudentDashboardLoader,
           },
+          {
+            path: ":userId/paymentcart",
+            element: (
+              <ProtectedRoute>
+                <FeesPaymentCart />
+              </ProtectedRoute>
+            ),
+          },
+          // {
+          //   path: "studentdashboard/:userId/feespayment",
+          //   element: (
+          //     <ProtectedRoute>
+          //       <FeesOverView />
+          //     </ProtectedRoute>
+          //   ),
+          // },
         ],
       },
       {

@@ -1,11 +1,14 @@
 // import { newStudentTemplate } from "../Config/payloads";
 
+import formatDate from "../common/utils/formatDate";
+
 const FormatNewStudentPayload = (
   payload: any,
   userId: string | undefined,
   studentId: string,
   phone: string,
-  newAdmission?: boolean
+  newAdmission?: boolean,
+  documentId?: string
 ) => {
   const personalDetails = {
     studentfullname: payload.studentfullname,
@@ -45,6 +48,7 @@ const FormatNewStudentPayload = (
   };
 
   const formattedPayload = {
+    documentId: documentId || null,
     userId: userId,
     phone: phone,
     studentObj,

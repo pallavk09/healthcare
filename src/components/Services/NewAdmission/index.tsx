@@ -20,6 +20,7 @@ import {
   uploadFile,
   UploadFileType,
 } from "../../../api/upload";
+import PersonIcon from "@mui/icons-material/Person";
 
 const NewAdmissionForm = ({
   onClose,
@@ -212,7 +213,123 @@ const NewAdmissionForm = ({
                 </Box>
               </Box>
               {/* Photo Upload Box */}
+
               <Box
+                sx={{
+                  // position: { xs: "static", md: "absolute" },
+                  // top: { md: 16 },
+                  // right: { md: 16 },
+                  mt: { xs: 2, md: 0 },
+                  width: 132,
+                  height: 170,
+                  border: "2px solid #ccc",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "#f5f5f5",
+                  overflow: "hidden",
+                }}
+              >
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: "100%",
+                    height: "100%",
+                  }}
+                >
+                  {photo ? (
+                    <>
+                      <Avatar
+                        src={photo as string}
+                        alt="Student Photo"
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                        }}
+                        variant="square"
+                      />
+                      {/* Hover effect for Camera Icon */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          right: 0,
+                          bottom: 0,
+                          left: 0,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          bgcolor: "rgba(0, 0, 0, 0.4)", // Dark overlay on hover
+                          opacity: 0,
+                          transition: "opacity 0.3s ease",
+                          cursor: "pointer",
+                          "&:hover": {
+                            opacity: 1, // Show icon on hover
+                          },
+                        }}
+                        onClick={() =>
+                          document.getElementById("photo-upload")?.click()
+                        } // Trigger file input on click
+                      >
+                        <PhotoCameraIcon
+                          sx={{ color: "white", fontSize: 40 }}
+                        />
+                      </Box>
+                    </>
+                  ) : (
+                    <>
+                      <Avatar
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          bgcolor: "#f0f0f0", // Background color for the empty avatar
+                        }}
+                        variant="square"
+                      >
+                        <PersonIcon sx={{ fontSize: 120, color: "#bdbdbd" }} />
+                      </Avatar>
+                      {/* Hover effect for Camera Icon when no photo */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          right: 0,
+                          bottom: 0,
+                          left: 0,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          bgcolor: "rgba(0, 0, 0, 0.4)", // Dark overlay on hover
+                          opacity: 0,
+                          transition: "opacity 0.3s ease",
+                          cursor: "pointer",
+                          "&:hover": {
+                            opacity: 1, // Show icon on hover
+                          },
+                        }}
+                        onClick={() =>
+                          document.getElementById("photo-upload")?.click()
+                        } // Trigger file input on click
+                      >
+                        <PhotoCameraIcon
+                          sx={{ color: "white", fontSize: 40 }}
+                        />
+                      </Box>
+
+                      <input
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={handlePhotoUpload}
+                      />
+                    </>
+                  )}
+                </Box>
+              </Box>
+
+              {/* <Box
                 sx={{
                   // position: { xs: "static", md: "absolute" },
                   // top: { md: 16 },
@@ -258,7 +375,7 @@ const NewAdmissionForm = ({
                     </Box>
                   </label>
                 )}
-              </Box>
+              </Box> */}
             </Box>
           </Grid>
 

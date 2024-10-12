@@ -1,5 +1,9 @@
 import { TFunction } from "i18next";
 import { newAddmissionApplicationType } from "../store/newadmissionContext";
+import {
+  cartContextType_ADMISSION_FORM,
+  cartContextType_FEE,
+} from "../store/cartContext";
 export interface ContainerProps {
   border?: boolean;
   children: React.ReactNode;
@@ -40,6 +44,7 @@ export interface validateProps {
 }
 
 export interface studentData {
+  documentId: string | null;
   userId: string;
   phone: string;
   studentObj: {
@@ -95,6 +100,20 @@ export type userAction =
   | {
       type: "ADD_NEW_APPLICATION";
       payload: newAddmissionApplicationType;
+    }
+  | {
+      type: "ADD_TO_CART_FEES_PAYMENT";
+      payload: cartContextType_FEE;
+    }
+  | {
+      type: "ADD_TO_CART_NEW_ADMISSION_FORM_PAYMENT";
+      payload: cartContextType_ADMISSION_FORM;
+    }
+  | {
+      type: "GET_COUNT_FEES_PAYMENT";
+    }
+  | {
+      type: "GET_COUNT_NEW_ADMISSION_FORM_PAYMENT";
     };
 
 export type PersonalInfoType = {

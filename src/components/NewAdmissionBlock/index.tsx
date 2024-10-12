@@ -229,6 +229,13 @@ const NewAdmissionBlock = ({ icon, id, direction }: ContentBlockProps) => {
                     {loading ? "Sending..." : "Send OTP"}
                   </MyCustomButton>
                 </Form.Item>
+                <Typography variant="caption" color="textSecondary">
+                  You may also{" "}
+                  <Link href="/privacypolicy.html" color="rgb(255, 130, 92)">
+                    <strong>download admission form</strong>
+                  </Link>{" "}
+                  and fill it manually.
+                </Typography>
               </Form>
             )}
             {isOtpSent && (

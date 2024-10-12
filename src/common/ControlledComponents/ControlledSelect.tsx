@@ -7,6 +7,7 @@ import {
   MenuItem,
   FormControlProps,
   SelectProps,
+  FormHelperText,
 } from "@mui/material";
 
 // Define props for the ControlledSelect component
@@ -71,8 +72,9 @@ const ControlledSelect: React.FC<ControlledSelectProps> = ({
           </Select>
         )}
       />
-      {/* Add FormHelperText to show error message */}
-      {/* {errorMessage && <FormHelperText error>{errorMessage}</FormHelperText>} */}
+      <FormHelperText sx={{ color: "#d32f2f" }}>
+        {errors?.[name]?.message?.toString() || ""}
+      </FormHelperText>
     </FormControl>
   );
 };

@@ -14,7 +14,11 @@ import Carousel from "react-material-ui-carousel";
 import StudentProfileDashboard from "../../components/Dashboard/StudentProfileDashboard";
 import FooterLogin from "../../components/FooterLogin";
 import { useLoaderData, json } from "react-router-dom";
-import { CreateNewStudent, ListStudents } from "../../api/students";
+import {
+  CreateNewStudent,
+  ListStudents,
+  UpdateStudent,
+} from "../../api/students";
 import { studentData } from "../../common/types";
 import ProfileDialog from "../../components/ProfileDialog";
 import { MyCustomButton } from "../../common/MyCustomControls";
@@ -27,6 +31,7 @@ import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import userDataContext from "../../store/userContext";
 import { jwtDecode } from "jwt-decode";
 import { GeneratePrevieUrl } from "../../common/utils/generatePreviewUrl";
+import { Outlet } from "react-router-dom";
 
 const Container = lazy(() => import("../../common/Container"));
 
@@ -76,23 +81,6 @@ const AnimatedButton = ({
   );
 };
 
-// export async function Loader({ params }: { params: any }) {
-//   try {
-//     console.log(`params.userId!: ${params.userId!}`);
-//     const studentList = await ListStudents(params.userId!);
-//     if (studentList?.result && studentList?.result.length > 0) {
-//       return studentList?.result;
-//     } else {
-//       throw json({ message: "Could not fetch students" }, { status: 500 });
-//     }
-//   } catch (error: any) {
-//     throw json(
-//       { message: `Could not fetch students. Error${error.message}` },
-//       { status: 500 }
-//     );
-//   }
-// }
-
 const StudentDashboard = () => {
   const ctx = useContext(ApiContext);
   const ctx_userData = useContext(userDataContext);
@@ -105,6 +93,7 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [_userId, setUserId] = useState<string | undefined>();
   const [_phone, setPhone] = useState<string | undefined>();
+  const [_studentIndex, setStudentIndex] = useState();
   // Reference to control reset from parent
   const resetFormRef = useRef<() => void>(() => {});
   const snackbarRef = useRef<SnackbarHandle>(null);
@@ -156,6 +145,8 @@ const StudentDashboard = () => {
             const studentFormatted = formatStudentDataForContext(
               studentList?.result
             );
+            console.log("Dashboard. Data formatted");
+            console.log(studentFormatted);
             setStudents(studentFormatted);
             setSelectedStudent(studentFormatted![0]);
           } else {
@@ -179,6 +170,12 @@ const StudentDashboard = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (_studentIndex) {
+      setSelectedStudent(students![_studentIndex]);
+    }
+  }, [_studentIndex, students]);
+
   const openProfileDialog = () => {
     console.log("Manage Profile clicked");
     setProfileDialogOpen(true);
@@ -192,6 +189,7 @@ const StudentDashboard = () => {
       // let siblingsArray: studentData[] | {} = {};
       siblingsArray = studentArray.map((student: any) => {
         return {
+          documentId: student.$id,
           userId: student.userId,
           phone: student.phone,
           newAdmission: student.newAdmission,
@@ -215,20 +213,65 @@ const StudentDashboard = () => {
     }
   };
 
+  const checkIfDuplicate = (siblingData: any): number => {
+    console.log("Inside checkIfDuplicate function");
+    console.log(
+      `students![0].studentObj.personalDetails.studentfullname: ${
+        students![0].studentObj.personalDetails.studentfullname
+      }`
+    );
+    console.log(`siblingData.studentfullname: ${siblingData.studentfullname}`);
+    const studentIndex = students?.findIndex((student) => {
+      if (
+        student.studentObj.personalDetails.studentfullname.toUpperCase() ===
+        siblingData.studentfullname.toUpperCase()
+      ) {
+        return true;
+      } else if (
+        student.studentObj.academicsDetails.class.toUpperCase() ===
+          siblingData.class.toUpperCase() &&
+        student.studentObj.academicsDetails.section.toUpperCase() ===
+          siblingData.section.toUpperCase() &&
+        student.studentObj.academicsDetails.rollnumber.toUpperCase() ===
+          siblingData.rollnumber.toUpperCase()
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    console.log(`Printing student Index: ${studentIndex}`);
+    return studentIndex!;
+  };
+
   const handleCarouselChange = (studentIndex: any) => {
     console.log(`Student Index is: ${studentIndex}`);
-    if (students && students.length > 0)
+    if (students && students.length > 0) {
+      const activeStudent = students[studentIndex];
+      console.log("Active Student");
+      console.log(activeStudent);
+      setStudentIndex(studentIndex);
       setSelectedStudent(students[studentIndex]);
+    }
   };
 
   const handleSaveProfile = async (data: any) => {
+    console.log("Inside Handle Save Profile");
     try {
       setLoading(true);
+      const studentIndex = checkIfDuplicate(data);
+      if (studentIndex === 0) {
+        console.log("Student already exisit in our database.");
+        snackbarRef.current?.showSnackbar(
+          `Student already exisit in our database.`,
+          "warning"
+        );
+        return;
+      }
       if (addSibling) {
         console.log("New Student to be added");
         console.log("Sibling Data:", data);
-        console.log("Current Context");
-        console.log(ctx?.state);
         const studentId = `studid${uuid()}`;
         if (_userId && _phone) {
           const value_Formatted = FormatNewStudentPayload(
@@ -259,6 +302,7 @@ const StudentDashboard = () => {
             };
 
             const formattedSibling = {
+              documentId: _newStudent.newStudent.$id,
               userId: _newStudent.newStudent.userId,
               phone: _newStudent.newStudent.phone,
               newAdmission: _newStudent.newStudent.newAdmission,
@@ -274,6 +318,10 @@ const StudentDashboard = () => {
             console.log(`Updated Student state`);
             console.log(updatedStudents);
             setStudents(updatedStudents);
+            snackbarRef.current?.showSnackbar(
+              `Sibling added successfully.`,
+              "success"
+            );
             //Refresh the page
             // navigate(0);
           } else {
@@ -290,8 +338,96 @@ const StudentDashboard = () => {
       } else {
         console.log("Update existing students");
         console.log("Manage Profile. Saved Data:", data);
+        const documentId = selectedStudent?.documentId;
+        if (selectedStudent?.userId && selectedStudent?.phone) {
+          const updated_sibling_formatted = FormatNewStudentPayload(
+            data,
+            selectedStudent?.userId,
+            selectedStudent?.studentObj.id,
+            selectedStudent?.phone,
+            false,
+            documentId!
+          );
+
+          console.log(`Formatted sibling value`);
+          console.log(updated_sibling_formatted);
+
+          const _updatedStudent = await UpdateStudent(
+            updated_sibling_formatted
+          );
+
+          if (_updatedStudent && _updatedStudent.updatedStudent) {
+            console.log("Student Updated");
+            console.log(_updatedStudent.updatedStudent);
+
+            let _personalDetails = JSON.parse(
+              _updatedStudent.updatedStudent.personalDetails
+            );
+
+            const studentObj = {
+              id: _updatedStudent.updatedStudent.studentId,
+              personalDetails: {
+                ..._personalDetails,
+                studentdob: formatDate(_personalDetails.studentdob),
+              },
+              guardianDetails: JSON.parse(
+                _updatedStudent.updatedStudent.guardianDetails
+              ),
+              academicsDetails: JSON.parse(
+                _updatedStudent.updatedStudent.academicsDetails
+              ),
+              newAdmission: _updatedStudent.updatedStudent.newAdmission,
+              fees: _updatedStudent.updatedStudent.fees,
+            };
+
+            const formattedSibling = {
+              documentId: _updatedStudent.updatedStudent.$id,
+              userId: _updatedStudent.updatedStudent.userId,
+              phone: _updatedStudent.updatedStudent.phone,
+              studentObj,
+            };
+
+            console.log("Formatted Sibling");
+            console.log(formattedSibling);
+
+            console.log("Existing atudent array");
+            console.log(students);
+
+            const updatedSiblingsArray: studentData[] = students!.map(
+              (student: studentData) => {
+                return student.documentId === formattedSibling.documentId
+                  ? formattedSibling
+                  : student;
+              }
+            );
+
+            console.log("Updated Siblings array");
+            setStudents(updatedSiblingsArray);
+
+            // const updatedStudents = [
+            //   ...students!,
+            //   formattedSibling,
+            // ] as studentData[];
+
+            snackbarRef.current?.showSnackbar(
+              `Data updated successfully.`,
+              "success"
+            );
+          } else {
+            console.log("Some issue");
+            snackbarRef.current?.showSnackbar(
+              `Issue while updating youe details`,
+              "error"
+            );
+          }
+        }
       }
     } catch (error) {
+      console.log("Exception: ", error);
+      snackbarRef.current?.showSnackbar(
+        `Exception while submitting details`,
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -367,7 +503,12 @@ const StudentDashboard = () => {
                     // onClick={() => handleStudentSelect(student)}
                     sx={{
                       cursor: "pointer",
-                      border: "2px solid #f5f5f5",
+                      boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .3)",
+                      borderRadius: 2,
+                      padding: (theme) => theme.spacing(1, 2),
+                      margin: (theme) => theme.spacing(1),
+                      // background:
+                      //   "linear-gradient(60deg, rgba(251,140,0,1) 0%, rgba(255,202,41,1) 100%)",
                     }}
                   >
                     <CardContent>
@@ -403,10 +544,7 @@ const StudentDashboard = () => {
                         >
                           <Typography variant="h6" color="#df0c0c">
                             <strong>
-                              {
-                                student.studentObj.personalDetails
-                                  .studentfullname
-                              }
+                              {student.studentObj.personalDetails.studentfullname?.toUpperCase()}
                             </strong>
                           </Typography>
                         </Grid>
@@ -456,7 +594,8 @@ const StudentDashboard = () => {
           </Grid>
 
           <Grid item xs={8}>
-            <StudentProfileDashboard student={selectedStudent} />
+            <Outlet context={{ _userId, _phone, selectedStudent }} />
+            {/* <StudentProfileDashboard userId={_userId!} phone={_phone!} /> */}
           </Grid>
         </Grid>
       </Container>

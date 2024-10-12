@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -49,12 +49,12 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({
     reset,
   } = useForm({
     defaultValues: profileData,
-    // mode: "onTouched",
+    mode: "onTouched",
   });
 
   useEffect(() => {
     if (profileData) {
-      console.log("profileData");
+      console.log("Under useEffect of profileDialog. Profile data as below");
       console.log(profileData);
       reset(profileData); // Reset form with new profileData
     }
@@ -232,15 +232,16 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({
                   justifyContent={"normal"}
                   sx={{ mt: -1 }}
                 >
-                  {/* <CustomDatePicker
+                  <CustomDatePicker
                     format="DD-MM-YYYY"
                     name="studentdob"
                     label="Date of Birth"
                     control={control}
                     errors={errors}
                     rules={{ required: "required" }}
-                     disabled={addSibling ? false : !isEditing}
-                  /> */}
+                    selectedDate={profileData.studentdob}
+                    disabled={addSibling ? false : !isEditing}
+                  />
 
                   {/* Gender */}
                   <ControlledSelect

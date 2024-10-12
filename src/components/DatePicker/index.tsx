@@ -1,5 +1,6 @@
 // import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-// import dayjs from "dayjs";
+import { useState, useEffect } from "react";
+import dayjs, { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 // import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -15,7 +16,7 @@ interface CustomDatePickerType {
   control: Control<any>;
   errors: FieldErrors<any>;
   rules?: Object;
-  defaultValue?: Date | null;
+  selectedDate?: string;
   disabled?: boolean;
 }
 
@@ -26,9 +27,18 @@ const CustomDatePicker: React.FC<CustomDatePickerType> = ({
   control,
   errors,
   rules = {},
-  defaultValue = null,
+  selectedDate,
   disabled,
 }) => {
+  const [savedDate, setSaveDate] = useState<Dayjs>();
+
+  useEffect(() => {
+    console.log("Inside useEffect of Custom Datepicker. Date: ", selectedDate);
+    const _savedDate: Dayjs = dayjs(selectedDate, "DD-MM-YYYY").startOf("day");
+    console.log(`Saved dates: ${_savedDate}`);
+    setSaveDate(_savedDate);
+  }, [selectedDate]);
+
   // const {
   //   control,
   //   formState: { errors },
@@ -40,14 +50,15 @@ const CustomDatePicker: React.FC<CustomDatePickerType> = ({
         <Controller
           name={name}
           control={control}
-          defaultValue={defaultValue}
+          defaultValue={savedDate}
           rules={rules}
           render={({ field }) => (
             <>
               <DatePicker
                 label={label}
                 disabled={disabled}
-                value={field.value}
+                format="DD-MM-YYYY"
+                value={savedDate}
                 onChange={(newvalue) => field.onChange(newvalue)}
                 slots={{
                   textField: (textFieldProps) => (
@@ -59,7 +70,7 @@ const CustomDatePicker: React.FC<CustomDatePickerType> = ({
                         mr: 3,
                       }}
                       error={Boolean(errors?.[name])}
-                      // helperText={errors?.[name]?.message || ""}
+                      helperText={errors?.[name]?.message || ""}
                     />
                   ),
                 }}

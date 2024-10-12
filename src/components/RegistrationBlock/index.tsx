@@ -116,12 +116,6 @@ const RegistrationBlock = () => {
     }
   }, []);
 
-  const handlePhotoUpload = (file: File) => {
-    const photoURL = URL.createObjectURL(file);
-    setPhotoFile(file);
-    setPhoto(photoURL); // Store photo URL in state
-  };
-
   const methods = useForm({
     mode: "onTouched",
   });
@@ -135,8 +129,17 @@ const RegistrationBlock = () => {
     formState: { errors },
   } = methods;
 
+  const handlePhotoUpload = async (file: File) => {
+    console.log("Inside handlePhotoUpload");
+    const photoURL = URL.createObjectURL(file);
+    setPhotoFile(file);
+    setPhoto(photoURL); // Store photo URL in state
+  };
+
   // Function to submit the form for the final step
   const onSubmit = async (data: any) => {
+    console.log("Under OnSubmit");
+    console.log(methods.getValues());
     try {
       if (activeStep === steps.length - 1) {
         setLoading(true);
@@ -177,7 +180,7 @@ const RegistrationBlock = () => {
   const handleNext = async () => {
     console.log(`Handling next. Phone: ${_phone} and UserId: ${_userId}`);
     const isValid = await trigger(); // Validate current step before moving
-    // console.log(methods.getValues());
+    console.log(methods.getValues());
     if (isValid) {
       if (activeStep === steps.length - 2) {
         console.log("Review and Submit screen. Show summary");
@@ -218,6 +221,7 @@ const RegistrationBlock = () => {
             setValue={setValue}
             photo={photo} // Pass the photo URL or file
             onPhotoUpload={handlePhotoUpload} // Callback to handle photo upload
+            trigger={trigger}
           />
         );
       case 1:
@@ -239,7 +243,7 @@ const RegistrationBlock = () => {
           />
         );
       case 3:
-        return <SummaryPage studentdata={studentDataState} />;
+        return <SummaryPage studentdata={studentDataState} photo={photo} />;
     }
   };
   return (

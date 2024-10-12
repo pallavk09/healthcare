@@ -4,9 +4,14 @@ import { userAction, userState, studentData } from "../common/types";
 import { newAddmissionApplicationType } from "./newadmissionContext";
 import newadmissionContext from "./newadmissionContext";
 import userDataContext, { userDataType } from "./userContext";
+import {
+  cartContextType_ADMISSION_FORM,
+  cartContextType_FEE,
+} from "./cartContext";
+
+import { feePaymentContext, newAdmissionPaymentContext } from "./cartContext";
 
 //Initial user data context
-
 const initialUserIdPhone: userDataType = {
   userId: "",
   phone: "",
@@ -40,6 +45,13 @@ export const initialState_NewAdmission: newAddmissionApplicationType[] = [
     transactionId: "",
   },
 ];
+
+//Initial state FEE Payment
+
+const initialState_FeesPayment: cartContextType_FEE[] = [];
+
+//Initial state New Admission Payment
+const initialState_NewAdmission_payment: cartContextType_ADMISSION_FORM[] = [];
 
 const addUpdateSiblings = (
   siblings: studentData[],
@@ -174,6 +186,34 @@ const userSessionReducer = (
   }
 };
 
+const feesPaymentReducer = (
+  state: cartContextType_FEE[],
+  action: userAction
+): cartContextType_FEE[] => {
+  switch (action.type) {
+    case "ADD_TO_CART_FEES_PAYMENT":
+      return state.length > 0 ? [...state, action.payload] : [action.payload];
+    case "GET_COUNT_FEES_PAYMENT":
+      return state;
+    default:
+      return state;
+  }
+};
+
+const newAdmissionFormPaymentReducer = (
+  state: cartContextType_ADMISSION_FORM[],
+  action: userAction
+): cartContextType_ADMISSION_FORM[] => {
+  switch (action.type) {
+    case "ADD_TO_CART_NEW_ADMISSION_FORM_PAYMENT":
+      return state.length > 0 ? [...state, action.payload] : [action.payload];
+    case "GET_COUNT_NEW_ADMISSION_FORM_PAYMENT":
+      return state;
+    default:
+      return state;
+  }
+};
+
 // Provider component
 interface ApiProviderProps {
   children: ReactNode;
@@ -190,16 +230,35 @@ const ApiProvider = ({ children }: ApiProviderProps) => {
     initialUserIdPhone
   );
 
+  const [state_Fee_payment, dispatch_Fee_payment] = useReducer(
+    feesPaymentReducer,
+    initialState_FeesPayment
+  );
+
+  const [state_NewAdmission_payment, dispatch_NewAdmission_payment] =
+    useReducer(
+      newAdmissionFormPaymentReducer,
+      initialState_NewAdmission_payment
+    );
+
   return (
-    <userDataContext.Provider value={{ user_state, user_dispatch }}>
-      <newadmissionContext.Provider
-        value={{ state_newAdmission, dispatch_newadmission }}
+    <newAdmissionPaymentContext.Provider
+      value={{ state_NewAdmission_payment, dispatch_NewAdmission_payment }}
+    >
+      <feePaymentContext.Provider
+        value={{ state_Fee_payment, dispatch_Fee_payment }}
       >
-        <ApiContext.Provider value={{ state, dispatch }}>
-          {children}
-        </ApiContext.Provider>
-      </newadmissionContext.Provider>
-    </userDataContext.Provider>
+        <userDataContext.Provider value={{ user_state, user_dispatch }}>
+          <newadmissionContext.Provider
+            value={{ state_newAdmission, dispatch_newadmission }}
+          >
+            <ApiContext.Provider value={{ state, dispatch }}>
+              {children}
+            </ApiContext.Provider>
+          </newadmissionContext.Provider>
+        </userDataContext.Provider>
+      </feePaymentContext.Provider>
+    </newAdmissionPaymentContext.Provider>
   );
 };
 

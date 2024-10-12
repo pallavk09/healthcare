@@ -25,4 +25,17 @@ const CreateNewStudent = async (studentData: any) => {
   }
 };
 
-export { ListStudents, CreateNewStudent };
+const UpdateStudent = async (studentData: any) => {
+  const data = JSON.stringify(studentData);
+  const response = await axios_instance.post("/student/update", data);
+  console.log(response);
+  if (response?.data?.status === "SUCCESS") {
+    console.log("UI API call. Success");
+    console.log(response);
+    return response?.data;
+  } else {
+    return [];
+  }
+};
+
+export { ListStudents, CreateNewStudent, UpdateStudent };
