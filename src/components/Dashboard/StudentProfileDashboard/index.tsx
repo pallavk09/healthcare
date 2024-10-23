@@ -27,8 +27,8 @@ const StudentProfileDashboard = ({
       <Box
         display={"flex"}
         flexDirection={"row"}
-        // minHeight={"95%"}
-        maxHeight={"90vh"}
+        // minHeight={"60vh"}
+        maxHeight={"100vh"}
         width={"68vw"}
         border="1px solid #edf3f5"
         boxShadow={2}

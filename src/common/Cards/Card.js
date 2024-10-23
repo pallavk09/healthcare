@@ -63,6 +63,8 @@ export default function Card(props) {
             padding: (theme) => theme.spacing(1),
             margin: (theme) => theme.spacing(1),
           }}
+          flexDirection={"column"}
+          alignItems={"flex-end"}
           justifyContent="flex-end"
         >
           <Typography variant="h5">

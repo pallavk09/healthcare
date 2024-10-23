@@ -1,4 +1,4 @@
-export const monthFeeTimeGap_days = 16;
+export const monthFeeTimeGap_days = 30;
 
 const RouteConfig = {
   route1: {
