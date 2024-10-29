@@ -56,6 +56,12 @@ const AdmissionDashboard = () => {
   const navigate = useNavigate();
   const snackbarRef = useRef<SnackbarHandle>(null);
 
+  const statusOrder = {
+    Verification: 0,
+    Interview: 1,
+    Selected: 3,
+  };
+
   // const ctx = useContext(newadmissionContext);
   const ctx_userData = useContext(userDataContext);
 
@@ -225,7 +231,12 @@ const AdmissionDashboard = () => {
                                 : "#59bab7"
                             }
                           >
-                            <strong> {application.submissionStatus}</strong>
+                            <strong>
+                              {application.submissionStatus ===
+                              "Payment Pending"
+                                ? "Payment Pending"
+                                : application.currentStatus}
+                            </strong>
                           </Typography>
                         </Box>
                       </Box>
@@ -244,15 +255,50 @@ const AdmissionDashboard = () => {
                       alignItems={"center"}
                       justifyContent={"center"}
                     >
-                      <ApplicationStepper activeStep={2} />
-                      {/* {application.submissionStatus &&
-                      application.submissionStatus === "Payment Pending" ? (
-                        <MyCustomButton color="primary" variant="contained">
-                          Make Payment
-                        </MyCustomButton>
+                      {/* <ApplicationStepper activeStep={2} /> */}
+                      {
+                        application.submissionStatus &&
+                        application.submissionStatus === "Payment Pending" ? (
+                          <MyCustomButton color="primary" variant="contained">
+                            Make Payment
+                          </MyCustomButton>
+                        ) : (
+                          ""
+                        )
+                        // <ApplicationStepper
+                        //   //@ts-ignore
+                        //   activeStep={statusOrder[application.currentStatus]}
+                        // />
+                      }
+
+                      {application.currentStatus &&
+                      application.currentStatus === "Interview Scheduled" ? (
+                        <Typography>
+                          <strong>
+                            {`Kindly visit school on ${application.interview}`}
+                          </strong>
+                        </Typography>
                       ) : (
-                        <ApplicationStepper activeStep={2} />
-                      )} */}
+                        ""
+                      )}
+
+                      {application.currentStatus &&
+                      application.currentStatus === "Interview" ? (
+                        <Typography>
+                          <strong>{`You will receive interview date and slot shortly.`}</strong>
+                        </Typography>
+                      ) : (
+                        ""
+                      )}
+
+                      {application.currentStatus &&
+                      application.currentStatus === "Verification" ? (
+                        <Typography>
+                          <strong>{`We are verifying your application. Updates will be shared shortly.`}</strong>
+                        </Typography>
+                      ) : (
+                        ""
+                      )}
 
                       {/* <MyCustomButton color="primary" variant="contained">
                       Make Payment

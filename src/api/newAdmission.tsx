@@ -14,6 +14,16 @@ const ListApplications = async (userId: string | null) => {
   }
 };
 
+const ListAllApplications = async () => {
+  const response = await axios_instance.get("/newadmission/listall");
+  console.log(response);
+  if (response?.data?.status === "SUCCESS") {
+    return response.data;
+  } else {
+    return [];
+  }
+};
+
 const CreateNewApplication = async (applicationData: any) => {
   console.log("CreateNewApplication. Data received as");
   console.log(applicationData);
@@ -30,4 +40,49 @@ const CreateNewApplication = async (applicationData: any) => {
   }
 };
 
-export { ListApplications, CreateNewApplication };
+const UpdateApplicationStatus = async (
+  documentId: string,
+  currentStatus: string
+) => {
+  const data = JSON.stringify({ documentId, currentStatus });
+  const response = await axios_instance.post(
+    "/newadmission/update-application-status",
+    data
+  );
+  console.log(response);
+  if (response?.data?.status === "SUCCESS") {
+    console.log("UpdateApplicationStatus. Success");
+    console.log(response);
+    return response?.data;
+  } else {
+    return [];
+  }
+};
+
+const ScheduleInterview = async (
+  documentId: string,
+  interviewDateSlot: string,
+  currentStatus: string
+) => {
+  const data = JSON.stringify({ documentId, interviewDateSlot, currentStatus });
+  const response = await axios_instance.post(
+    "/newadmission/scheduleinterview",
+    data
+  );
+  console.log(response);
+  if (response?.data?.status === "SUCCESS") {
+    console.log("ScheduleInterview. Success");
+    console.log(response);
+    return response?.data;
+  } else {
+    return [];
+  }
+};
+
+export {
+  ListApplications,
+  CreateNewApplication,
+  ListAllApplications,
+  UpdateApplicationStatus,
+  ScheduleInterview,
+};

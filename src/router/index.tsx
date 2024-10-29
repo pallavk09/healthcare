@@ -114,21 +114,29 @@ const myRouter = createBrowserRouter([
           // },
         ],
       },
+    ],
+  },
+  {
+    path: "schooladmin",
+    element: <SchoolAdmin />,
+    children: [
       {
-        path: "schooladmin",
-        element: <SchoolAdmin />,
-        children: [
-          {
-            path: "admission-details",
-            element: <AdmissionDetails />,
-          },
-          {
-            path: "fees-details",
-            element: <FeePaymentsScreen />,
-          },
-        ],
+        path: "admission-details",
+        element: <AdmissionDetails />,
+      },
+      {
+        path: "fees-details",
+        element: <FeePaymentsScreen />,
       },
     ],
+  },
+  {
+    path: "admission-details",
+    element: <AdmissionDetails />,
+  },
+  {
+    path: "fees-details",
+    element: <FeePaymentsScreen />,
   },
 ]);
 const Router = () => {

@@ -101,7 +101,7 @@ const NewAdmissionForm = ({
           phone: _phone!,
           emailId: "",
           applicationId: generateUniqueId(),
-          status: "",
+          currentStatus: "",
           role: "NEWADMISSION",
           submissionDate: "",
           createdAt: "",
@@ -110,6 +110,7 @@ const NewAdmissionForm = ({
           submissionStatus: "Payment Pending",
           paymentStatus: "Pending",
           transactionId: "",
+          interview: "",
         };
 
         const response = await CreateNewApplication(newApplicationObj);

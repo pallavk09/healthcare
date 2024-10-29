@@ -34,7 +34,7 @@ export const initialState_NewAdmission: newAddmissionApplicationType[] = [
     phone: "",
     emailId: "",
     applicationId: "",
-    status: "",
+    currentStatus: "",
     role: "NEWADMISSION",
     submissionDate: "",
     createdAt: "",
@@ -43,6 +43,7 @@ export const initialState_NewAdmission: newAddmissionApplicationType[] = [
     submissionStatus: "",
     paymentStatus: "",
     transactionId: "",
+    interview: "",
   },
 ];
 

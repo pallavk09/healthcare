@@ -7,7 +7,13 @@ export interface newAddmissionApplicationType {
   phone: string;
   emailId: string;
   applicationId: string;
-  status: "Applied" | "Interview" | "Selected" | "";
+  currentStatus:
+    | "Verification"
+    | "Interview"
+    | "Selected"
+    | "Rejected"
+    | "Interview Scheduled"
+    | "";
   role: "NEWADMISSION";
   submissionDate: string;
   createdAt: string;
@@ -16,6 +22,7 @@ export interface newAddmissionApplicationType {
   submissionStatus: "Complete" | "Payment Pending" | "";
   paymentStatus: "Success" | "Fail" | "Pending" | "";
   transactionId: string;
+  interview: string;
 }
 
 interface newAdmissionContext {
