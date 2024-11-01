@@ -272,14 +272,16 @@ const AdmissionDetails: React.FC = () => {
         const applicationList = await ListAllApplications();
         if (applicationList?.result && applicationList?.result.length > 0) {
           const rows = formatRows(applicationList?.result);
-
+          console.log("Formatted Rows");
+          console.log(rows);
           // Example of summary counts (you would calculate these based on your data)
           const totalRegistrations = rows.length;
           const totalPending = rows.filter(
             (row) => row.status === "Verification"
           ).length;
           const totalScheduled = rows.filter(
-            (row) => row.status === "Interview"
+            (row) =>
+              row.status === "Interview" || row.status === "Interview Scheduled"
           ).length;
           const totalCompleted = rows.filter(
             (row) => row.status === "Selected"
