@@ -145,6 +145,10 @@ const FeesOverView = () => {
   }, []);
 
   useEffect(() => {
+    setFeeDataFiltered(feeData[0]);
+  }, []);
+
+  useEffect(() => {
     let feesDataFiltered = feeData.filter(
       (row: any) => row.student_docId === selectedStudent.documentId
     );

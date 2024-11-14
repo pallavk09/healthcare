@@ -14,4 +14,14 @@ const GetFeeData = async (userId: string) => {
   }
 };
 
-export { GetFeeData };
+const GetAllFeeData = async () => {
+  const response = await axios_instance.get("/fees/getallfeedata");
+  console.log(response);
+  if (response?.data?.status === "SUCCESS") {
+    return response.data;
+  } else {
+    return [];
+  }
+};
+
+export { GetFeeData, GetAllFeeData };

@@ -7,6 +7,7 @@ import {
   GridToolbarContainer,
   GridToolbarExport,
   GridToolbarFilterButton,
+  GridOverlay,
 } from "@mui/x-data-grid";
 import { Typography, Box, Grid } from "@mui/material";
 
@@ -16,6 +17,18 @@ const CustomToolbar: React.FC = () => {
       <GridToolbarFilterButton />
       <GridToolbarExport />
     </GridToolbarContainer>
+  );
+};
+
+const CustomNoRowsOverlay = () => {
+  return (
+    <GridOverlay>
+      <Box sx={{ textAlign: "center", padding: 2 }}>
+        <Typography variant="h5" color="textSecondary">
+          NO DATA AVAILABLE
+        </Typography>
+      </Box>
+    </GridOverlay>
   );
 };
 
@@ -77,89 +90,83 @@ const FeeDetails: React.FC<any> = (props) => {
     React.useState<GridPaginationModel>({ page: 0, pageSize: 5 });
 
   // Helper function to determine cell color based on status and date
-  const getStatusStyle = (status: string, dueDate: string) => {
-    // const today = new Date();
-    const _dueDate = new Date(dueDate);
-    // const daysDiff = Math.ceil(
-    //   (_dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    // );
-    const daysDiff = _dueDate.getDate() - new Date().getDate();
-    console.log("Days Diff", daysDiff);
-    if (status === "Paid") {
-      return {
-        status: "Paid",
-        style: { backgroundColor: "#d4edda", color: "#155724" },
-      }; // Elegant Green
-    } else if (daysDiff <= 4 && daysDiff >= 0) {
-      return {
-        status: "Upcoming",
-        style: { backgroundColor: "#fff3cd", color: "#856404" },
-      }; // Elegant Amber
-    } else if (daysDiff < 0) {
-      return {
-        status: "Overdue",
-        style: { backgroundColor: "#f8d7da", color: "#721c24" },
-      }; // Elegant Red
-    }
-    return {};
-  };
+  // const getStatusStyle = (status: string, dueDate: string) => {
+  //   // const today = new Date();
+  //   const _dueDate = new Date(dueDate);
+  //   // const daysDiff = Math.ceil(
+  //   //   (_dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  //   // );
+  //   const daysDiff = _dueDate.getDate() - new Date().getDate();
+  //   console.log("Days Diff", daysDiff);
+  //   if (status === "Paid") {
+  //     return {
+  //       status: "Paid",
+  //       style: { backgroundColor: "#d4edda", color: "#155724" },
+  //     }; // Elegant Green
+  //   } else if (daysDiff <= 4 && daysDiff >= 0) {
+  //     return {
+  //       status: "Upcoming",
+  //       style: { backgroundColor: "#fff3cd", color: "#856404" },
+  //     }; // Elegant Amber
+  //   } else if (daysDiff < 0) {
+  //     return {
+  //       status: "Overdue",
+  //       style: { backgroundColor: "#f8d7da", color: "#721c24" },
+  //     }; // Elegant Red
+  //   }
+  //   return {};
+  // };
 
   // Columns for Fee Payments DataGrid
   const columns: GridColDef[] = [
-    { field: "registrationId", headerName: "Registration ID", width: 150 },
-    { field: "studentName", headerName: "Student Name", width: 200 },
-    { field: "guardianName", headerName: "Guardian Name", width: 200 },
-    { field: "contact", headerName: "Contact", width: 180 },
+    // { field: "registrationId", headerName: "Registration ID", width: 150 },
+    { field: "studentName", headerName: "Student Name", flex: 1 },
+    // { field: "guardianName", headerName: "Guardian Name", width: 200 },
+    { field: "contact", headerName: "Contact", flex: 1 },
     {
-      field: "feeAmount",
+      field: "amount",
       headerName: "Fee Amount",
-      width: 150,
-      type: "number",
-      renderCell: (params) => `$${params.value}`,
+      flex: 1,
+      renderCell: (params) => `${params.value} INR`,
     },
-    { field: "dueDate", headerName: "Due Date", width: 180 },
-    {
-      field: "amountPaid",
-      headerName: "Amount Paid",
-      width: 150,
-      type: "number",
-      renderCell: (params) => `$${params.value}`,
-    },
+    { field: "due_date", headerName: "Due Date", flex: 1 },
     // {
-    //   field: "balance",
-    //   headerName: "Balance",
+    //   field: "amountPaid",
+    //   headerName: "Amount Paid",
     //   width: 150,
     //   type: "number",
     //   renderCell: (params) => `$${params.value}`,
     // },
-    { field: "paymentDate", headerName: "Payment Date", width: 180 },
-    {
-      field: "paymentStatus",
-      headerName: "Payment Status",
-      width: 150,
-      renderCell: (params) => {
-        const { paymentStatus, dueDate } = params.row;
-        const { status, style } = getStatusStyle(paymentStatus, dueDate);
 
-        return (
-          <Typography
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              borderRadius: "4px",
-              padding: "8px",
-              textAlign: "center",
-              mt: 0.8,
-              ...style,
-            }}
-          >
-            {status}
-          </Typography>
-        );
-      },
-    },
+    { field: "payment_date", headerName: "Payment Date", flex: 1 },
+    { field: "transId", headerName: "Transaction ID", flex: 1 },
+    // {
+    //   field: "paymentStatus",
+    //   headerName: "Payment Status",
+    //   width: 150,
+    //   renderCell: (params) => {
+    //     const { paymentStatus, dueDate } = params.row;
+    //     const { status, style } = getStatusStyle(paymentStatus, dueDate);
+
+    //     return (
+    //       <Typography
+    //         sx={{
+    //           display: "flex",
+    //           alignItems: "center",
+    //           justifyContent: "center",
+    //           width: "100%",
+    //           borderRadius: "4px",
+    //           padding: "8px",
+    //           textAlign: "center",
+    //           mt: 0.8,
+    //           ...style,
+    //         }}
+    //       >
+    //         {status}
+    //       </Typography>
+    //     );
+    //   },
+    // },
   ];
 
   return (
@@ -214,8 +221,9 @@ const FeeDetails: React.FC<any> = (props) => {
         <Grid container direction="column" mt={4}>
           <Grid item xs={12}>
             <DataGrid
-              rows={rows}
+              rows={props.feesdata}
               columns={columns}
+              rowHeight={40}
               // autoHeight
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel} // Controls pagination behavior
@@ -223,11 +231,15 @@ const FeeDetails: React.FC<any> = (props) => {
               checkboxSelection={false}
               disableRowSelectionOnClick
               slots={{
-                // toolbar: GridToolbar, // Enables search functionality and other features
-                toolbar: CustomToolbar,
+                noRowsOverlay: CustomNoRowsOverlay,
               }}
+              // slots={{
+              //   // toolbar: GridToolbar, // Enables search functionality and other features
+              //   toolbar: CustomToolbar,
+              // }}
               sx={{
                 maxWidth: "95vw",
+                height: 350, // Fixed height for the grid
                 // Target the column headers specifically
                 "& .MuiDataGrid-columnHeaders": {
                   backgroundColor: "#1e88e5", // Custom background color for header

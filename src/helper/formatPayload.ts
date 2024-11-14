@@ -8,7 +8,8 @@ const FormatNewStudentPayload = (
   studentId: string,
   phone: string,
   newAdmission?: boolean,
-  documentId?: string
+  documentId?: string,
+  photoUrl?: string
 ) => {
   const personalDetails = {
     studentfullname: payload.studentfullname,
@@ -39,7 +40,7 @@ const FormatNewStudentPayload = (
 
   const studentObj = {
     id: studentId,
-    photoUrl: "",
+    photoUrl: photoUrl || payload.photoUrl || "",
     personalDetails,
     guardianDetails,
     academicsDetails,

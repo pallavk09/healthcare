@@ -277,6 +277,13 @@ const NewAdmissionForm = ({
                           sx={{ color: "white", fontSize: 40 }}
                         />
                       </Box>
+                      <input
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={handlePhotoUpload}
+                      />
                     </>
                   ) : (
                     <>

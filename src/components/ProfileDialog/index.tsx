@@ -10,6 +10,8 @@ import {
   IconButton,
   Typography,
   Grid,
+  Box,
+  Avatar,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
@@ -19,6 +21,9 @@ import { MyCustomButton } from "../../common/MyCustomControls";
 import CustomDatePicker from "../DatePicker";
 import ControlledTextField from "../../common/ControlledComponents/ControlledTextField";
 import ControlledSelect from "../../common/ControlledComponents/ControlledSelect";
+import PersonIcon from "@mui/icons-material/Person";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import { GeneratePrevieUrl } from "../../common/utils/generatePreviewUrl";
 
 interface ProfileDialogProps {
   isOpen: boolean;
@@ -51,31 +56,58 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({
     defaultValues: profileData,
     mode: "onTouched",
   });
-
+  const [photo, setPhoto] = useState<string | ArrayBuffer | null>(null);
+  const [photofile, setPhotoFile] = useState<File>();
   useEffect(() => {
     if (profileData) {
       console.log("Under useEffect of profileDialog. Profile data as below");
       console.log(profileData);
       reset(profileData); // Reset form with new profileData
+      const getPhotoUrl = profileData.photoUrl
+        ? GeneratePrevieUrl(profileData.photoUrl)
+        : "";
+      profileData.photoUrl && setPhotoFile(undefined);
+
+      setPhoto(getPhotoUrl);
     }
   }, [profileData, reset]);
 
   useEffect(() => {
     if (resetFormRef) {
+      const getPhotoUrl = profileData.photoUrl
+        ? GeneratePrevieUrl(profileData.photoUrl)
+        : "";
+      profileData.photoUrl && setPhotoFile(undefined);
+      setPhoto(getPhotoUrl);
       resetFormRef.current = () => reset(profileData);
     }
   }, [resetFormRef, reset, profileData]);
 
   const handleFormSubmit = async (data: any) => {
     console.log("handleFormSubmit");
-    console.log(data);
+    let updatedData = { ...data, photofile };
+    console.log(updatedData);
     const isValid = await trigger();
     if (isValid) {
       console.log("Data submission. Validation passed");
-      onSubmit(data);
+      onSubmit(updatedData);
       onClose();
     } else {
       console.log("Data submission. Validation failed");
+    }
+  };
+
+  // Handle photo upload
+  const handlePhotoUpload = (event: any) => {
+    const file = event.target.files[0];
+    setPhotoFile(file);
+    // formData.append("file", file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPhoto(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -124,6 +156,135 @@ const ProfileDialog: React.FC<ProfileDialogProps> = ({
             </AccordionSummary>
             <AccordionDetails>
               <Grid container spacing={4} sx={{ mt: -3 }}>
+                <Grid item xs={8}>
+                  <Box
+                    sx={{
+                      // position: { xs: "static", md: "absolute" },
+                      // top: { md: 16 },
+                      // right: { md: 16 },
+                      mt: { xs: 2, md: 0 },
+                      width: 132,
+                      height: 170,
+                      border: "2px solid #ccc",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#f5f5f5",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        position: "relative",
+                        width: "100%",
+                        height: "100%",
+                      }}
+                    >
+                      {photo ? (
+                        <>
+                          <Avatar
+                            src={photo as string}
+                            alt="Student Photo"
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "contain",
+                            }}
+                            variant="square"
+                          />
+                          {/* Hover effect for Camera Icon */}
+                          {(addSibling || isEditing) && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                bottom: 0,
+                                left: 0,
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                bgcolor: "rgba(0, 0, 0, 0.4)", // Dark overlay on hover
+                                opacity: 0,
+                                transition: "opacity 0.3s ease",
+                                cursor: "pointer",
+                                "&:hover": {
+                                  opacity: 1, // Show icon on hover
+                                },
+                              }}
+                              onClick={() =>
+                                document.getElementById("photo-upload")?.click()
+                              } // Trigger file input on click
+                            >
+                              <PhotoCameraIcon
+                                sx={{ color: "white", fontSize: 40 }}
+                              />
+                            </Box>
+                          )}
+                          <input
+                            id="photo-upload"
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={handlePhotoUpload}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <Avatar
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              bgcolor: "#f0f0f0", // Background color for the empty avatar
+                            }}
+                            variant="square"
+                          >
+                            <PersonIcon
+                              sx={{ fontSize: 120, color: "#bdbdbd" }}
+                            />
+                          </Avatar>
+                          {/* Hover effect for Camera Icon when no photo */}
+                          {(addSibling || isEditing) && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                bottom: 0,
+                                left: 0,
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                bgcolor: "rgba(0, 0, 0, 0.4)", // Dark overlay on hover
+                                opacity: 0,
+                                transition: "opacity 0.3s ease",
+                                cursor: "pointer",
+                                "&:hover": {
+                                  opacity: 1, // Show icon on hover
+                                },
+                              }}
+                              onClick={() =>
+                                document.getElementById("photo-upload")?.click()
+                              } // Trigger file input on click
+                            >
+                              <PhotoCameraIcon
+                                sx={{ color: "white", fontSize: 40 }}
+                              />
+                            </Box>
+                          )}
+
+                          <input
+                            id="photo-upload"
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={handlePhotoUpload}
+                          />
+                        </>
+                      )}
+                    </Box>
+                  </Box>
+                </Grid>
                 <Grid item xs={12}>
                   <ControlledTextField
                     name="studentfullname"

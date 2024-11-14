@@ -10,6 +10,7 @@ import {
   DialogContent,
   Container,
   Avatar,
+  Button,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import NewAdmissionForm from "../../components/Services/NewAdmission";
@@ -146,7 +147,7 @@ const AdmissionDashboard = () => {
                 raised={true}
                 // onClick={() => setIsOpen(true)}
                 style={{
-                  cursor: "pointer",
+                  // cursor: "pointer",
                   textAlign: "center",
                   boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .3)",
                   borderRadius: 4,
@@ -206,9 +207,19 @@ const AdmissionDashboard = () => {
                           <Typography variant="body1" display={"inline"}>
                             <strong>Application ID: </strong>
                           </Typography>
-                          <Typography variant="body1" display={"inline"}>
-                            {application.applicationId}
-                          </Typography>
+                          <Button
+                            type="button"
+                            variant="text"
+                            sx={{ p: 0, cursor: "pointer" }}
+                          >
+                            <Typography
+                              variant="body1"
+                              display={"inline"}
+                              sx={{ textDecoration: "underline" }}
+                            >
+                              {application.applicationId}
+                            </Typography>
+                          </Button>
                         </Box>
                         <Box sx={{ flex: 0 }} textAlign={"left"}>
                           <Typography variant="body1" display={"inline"}>
@@ -334,6 +345,11 @@ const AdmissionDashboard = () => {
       <ToastSnackbar ref={snackbarRef} />
       <Container maxWidth="lg" sx={{ mt: 5 }}>
         <Grid spacing={2} container>
+          <Grid item xs={12}>
+            <Typography variant="caption" color="textSecondary" ml={2}>
+              Click you Application ID to view your application.
+            </Typography>
+          </Grid>
           <Grid
             item
             xs={12}

@@ -57,9 +57,9 @@ const myRouter = createBrowserRouter([
           {
             path: "studentregistration/:userId",
             element: (
-              <ProtectedRoute>
-                <Studentregistration />
-              </ProtectedRoute>
+              // <ProtectedRoute>
+              <Studentregistration />
+              // </ProtectedRoute>
             ),
             // loader: RegistrationLoader,
           },
@@ -67,25 +67,25 @@ const myRouter = createBrowserRouter([
           {
             path: "studentdashboard/:userId",
             element: (
-              <ProtectedRoute>
-                <StudentDashboard />
-              </ProtectedRoute>
+              // <ProtectedRoute>
+              <StudentDashboard />
+              // </ProtectedRoute>
             ),
             children: [
               {
                 index: true,
                 element: (
-                  <ProtectedRoute>
-                    <StudentDashboardHome />
-                  </ProtectedRoute>
+                  // <ProtectedRoute>
+                  <StudentDashboardHome />
+                  // </ProtectedRoute>
                 ),
               },
               {
                 path: "feespaymentsummary",
                 element: (
-                  <ProtectedRoute>
-                    <FeesOverView />
-                  </ProtectedRoute>
+                  // <ProtectedRoute>
+                  <FeesOverView />
+                  // </ProtectedRoute>
                 ),
               },
             ],

@@ -32,6 +32,7 @@ import userDataContext from "../../store/userContext";
 import { jwtDecode } from "jwt-decode";
 import { GeneratePrevieUrl } from "../../common/utils/generatePreviewUrl";
 import { Outlet } from "react-router-dom";
+import { uploadFile, UploadFileType } from "../../api/upload";
 
 const Container = lazy(() => import("../../common/Container"));
 
@@ -257,7 +258,8 @@ const StudentDashboard = () => {
   };
 
   const handleSaveProfile = async (data: any) => {
-    console.log("Inside Handle Save Profile");
+    console.log("Inside Handle Save Profile. With PhotoFile");
+    console.log(data);
     try {
       setLoading(true);
       const studentIndex = checkIfDuplicate(data);
@@ -274,11 +276,28 @@ const StudentDashboard = () => {
         console.log("Sibling Data:", data);
         const studentId = `studid${uuid()}`;
         if (_userId && _phone) {
+          let photoUrl = "";
+          if (data.photofile) {
+            const uploadFileObject: UploadFileType = {
+              filepath: data.photofile,
+              bucket_id:
+                process.env.REACT_APP_APPWRITE_NEW_ADMISSION_BUCKET_ID!,
+            };
+            const upload = await uploadFile(uploadFileObject);
+
+            console.log("Photo uploaded. Printing response");
+            console.log(upload);
+            photoUrl = upload?.$id!;
+          }
+
           const value_Formatted = FormatNewStudentPayload(
             data,
             _userId,
             studentId,
-            _phone
+            _phone,
+            false,
+            undefined,
+            photoUrl
           );
           console.log(`Formatted sibling value`);
           console.log(value_Formatted);
@@ -339,14 +358,30 @@ const StudentDashboard = () => {
         console.log("Update existing students");
         console.log("Manage Profile. Saved Data:", data);
         const documentId = selectedStudent?.documentId;
+
         if (selectedStudent?.userId && selectedStudent?.phone) {
+          let photoUrl = undefined;
+          if (data.photofile) {
+            const uploadFileObject: UploadFileType = {
+              filepath: data.photofile,
+              bucket_id:
+                process.env.REACT_APP_APPWRITE_NEW_ADMISSION_BUCKET_ID!,
+            };
+            const upload = await uploadFile(uploadFileObject);
+
+            console.log("Photo uploaded. Printing response");
+            console.log(upload);
+            photoUrl = upload?.$id!;
+          }
+
           const updated_sibling_formatted = FormatNewStudentPayload(
             data,
             selectedStudent?.userId,
             selectedStudent?.studentObj.id,
             selectedStudent?.phone,
             false,
-            documentId!
+            documentId!,
+            photoUrl
           );
 
           console.log(`Formatted sibling value`);
@@ -378,6 +413,7 @@ const StudentDashboard = () => {
               ),
               newAdmission: _updatedStudent.updatedStudent.newAdmission,
               fees: _updatedStudent.updatedStudent.fees,
+              photoUrl: _updatedStudent.updatedStudent.photoUrl,
             };
 
             const formattedSibling = {
