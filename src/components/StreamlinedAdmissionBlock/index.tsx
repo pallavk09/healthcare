@@ -14,11 +14,11 @@ import {
   StyledRow,
   ButtonWrapper,
 } from "./styles";
+import { Typography } from "@mui/material";
 
-const ContentBlock = ({
+const StreamlinedAdmissionBlock = ({
   icon,
-  title,
-  content,
+
   section,
   button,
   id,
@@ -46,8 +46,20 @@ const ContentBlock = ({
             <ContentWrapper>
               {/* <h6>{t(title)}</h6>
               <Content>{t(content)}</Content> */}
-              <h6 style={{ marginBottom: "auto" }}>{title}</h6>
-              <Content>{content}</Content>
+              <h6 style={{ marginBottom: "auto" }}>Streamlined Admissions</h6>
+              <Typography variant="h6" mt={3}>
+                Eduern simplifies the admission process, making it effortless
+                for both schools and families. From the moment a prospective
+                student applies, our platform ensures a smooth, user-friendly
+                experience through{" "}
+                <strong> Simplified Application Process</strong>,{" "}
+                <strong> Real Time Application Tracking</strong> and{" "}
+                <strong>Seamless Communication</strong>
+                <br />
+                With Eduern, admissions become a streamlined, efficient, and
+                stress-free experience for parents.
+              </Typography>
+              {/* <Content>{content}</Content> */}
               {/* <h2 style={{ marginBottom: "auto" }}>{title}</h2> */}
               {/* <Content>{content}</Content> */}
               {direction === "right" ? (
@@ -91,13 +103,22 @@ const ContentBlock = ({
                             <Col key={id} span={11}>
                               <SvgIcon
                                 src={item.icon}
-                                width="100px"
-                                height="100px"
+                                width="90px"
+                                height="80px"
                               />
                               {/* <MinTitle>{t(item.title)}</MinTitle>
                               <MinPara>{t(item.content)}</MinPara> */}
                               <MinTitle>{item.title}</MinTitle>
-                              <MinPara>{item.content}</MinPara>
+                              <Typography variant="body2">
+                                Eduern simplifies the admission process, making
+                                it effortless for both schools and families.
+                                From the moment a prospective student applies,
+                                our platform ensures a smooth, user-friendly
+                                experience through{" "}
+                                <strong> Simplified Application Process</strong>
+                                , Real Time Application Tracking and Seamless
+                                Communication
+                              </Typography>
                             </Col>
                           );
                         }
@@ -113,4 +134,4 @@ const ContentBlock = ({
   );
 };
 
-export default ContentBlock;
+export default StreamlinedAdmissionBlock;

@@ -5,7 +5,6 @@ import ReactDOM from "react-dom/client";
 // import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
 import Router from "./router";
-import ApiProvider from "./store/contextProvider";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -13,9 +12,8 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     {/* <BrowserRouter> */}
-    <ApiProvider>
-      <Router />
-    </ApiProvider>
+
+    <Router />
     {/* </BrowserRouter> */}
   </React.StrictMode>
 );

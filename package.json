@@ -1,6 +1,6 @@
 {
-  "name": "my-edu-app",
-  "version": "0.1.0",
+  "name": "eduern",
+  "version": "1.0",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.13.3",
@@ -27,9 +27,6 @@
     "react-awesome-reveal": "^4.2.14",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.0",
-    "react-i18next": "^15.0.1",
-    "react-material-ui-carousel": "^3.4.2",
-    "react-perfect-scrollbar": "^1.5.8",
     "react-router-dom": "^6.26.1",
     "react-scripts": "5.0.1",
     "react-toastify": "^10.0.5",

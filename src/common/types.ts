@@ -1,9 +1,3 @@
-import { TFunction } from "i18next";
-import { newAddmissionApplicationType } from "../store/newadmissionContext";
-import {
-  cartContextType_ADMISSION_FORM,
-  cartContextType_FEE,
-} from "../store/cartContext";
 export interface ContainerProps {
   border?: boolean;
   children: React.ReactNode;
@@ -28,7 +22,6 @@ export interface SvgIconProps {
 export interface InputProps {
   name: string;
   placeholder: string;
-  t: TFunction;
   type?: string;
   value?: string;
   onChange: (
@@ -43,89 +36,22 @@ export interface validateProps {
   email: string;
 }
 
-export interface studentData {
-  documentId: string | null;
-  userId: string;
-  phone: string;
-  studentObj: {
-    id: string;
-    photoUrl?: string;
-    personalDetails: {
-      studentfullname: string;
-      addressline1: string;
-      addressline2: string;
-      addresscity: string;
-      addressstate: string;
-      addresspincode: string;
-      studentdob: string;
-      studentgender: string;
-    };
-    guardianDetails: {
-      guardianname: string;
-      studentrelation: string;
-      occupation: string;
-      guardianphoneno: string;
-      guardianemailid: string;
-    };
-    academicsDetails: {
-      class: string;
-      section: string;
-      rollnumber: string;
-      housename: string;
-      busnumber: string;
-    };
-    newAdmission: boolean;
-    fees: string[];
-  };
-}
-
-// Define the shape of your state
-export interface userState {
-  userId: string | undefined;
-  phone: string;
-  isLoggedIn: boolean;
-  role: "student" | "schooladmin" | "superadmin";
-  otpVerified: boolean;
-  siblings: studentData[];
-}
+// // Define the shape of your state
+// export interface userState {
+//   userId: string | undefined;
+//   phone: string;
+//   isLoggedIn: boolean;
+//   role: "student" | "schooladmin" | "superadmin";
+//   otpVerified: boolean;
+//   siblings: studentData[];
+// }
 
 // Define the action types
 export type userAction =
   | { type: "UPDATE_USERID"; payload: string | undefined }
   | { type: "UPDATE_USER_LOGGEDIN"; payload: { phone: string; userId: string } }
-  | { type: "RESET_USER" }
-  | { type: "ADD_NEW_STUDENT"; payload: studentData[] | null }
-  | { type: "LOAD_EXISTING_STUDENTS"; payload: studentData[] | null }
-  | { type: "ADD_USERID_PHONE"; payload: { userId: string; phone: string } }
-  | {
-      type: "ADD_NEW_APPLICATION";
-      payload: newAddmissionApplicationType;
-    }
-  | {
-      type: "ADD_TO_CART_FEES_PAYMENT";
-      payload: cartContextType_FEE;
-    }
-  | {
-      type: "ADD_TO_CART_NEW_ADMISSION_FORM_PAYMENT";
-      payload: cartContextType_ADMISSION_FORM;
-    }
-  | {
-      type: "GET_COUNT_FEES_PAYMENT";
-    }
-  | {
-      type: "GET_COUNT_NEW_ADMISSION_FORM_PAYMENT";
-    };
+  | { type: "RESET_USER" };
 
-export type PersonalInfoType = {
-  studentfullname: string | "";
-  addressline1: string | "";
-  addressline2: string | "";
-  addresscity: string | "";
-  addressstate: string | "";
-  addresspincode: string | "";
-  studentdob: string | "";
-  studentgender: string | "";
-};
 export type StudentRegistrationFormsType = {
   id: string;
   title: string;

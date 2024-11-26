@@ -1,23 +1,24 @@
-import { withTranslation } from "react-i18next";
+import { Typography } from "@mui/material";
 import { Container, TextWrapper, Content } from "./styles";
-import { TFunction } from "i18next";
 
 interface Props {
   title: string;
   content: string;
-  t: TFunction;
 }
 
-const Block = ({ title, content, t }: Props) => {
+const Block = ({ title, content }: Props) => {
   return (
     <Container>
-      <h6>{t(title)}</h6>
+      <Typography variant="h2">
+        <strong>{title}</strong>
+      </Typography>
+      {/* <h6>{title}</h6> */}
       <TextWrapper>
-        <Content>{t(content)}</Content>
+        <Content>{content}</Content>
       </TextWrapper>
     </Container>
   );
 };
 
 // export default Block;
-export default withTranslation()(Block);
+export default Block;

@@ -3,8 +3,7 @@ import styled from "styled-components";
 
 export const ContentSection = styled("section")`
   position: relative;
-  padding: 0rem 0 6rem;
-  margin-top: 20px;
+
   @media only screen and (max-width: 1024px) {
     padding: 4rem 0 4rem;
   }
@@ -26,7 +25,7 @@ export const StyledRow = styled(Row)<StyledRowProps>`
 export const ContentWrapper = styled("div")`
   position: relative;
   max-width: 80vw;
-  // margin-top: 50px;
+
   @media only screen and (max-width: 575px) {
     padding-top: 4rem;
   }

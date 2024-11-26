@@ -14,11 +14,11 @@ import {
   StyledRow,
   ButtonWrapper,
 } from "./styles";
+import { Typography } from "@mui/material";
 
-const ContentBlock = ({
+const EnhancedAdministration = ({
   icon,
-  title,
-  content,
+
   section,
   button,
   id,
@@ -46,8 +46,22 @@ const ContentBlock = ({
             <ContentWrapper>
               {/* <h6>{t(title)}</h6>
               <Content>{t(content)}</Content> */}
-              <h6 style={{ marginBottom: "auto" }}>{title}</h6>
-              <Content>{content}</Content>
+              <h6 style={{ marginBottom: "auto" }}>Enhanced Administration</h6>
+              <Typography variant="h6" mt={3}>
+                Eduern revolutionizes school administration by providing tools
+                that keep everyone connected, informed, and organized. Our
+                platform ensures that schools can manage their daily operations
+                effortlessly while maintaining real-time communication with
+                parents, teachers, and students{" "}
+                <strong> Event and Activity Tracking</strong>,{" "}
+                <strong> Real-Time Updates</strong>,{" "}
+                <strong>Improved Transparency</strong>.
+                <br />
+                With Eduern’s enhanced administration features, schools can
+                eliminate communication gaps, stay organized, and focus on what
+                truly matters: providing quality education
+              </Typography>
+              {/* <Content>{content}</Content> */}
               {/* <h2 style={{ marginBottom: "auto" }}>{title}</h2> */}
               {/* <Content>{content}</Content> */}
               {direction === "right" ? (
@@ -91,13 +105,22 @@ const ContentBlock = ({
                             <Col key={id} span={11}>
                               <SvgIcon
                                 src={item.icon}
-                                width="100px"
-                                height="100px"
+                                width="90px"
+                                height="90px"
                               />
                               {/* <MinTitle>{t(item.title)}</MinTitle>
                               <MinPara>{t(item.content)}</MinPara> */}
                               <MinTitle>{item.title}</MinTitle>
-                              <MinPara>{item.content}</MinPara>
+                              <Typography variant="body2">
+                                Eduern simplifies the admission process, making
+                                it effortless for both schools and families.
+                                From the moment a prospective student applies,
+                                our platform ensures a smooth, user-friendly
+                                experience through{" "}
+                                <strong> Simplified Application Process</strong>
+                                , Real Time Application Tracking and Seamless
+                                Communication
+                              </Typography>
                             </Col>
                           );
                         }
@@ -113,4 +136,4 @@ const ContentBlock = ({
   );
 };
 
-export default ContentBlock;
+export default EnhancedAdministration;

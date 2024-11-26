@@ -14,11 +14,11 @@ import {
   StyledRow,
   ButtonWrapper,
 } from "./styles";
+import { Typography } from "@mui/material";
 
-const ContentBlock = ({
+const EffortLessFeesPayment = ({
   icon,
-  title,
-  content,
+
   section,
   button,
   id,
@@ -46,8 +46,20 @@ const ContentBlock = ({
             <ContentWrapper>
               {/* <h6>{t(title)}</h6>
               <Content>{t(content)}</Content> */}
-              <h6 style={{ marginBottom: "auto" }}>{title}</h6>
-              <Content>{content}</Content>
+              <h6 style={{ marginBottom: "auto" }}>Effortless Fee Payments</h6>
+              <Typography variant="h6" mt={3}>
+                Managing school fees has never been easier with Eduern’s secure
+                and user-friendly payment system. We simplify fee collection and
+                tracking for both parents and school administrators, ensuring a
+                smooth and efficient process{" "}
+                <strong> Automated Payment Reminders</strong>,{" "}
+                <strong> Transparent Fee Breakdown</strong> and{" "}
+                <strong>Real-Time Status Updates</strong>. <br /> Eduern’s
+                effortless fee payment system saves time, reduces stress, and
+                enhances financial transparency, making school fee management a
+                breeze for everyone involved
+              </Typography>
+              {/* <Content>{content}</Content> */}
               {/* <h2 style={{ marginBottom: "auto" }}>{title}</h2> */}
               {/* <Content>{content}</Content> */}
               {direction === "right" ? (
@@ -91,13 +103,22 @@ const ContentBlock = ({
                             <Col key={id} span={11}>
                               <SvgIcon
                                 src={item.icon}
-                                width="100px"
-                                height="100px"
+                                width="90px"
+                                height="90px"
                               />
                               {/* <MinTitle>{t(item.title)}</MinTitle>
                               <MinPara>{t(item.content)}</MinPara> */}
                               <MinTitle>{item.title}</MinTitle>
-                              <MinPara>{item.content}</MinPara>
+                              <Typography variant="body2">
+                                Eduern simplifies the admission process, making
+                                it effortless for both schools and families.
+                                From the moment a prospective student applies,
+                                our platform ensures a smooth, user-friendly
+                                experience through{" "}
+                                <strong> Simplified Application Process</strong>
+                                , Real Time Application Tracking and Seamless
+                                Communication
+                              </Typography>
                             </Col>
                           );
                         }
@@ -113,4 +134,4 @@ const ContentBlock = ({
   );
 };
 
-export default ContentBlock;
+export default EffortLessFeesPayment;
