@@ -98,14 +98,14 @@ const Footer = () => {
             // gridColumn: 'span 4',
           }}
         ></Typography> */}
-        <Box display="flex" flexDirection="row">
+        {/* <Box display="flex" flexDirection="row">
           <FacebookIcon sx={{ marginRight: "20px" }} />
           <LinkedInIcon sx={{ marginRight: "20px" }} />
 
           <XIcon sx={{ marginRight: "20px" }} />
           <YouTubeIcon sx={{ marginRight: "20px" }} />
           <InstagramIcon />
-        </Box>
+        </Box> */}
         <Typography
           variant="h6"
           sx={{

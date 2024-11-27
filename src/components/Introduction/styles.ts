@@ -3,14 +3,15 @@ import styled from "styled-components";
 
 export const ContentSection = styled("section")`
   position: relative;
-
+  padding: 0rem 0 6rem;
+  margin-top: 20px;
   @media only screen and (max-width: 1024px) {
     padding: 4rem 0 4rem;
   }
 `;
 
 export const Content = styled("p")`
-  padding: 0.75rem 0 0.75rem;
+  margin: 1.5rem 0 2rem 0;
 `;
 
 interface StyledRowProps {
@@ -23,10 +24,11 @@ export const StyledRow = styled(Row)<StyledRowProps>`
 `;
 
 export const ContentWrapper = styled("div")`
-  max-width: 90vw;
-
-  @media only screen and (max-width: 768px) {
-    max-width: 100%;
+  position: relative;
+  max-width: 80vw;
+  // margin-top: 50px;
+  @media only screen and (max-width: 575px) {
+    padding-top: 4rem;
   }
 `;
 
@@ -56,9 +58,5 @@ export const ButtonWrapper = styled("div")`
 
   @media screen and (min-width: 1024px) {
     max-width: 80%;
-  }
-
-  button:last-child {
-    margin-left: 20px;
   }
 `;

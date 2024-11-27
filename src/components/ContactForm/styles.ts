@@ -9,7 +9,7 @@ export const ContactContainer = styled("div")`
 `;
 
 export const FormGroup = styled("form")`
-  width: 100%;
+  width: 80%;
   max-width: 520px;
 
   @media only screen and (max-width: 1045px) {

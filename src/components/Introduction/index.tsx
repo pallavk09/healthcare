@@ -17,7 +17,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
-const ContentBlock = ({
+const Introduction = ({
   icon,
   title,
   content,
@@ -28,14 +28,15 @@ const ContentBlock = ({
 }: ContentBlockProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  // const scrollTo = (id: string) => {
-  //   const element = document.getElementById(id) as HTMLDivElement;
-  //   element.scrollIntoView({
-  //     behavior: "smooth",
-  //   });
-  // };
+
+  const scrollTo = (id: string) => {
+    const element = document.getElementById(id) as HTMLDivElement;
+    element.scrollIntoView({
+      behavior: "smooth",
+    });
+  };
   return (
-    <ContentSection>
+    <ContentSection style={isMobile ? { padding: "8rem 0 4rem" } : {}}>
       <Fade direction={direction} triggerOnce={false}>
         <StyledRow
           justify="space-between"
@@ -43,34 +44,30 @@ const ContentBlock = ({
           id={id}
           direction={direction}
         >
-          {!isMobile ? (
-            <Col lg={11} md={11} sm={12} xs={24}>
-              <SvgIcon src={icon} width="100%" height="100%" />
-            </Col>
-          ) : (
-            ""
-          )}
-          <Col lg={11} md={11} sm={11} xs={24}>
-            <ContentWrapper>
-              {/* <h6 style={{ marginBottom: "auto" }}>{title}</h6> */}
+          <Col lg={11} md={11} sm={12} xs={24}>
+            <SvgIcon src={icon} width="100%" height="100%" />
+          </Col>
+          <Col
+            lg={11}
+            md={11}
+            sm={11}
+            xs={24}
+            style={{ marginTop: isMobile ? "-80px" : "" }}
+          >
+            <ContentWrapper
+              style={{
+                maxWidth: isMobile ? "100vw" : "80vw",
+              }}
+            >
               {!isMobile ? (
-                <h6
-                  style={{
-                    marginTop: "10px",
-                    marginBottom: "10px",
-                    color: "#cb3d64",
-                  }}
-                >
-                  {title}
-                </h6>
+                <h6 style={{ marginBottom: "auto" }}>{title}</h6>
               ) : (
                 <h6
                   style={{
-                    marginTop: "auto",
                     marginBottom: "auto",
-                    color: "#cb3d64",
+                    fontSize: "20px",
                     width: "100%",
-                    fontSize: "2rem",
+                    textAlign: "center",
                   }}
                 >
                   {title}
@@ -82,9 +79,9 @@ const ContentBlock = ({
                     ? {
                         marginBottom: "auto",
                         marginTop: "auto",
-                        fontSize: "1.2rem",
+                        fontSize: "15px",
                         width: "100%",
-                        // textAlign: "center",
+                        textAlign: "center",
                       }
                     : {}
                 }
@@ -92,6 +89,14 @@ const ContentBlock = ({
                 {content}
               </Content>
             </ContentWrapper>
+            <ButtonWrapper style={isMobile ? { justifyContent: "center" } : {}}>
+              <Button
+                width={isMobile ? "78%" : "78%"}
+                onClick={() => scrollTo("contact")}
+              >
+                {"Book a Demo"}
+              </Button>
+            </ButtonWrapper>
           </Col>
         </StyledRow>
       </Fade>
@@ -99,4 +104,4 @@ const ContentBlock = ({
   );
 };
 
-export default ContentBlock;
+export default Introduction;

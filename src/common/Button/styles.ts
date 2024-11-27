@@ -4,6 +4,7 @@ export const StyledButton = styled("button")<{
   color?: string;
   max_width?: string;
   type?: string;
+  width?: string;
 }>`
   background: ${(p) => p.color || "#2e186a"};
   color: ${(p) => (p.color ? "#2E186A" : "#fff")};
@@ -12,7 +13,7 @@ export const StyledButton = styled("button")<{
   ${(p) => p.type || `type:${p.type}`}
   font-size: 1rem;
   font-weight: 700;
-  width: 100%;
+  width: ${(p) => (p.width ? p.width : "78%")};
   border: 1px solid #edf3f5;
   border-radius: 4px;
   padding: 13px 0;

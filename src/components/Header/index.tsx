@@ -15,53 +15,17 @@ import {
   Span,
 } from "./styles";
 
-import {
-  Box,
-  Typography,
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-} from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { MyCustomButton } from "../../common/MyCustomControls";
+import { Box, Typography } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const Header = () => {
   const [visible, setVisibility] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [tokenExpired, setTokenExpired] = useState<boolean>(true);
-  const [tokenPresent, setTokenPresent] = useState(false);
-  const [logoutTitle, setLogoutTitle] = useState<string>("Confirm Logout");
-  const [logoutSubTitle, setLogoutSubTitle] = useState<string>(
-    "Are you sure you want to logout?"
-  );
-  const [paymentCount, setPaymentCount] = useState<number>(0);
-
-  const handleClickOpen = () => {
-    console.log("Clicked open");
-    setOpen(true);
-  };
-
-  const styleUnderline = {
-    color: "rgb(255, 130, 92)",
-    textUnderlinePosition: "under",
-    textDecoration: "rgb(255, 130, 92) wavy underline",
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const toggleButton = () => {
     setVisibility(!visible);
-  };
-  const showLoginformHandler = () => {
-    console.log("Login clicked");
-  };
-
-  const showLoginNewAdmission = () => {
-    console.log("New Admission");
   };
 
   const MenuItem = () => {
@@ -74,7 +38,11 @@ const Header = () => {
     };
     return (
       <>
-        <Box display={"flex"} flexDirection={"row"} gap={1}>
+        <Box
+          display={"flex"}
+          flexDirection={!isMobile ? "row" : "column"}
+          gap={1}
+        >
           <CustomNavLinkSmall onClick={() => scrollTo("aboutus")}>
             <Span>{"About"}</Span>
           </CustomNavLinkSmall>
@@ -127,12 +95,17 @@ const Header = () => {
                 <Box
                   display={"flex"}
                   flexDirection={"column"}
-                  alignItems={"center"}
+                  alignItems={isMobile ? "flex-start" : "center"}
+                  ml={isMobile ? 1 : 0}
                 >
-                  <Typography variant="h3" mt={4}>
+                  <Typography variant={!isMobile ? "h3" : "h4"} mt={4}>
                     <strong>EDUERN</strong>
                   </Typography>
-                  <Typography variant="caption" color="#cb3d64">
+                  <Typography
+                    variant="caption"
+                    color="#cb3d64"
+                    fontSize={isMobile ? "0.5rem" : ""}
+                  >
                     <strong>Education Easy, Reliable, and Networked</strong>
                   </Typography>
                 </Box>
@@ -156,16 +129,16 @@ const Header = () => {
             </Burger>
           </Row>
           <Drawer closable={false} open={visible} onClose={toggleButton}>
-            <Col style={{ marginBottom: "2.5rem" }}>
+            {/* <Col style={{ marginBottom: "1.5rem" }}>
               <Label onClick={toggleButton}>
-                <Col span={12}>
+                <Col span={8}>
                   <Menu>Menu</Menu>
                 </Col>
                 <Col span={12}>
                   <Outline />
                 </Col>
               </Label>
-            </Col>
+            </Col> */}
             <MenuItem />
           </Drawer>
         </Container>

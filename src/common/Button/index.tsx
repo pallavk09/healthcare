@@ -7,12 +7,14 @@ export const Button = ({
   onClick,
   max_width,
   type,
+  width,
 }: ButtonProps) => (
   <StyledButton
     color={color}
     onClick={onClick}
     max_width={max_width}
     type={type}
+    width={width}
   >
     {children}
   </StyledButton>

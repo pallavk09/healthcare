@@ -2,10 +2,11 @@ import styled from "styled-components";
 
 export const StyledContainer = styled("div")<{
   border?: boolean;
+  width?: string;
 }>`
   position: relative;
-  width: 96vw;
-  // max-width: 1200px;
+  width: ${(p) => (p.width ? p.width : "96vw")};
+  max-width: 96vw;
   margin-right: auto;
   margin-left: auto;
   // padding: 0 60px;

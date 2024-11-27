@@ -12,6 +12,11 @@ import StreamlinedAdmissionBlock from "../../components/StreamlinedAdmissionBloc
 import EffortLessFeesPayment from "../../components/EffortLessFeesPayment";
 import EnhancedAdministration from "../../components/EnhancedAdministration";
 
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import Introduction from "../../components/Introduction";
+import PageFooterMobile from "../../components/Footer/footerMobile";
+
 // import MiddleBlock from "../../components/MiddleBlock";
 
 const Contact = lazy(() => import("../../components/ContactForm"));
@@ -24,12 +29,14 @@ const ContentBlock = lazy(() => import("../../components/ContentBlock"));
 // );
 
 const Home = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   return (
     <>
       {/* <Header /> */}
-      <Container>
+      <Container width={isMobile ? "98vw" : "96vw"}>
         <ScrollToTop />
-        <ContentBlock
+        <Introduction
           direction="right"
           title={IntroContent.title}
           content={IntroContent.text}
@@ -117,7 +124,7 @@ const Home = () => {
           id="contact"
         />
       </Container>
-      <Footer />
+      {!isMobile ? <Footer /> : <PageFooterMobile />}
     </>
   );
 };

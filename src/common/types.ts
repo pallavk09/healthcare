@@ -1,5 +1,6 @@
 export interface ContainerProps {
   border?: boolean;
+  width?: string;
   children: React.ReactNode;
 }
 
@@ -10,6 +11,7 @@ export interface ButtonProps {
   max_width?: string;
   children: React.ReactNode;
   type?: "submit" | "button" | "reset";
+  width?: string;
   onClick?: (event?: React.MouseEvent<HTMLElement>) => void;
 }
 
