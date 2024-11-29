@@ -43,7 +43,7 @@ const Block = ({ title, content }: Props) => {
               ? {
                   marginBottom: "auto",
                   marginTop: "auto",
-                  fontSize: "0.6rem",
+                  fontSize: "0.9rem",
                   width: "100%",
                   // textAlign: "center",
                 }

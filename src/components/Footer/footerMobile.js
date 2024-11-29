@@ -39,10 +39,9 @@ export default function PageFooterMobile() {
           sx={{
             opacity: 1,
             marginTop: -4,
-            fontSize: "0.8rem",
           }}
         >
-          <p>
+          <p style={{ fontSize: "0.9rem" }}>
             EDUERN, 603, Brij Residency phase 2 <br />
             Shiv Vatika, Lasudia Mori <br />
             Indore, Madhya Pradesh 453771 <br /> India
@@ -63,7 +62,7 @@ export default function PageFooterMobile() {
             fontWeight: 800,
             color: "#FFC000",
             opacity: 1,
-            fontSize: "1.5em",
+            fontSize: "1.5em!",
           }}
         >
           <p>Help & Support</p>
@@ -77,7 +76,9 @@ export default function PageFooterMobile() {
             fontSize: "0.8em",
           }}
         >
-          <p>whatsup@eduern.com or +91-9989847374</p>
+          <p style={{ fontSize: "0.9rem" }}>
+            whatsup@eduern.com or +91-9989847374
+          </p>
         </Typography>
         <Typography
           variant="h7"

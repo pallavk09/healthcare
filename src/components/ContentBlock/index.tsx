@@ -65,7 +65,7 @@ const ContentBlock = ({
                     ? {
                         marginBottom: "auto",
                         marginTop: "auto",
-                        fontSize: "0.4rem",
+                        fontSize: "0.5rem",
                         width: "100%",
                         // textAlign: "center",
                       }
