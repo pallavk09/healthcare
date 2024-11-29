@@ -28,7 +28,7 @@ const Block = ({ title, content }: Props) => {
             marginTop: "auto",
             marginBottom: "auto",
             width: "100%",
-            fontSize: "2rem",
+            fontSize: "1rem",
             color: "#cb3d64",
           }}
         >
@@ -43,7 +43,7 @@ const Block = ({ title, content }: Props) => {
               ? {
                   marginBottom: "auto",
                   marginTop: "auto",
-                  fontSize: "1.2rem",
+                  fontSize: "0.6rem",
                   width: "100%",
                   // textAlign: "center",
                 }

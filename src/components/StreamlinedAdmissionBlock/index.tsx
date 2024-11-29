@@ -43,18 +43,18 @@ const StreamlinedAdmissionBlock = ({
           id={id}
           direction={direction}
         >
-          {!isMobile ? (
-            <Col lg={11} md={11} sm={12} xs={24}>
-              <SvgIcon src={icon} width="100%" height="100%" />
-            </Col>
-          ) : (
-            ""
-          )}
-          <Col lg={11} md={11} sm={11} xs={24}>
+          {/* <Col lg={11} md={11} sm={12} xs={24}>
+            <SvgIcon src={icon} width="100%" height="100%" />
+          </Col> */}
+          <Col xs={11}>
+            <SvgIcon
+              src={icon}
+              width={isMobile ? "120%" : "100%"}
+              height={isMobile ? "100%" : "100%"}
+            />
+          </Col>
+          <Col xs={11}>
             <ContentWrapper>
-              {/* <h6>{t(title)}</h6>
-              <Content>{t(content)}</Content> */}
-              {/* <h6 style={{ marginBottom: "auto" }}>Streamlined Admissions</h6> */}
               {!isMobile ? (
                 <h6
                   style={{
@@ -69,7 +69,7 @@ const StreamlinedAdmissionBlock = ({
                     marginTop: "auto",
                     marginBottom: "auto",
                     width: "100%",
-                    fontSize: "1.7rem",
+                    fontSize: "1rem",
                   }}
                 >
                   {"Streamlined Admissions"}
@@ -81,9 +81,8 @@ const StreamlinedAdmissionBlock = ({
                     ? {
                         marginBottom: "auto",
                         marginTop: "auto",
-                        fontSize: "1.1rem",
+                        fontSize: "0.4rem",
                         width: "100%",
-                        // textAlign: "center",
                       }
                     : {}
                 }

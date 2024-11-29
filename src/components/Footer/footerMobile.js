@@ -27,7 +27,7 @@ export default function PageFooterMobile() {
           variant="h5"
           sx={{
             fontWeight: 800,
-            color: "#FFC000",
+
             opacity: 1,
             fontSize: "1.5em",
           }}
@@ -39,7 +39,7 @@ export default function PageFooterMobile() {
           sx={{
             opacity: 1,
             marginTop: -4,
-            fontSize: "0.5em",
+            fontSize: "0.8rem",
           }}
         >
           <p>
@@ -74,7 +74,7 @@ export default function PageFooterMobile() {
             fontWeight: 400,
             opacity: 1,
             marginTop: -4,
-            fontSize: "0.75em",
+            fontSize: "0.8em",
           }}
         >
           <p>whatsup@eduern.com or +91-9989847374</p>
@@ -84,6 +84,7 @@ export default function PageFooterMobile() {
           sx={{
             fontWeight: 300,
             opacity: 1,
+            fontSize: "0.8em",
           }}
         >
           © 2024 SYYNER Technology
@@ -98,12 +99,19 @@ export default function PageFooterMobile() {
         </Box> */}
       </Box>
 
-      <Box display="flex" flexDirection="column" textAlign={"center"} mt={0.5}>
+      <Box
+        display="flex"
+        flexDirection="column"
+        textAlign={"center"}
+        mt={0.5}
+        mb={2}
+      >
         <Typography
           variant="h8"
           sx={{
             fontWeight: 300,
             opacity: 1,
+            fontSize: "0.9em",
           }}
         >
           Privacy Policy | Terms & Conditions

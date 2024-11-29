@@ -8,7 +8,7 @@ export const MiddleBlockSection = styled("section")`
   justify-content: left;
 
   @media screen and (max-width: 1024px) {
-    padding: 5.5rem 0 3rem;
+    padding: 0.2rem 0 3rem;
   }
 `;
 

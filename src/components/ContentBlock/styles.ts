@@ -4,9 +4,9 @@ import styled from "styled-components";
 export const ContentSection = styled("section")`
   position: relative;
   padding: 0rem 0 6rem;
-  margin-top: 20px;
+  margin-top: 10px;
   @media only screen and (max-width: 1024px) {
-    padding: 4rem 0 4rem;
+    padding: 2rem 0 0rem;
   }
 `;
 

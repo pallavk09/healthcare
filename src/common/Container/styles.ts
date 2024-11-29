@@ -5,7 +5,7 @@ export const StyledContainer = styled("div")<{
   width?: string;
 }>`
   position: relative;
-  width: ${(p) => (p.width ? p.width : "96vw")};
+  width: ${(p) => (p.width ? p.width : "90vw")};
   max-width: 96vw;
   margin-right: auto;
   margin-left: auto;
@@ -24,7 +24,7 @@ export const StyledContainer = styled("div")<{
   }
 
   @media only screen and (max-width: 414px) {
-    max-width: 100%;
+    // max-width: 100%;
     padding: 0 18px;
   }
 `;

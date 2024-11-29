@@ -20,7 +20,8 @@ import PageFooterMobile from "../../components/Footer/footerMobile";
 // import MiddleBlock from "../../components/MiddleBlock";
 
 const Contact = lazy(() => import("../../components/ContactForm"));
-const MiddleBlock = lazy(() => import("../../components/MiddleBlock"));
+const MiddleBlock1 = lazy(() => import("../../components/MiddleBlock1"));
+const MiddleBlock2 = lazy(() => import("../../components/MiddleBlock2"));
 const Container = lazy(() => import("../../common/Container"));
 const ScrollToTop = lazy(() => import("../../common/ScrollToTop"));
 const ContentBlock = lazy(() => import("../../components/ContentBlock"));
@@ -34,7 +35,7 @@ const Home = () => {
   return (
     <>
       {/* <Header /> */}
-      <Container width={isMobile ? "98vw" : "96vw"}>
+      <Container width={isMobile ? "80vw" : "96vw"}>
         <ScrollToTop />
         <Introduction
           direction="right"
@@ -44,18 +45,20 @@ const Home = () => {
           icon="developer.svg"
           id="intro"
         />
-        <MiddleBlock
+        <MiddleBlock1
           title={MiddleBlockContent.title}
           content={MiddleBlockContent.text}
           id="aboutus"
+          direction="right"
           // button={MiddleBlockContent.button}
         />
-        <MiddleBlock
+        <MiddleBlock2
           title={"How We Help"}
           content={
             "At Eduern, we provide cutting-edge solutions designed to transform educational management. Our platform simplifies school operations and fosters seamless communication, ensuring an efficient, connected, and stress-free experience for administrators, educators, parents, and students alike."
           }
           id="ourservices"
+          direction="left"
         />
 
         <StreamlinedAdmissionBlock

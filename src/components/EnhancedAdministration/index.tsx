@@ -43,14 +43,14 @@ const EnhancedAdministration = ({
           id={id}
           direction={direction}
         >
-          {!isMobile ? (
-            <Col lg={11} md={11} sm={12} xs={24}>
-              <SvgIcon src={icon} width="100%" height="100%" />
-            </Col>
-          ) : (
-            ""
-          )}
-          <Col lg={11} md={11} sm={11} xs={24}>
+          <Col xs={11}>
+            <SvgIcon
+              src={icon}
+              width={isMobile ? "120%" : "100%"}
+              height={isMobile ? "100%" : "100%"}
+            />
+          </Col>
+          <Col xs={11}>
             <ContentWrapper>
               {/* <h6 style={{ marginBottom: "auto" }}>Enhanced Administration</h6> */}
               {!isMobile ? (
@@ -67,7 +67,7 @@ const EnhancedAdministration = ({
                     marginTop: "auto",
                     marginBottom: "auto",
                     width: "110%",
-                    fontSize: "1.7rem",
+                    fontSize: "1rem",
                   }}
                 >
                   {"Enhanced Administration"}
@@ -80,7 +80,7 @@ const EnhancedAdministration = ({
                     ? {
                         marginBottom: "auto",
                         marginTop: "auto",
-                        fontSize: "1.1rem",
+                        fontSize: "0.41rem",
                         width: "100%",
                         // textAlign: "center",
                       }

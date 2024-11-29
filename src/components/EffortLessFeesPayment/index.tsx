@@ -2,38 +2,15 @@ import { Row, Col } from "antd";
 import { Fade } from "react-awesome-reveal";
 
 import { ContentBlockProps } from "./types";
-import { Button } from "../../common/Button";
 import { SvgIcon } from "../../common/SvgIcon";
-import {
-  ContentSection,
-  Content,
-  ContentWrapper,
-  ServiceWrapper,
-  MinTitle,
-  MinPara,
-  StyledRow,
-  ButtonWrapper,
-} from "./styles";
-import { Typography } from "@mui/material";
+import { ContentSection, Content, ContentWrapper, StyledRow } from "./styles";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
-const EffortLessFeesPayment = ({
-  icon,
-
-  section,
-  button,
-  id,
-  direction,
-}: ContentBlockProps) => {
+const EffortLessFeesPayment = ({ icon, id, direction }: ContentBlockProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  // const scrollTo = (id: string) => {
-  //   const element = document.getElementById(id) as HTMLDivElement;
-  //   element.scrollIntoView({
-  //     behavior: "smooth",
-  //   });
-  // };
+
   return (
     <ContentSection>
       <Fade direction={direction} triggerOnce={false}>
@@ -43,17 +20,16 @@ const EffortLessFeesPayment = ({
           id={id}
           direction={direction}
         >
-          {!isMobile ? (
-            <Col lg={11} md={11} sm={12} xs={24}>
-              <SvgIcon src={icon} width="100%" height="100%" />
-            </Col>
-          ) : (
-            ""
-          )}
+          <Col xs={11}>
+            <SvgIcon
+              src={icon}
+              width={isMobile ? "120%" : "100%"}
+              height={isMobile ? "100%" : "100%"}
+            />
+          </Col>
 
-          <Col lg={11} md={11} sm={11} xs={24}>
+          <Col xs={11}>
             <ContentWrapper>
-              {/* <h6 style={{ marginBottom: "auto" }}>Effortless Fee Payments</h6> */}
               {!isMobile ? (
                 <h6
                   style={{
@@ -68,7 +44,7 @@ const EffortLessFeesPayment = ({
                     marginTop: "auto",
                     marginBottom: "auto",
                     width: "100%",
-                    fontSize: "1.7rem",
+                    fontSize: "1rem",
                   }}
                 >
                   {"Effortless Fee Payments"}
@@ -81,9 +57,8 @@ const EffortLessFeesPayment = ({
                     ? {
                         marginBottom: "auto",
                         marginTop: "auto",
-                        fontSize: "1.1rem",
+                        fontSize: "0.4rem",
                         width: "100%",
-                        // textAlign: "center",
                       }
                     : {}
                 }
