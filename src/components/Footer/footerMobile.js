@@ -116,9 +116,13 @@ export default function PageFooterMobile() {
             fontSize: "0.9em",
           }}
         >
-          <NavLink to={"/privacy-policy"}>Privacy Policy</NavLink>
+          <NavLink to={"/privacy-policy"} target="_blank">
+            Privacy Policy
+          </NavLink>
           {" | "}
-          <NavLink to={"/terms-conditions"}>Terms & Conditions</NavLink>
+          <NavLink to={"/terms-conditions"} target="_blank">
+            Terms & Conditions
+          </NavLink>
         </Typography>
       </Box>
     </Box>
