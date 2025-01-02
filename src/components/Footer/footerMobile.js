@@ -4,6 +4,7 @@ import XIcon from "@mui/icons-material/X";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import YouTubeIcon from "@mui/icons-material/YouTube";
+import { NavLink } from "react-router-dom";
 
 export default function PageFooterMobile() {
   return (
@@ -42,9 +43,9 @@ export default function PageFooterMobile() {
           }}
         >
           <p style={{ fontSize: "0.9rem" }}>
-            EDUERN, 603, Brij Residency phase 2 <br />
-            Shiv Vatika, Lasudia Mori <br />
-            Indore, Madhya Pradesh 453771 <br /> India
+            EDUERN, Shri Lilawati Hospital <br />
+            Aghore ashram, Sudna, Police line road <br />
+            Daltonganj, Jharkhand - 822101 <br /> India
           </p>
         </Typography>
       </Box>
@@ -115,7 +116,9 @@ export default function PageFooterMobile() {
             fontSize: "0.9em",
           }}
         >
-          Privacy Policy | Terms & Conditions
+          <NavLink to={"/privacy-policy"}>Privacy Policy</NavLink>
+          {" | "}
+          <NavLink to={"/terms-conditions"}>Terms & Conditions</NavLink>
         </Typography>
       </Box>
     </Box>

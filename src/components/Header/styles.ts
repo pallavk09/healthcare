@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { Link } from "react-router-dom";
-import { MenuOutlined } from "@ant-design/icons";
+import { MenuOutlined, CloseOutlined } from "@ant-design/icons";
 
 export const HeaderSection = styled("header")`
   // padding: 1rem 0.5rem;
@@ -33,6 +33,59 @@ export const CustomNavLink = styled("div")`
   }
 `;
 
+interface BurgerProps {
+  open: boolean;
+}
+
+// export const Burger = styled.div<{ open: boolean }>`
+//   display: flex;
+//   flex-direction: column;
+//   justify-content: center;
+//   align-items: center;
+//   cursor: pointer;
+//   width: 30px;
+//   height: 30px;
+
+//   div {
+//     width: 100%;
+//     height: 3px;
+//     background-color: #2e186a;
+//     border-radius: 2px;
+//     transition: all 0.3s ease;
+//     position: relative;
+
+//     &:nth-child(1) {
+//       transform: ${({ open }) =>
+//         open ? "rotate(45deg) translateY(0)" : "rotate(0) translateY(-8px)"};
+//     }
+
+//     &:nth-child(2) {
+//       opacity: ${({ open }) => (open ? "0" : "1")};
+//     }
+
+//     &:nth-child(3) {
+//       transform: ${({ open }) =>
+//         open ? "rotate(-45deg) translateY(0)" : "rotate(0) translateY(8px)"};
+//     }
+//   }
+// `;
+
+// export const Burger = styled.div<BurgerProps>`
+//   @media only screen and (max-width: 890px) {
+//     display: block;
+//   }
+
+//   display: none;
+//   cursor: pointer;
+
+//   svg {
+//     fill: #2e186a;
+//     font-size: 22px;
+//     transition: transform 0.3s ease; /* Smooth rotation */
+//     transform: ${({ open }) => (open ? "rotate(90deg)" : "rotate(0deg)")};
+//   }
+// `;
+
 export const Burger = styled("div")`
   @media only screen and (max-width: 890px) {
     display: block;
@@ -64,7 +117,9 @@ export const CustomNavLinkSmall = styled(NavLink)`
   margin: 0.2rem 1rem;
 
   @media only screen and (max-width: 768px) {
-    margin: 1.25rem 2rem;
+    font-size: 1.4rem;
+    margin: 0.8rem 0rem;
+    text-align: left;
   }
 `;
 
@@ -79,6 +134,12 @@ export const Label = styled("span")`
 
 export const Outline = styled(MenuOutlined)`
   font-size: 22px;
+  transition: transform 0.8s ease;
+`;
+
+export const CloseIcon = styled(CloseOutlined)`
+  font-size: 22px;
+  transition: transform 0.8s ease; /* Smooth transition */
 `;
 
 export const Span = styled("span")`

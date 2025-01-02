@@ -13,9 +13,10 @@ import {
   Label,
   Outline,
   Span,
+  CloseIcon,
 } from "./styles";
 
-import { Box, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
@@ -74,6 +75,94 @@ const Header = () => {
     );
   };
 
+  const MenuItemMobile = () => {
+    const scrollTo = (id: string) => {
+      const element = document.getElementById(id) as HTMLDivElement;
+      element.scrollIntoView({
+        behavior: "smooth",
+      });
+      setVisibility(false);
+    };
+    return (
+      <>
+        <Box
+          display={"flex"}
+          flexDirection={"column"}
+          justifyContent={"left"}
+          alignItems={"left"}
+        >
+          <LogoContainer to="/" aria-label="homepage">
+            <Box
+              display={"flex"}
+              flexDirection={"column"}
+              alignItems={isMobile ? "flex-start" : "center"}
+              ml={isMobile ? 1 : 0}
+            >
+              <Typography variant={!isMobile ? "h3" : "h4"} mt={4}>
+                <strong>EDUERN</strong>
+              </Typography>
+              <Typography
+                variant="caption"
+                color="#cb3d64"
+                fontSize={isMobile ? "0.5rem" : ""}
+              >
+                <strong>Education Easy, Reliable, and Networked</strong>
+              </Typography>
+            </Box>
+          </LogoContainer>
+          <CustomNavLinkSmall onClick={() => scrollTo("aboutus")}>
+            About
+            <span>
+              <Divider
+                style={{
+                  color: "#FF825B",
+                  border: "0.5px solid",
+                  marginTop: "0.4rem",
+                }}
+              />
+            </span>
+          </CustomNavLinkSmall>
+          <CustomNavLinkSmall onClick={() => scrollTo("ourservices")}>
+            Services
+            <span>
+              <Divider
+                style={{
+                  color: "#FF825B",
+                  border: "0.5px solid",
+                  marginTop: "0.4rem",
+                }}
+              />
+            </span>
+          </CustomNavLinkSmall>
+          <CustomNavLinkSmall onClick={() => scrollTo("whyus")}>
+            Why Us
+            <span>
+              <Divider
+                style={{
+                  color: "#FF825B",
+                  border: "0.5px solid",
+                  marginTop: "0.4rem",
+                }}
+              />
+            </span>
+          </CustomNavLinkSmall>
+          <CustomNavLinkSmall onClick={() => scrollTo("contact")}>
+            Get In Touch
+            <span>
+              <Divider
+                style={{
+                  color: "#FF825B",
+                  border: "0.5px solid",
+                  marginTop: "0.4rem",
+                }}
+              />
+            </span>
+          </CustomNavLinkSmall>
+        </Box>
+      </>
+    );
+  };
+
   return (
     <>
       <HeaderSection>
@@ -124,11 +213,21 @@ const Header = () => {
             <NotHidden>
               <MenuItem />
             </NotHidden>
+
+            {/* <Burger onClick={toggleButton} open={visible}> */}
             <Burger onClick={toggleButton}>
-              <Outline />
+              {/* <div />
+              <div />
+              <div /> */}
+              {visible ? <CloseIcon /> : <Outline />}
             </Burger>
           </Row>
-          <Drawer closable={false} open={visible} onClose={toggleButton}>
+          <Drawer
+            closable={false}
+            open={visible}
+            onClose={toggleButton}
+            placement="left"
+          >
             {/* <Col style={{ marginBottom: "1.5rem" }}>
               <Label onClick={toggleButton}>
                 <Col span={8}>
@@ -139,7 +238,8 @@ const Header = () => {
                 </Col>
               </Label>
             </Col> */}
-            <MenuItem />
+            {/* <MenuItem /> */}
+            <MenuItemMobile />
           </Drawer>
         </Container>
       </HeaderSection>
