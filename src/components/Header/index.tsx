@@ -98,15 +98,19 @@ const Header = () => {
               alignItems={isMobile ? "flex-start" : "center"}
               ml={isMobile ? 1 : 0}
             >
-              <Typography variant={!isMobile ? "h3" : "h4"} mt={4}>
-                <strong>EDUERN</strong>
+              <Typography
+                variant={!isMobile ? "h3" : "h4"}
+                mt={4}
+                color="#FF825B"
+              >
+                <strong>Eduern</strong>
               </Typography>
               <Typography
                 variant="caption"
-                color="#cb3d64"
+                color="#2E186A"
                 fontSize={isMobile ? "0.5rem" : ""}
               >
-                <strong>Education Easy, Reliable, and Networked</strong>
+                <strong>Education Easy, Reliable, & Networked</strong>
               </Typography>
             </Box>
           </LogoContainer>
@@ -176,26 +180,26 @@ const Header = () => {
             >
               <LogoContainer to="/" aria-label="homepage">
                 {/* <SvgIcon src="logo.svg" width="101px" height="64px" /> */}
-                {/* <SvgIcon
-                  src="dummySchoolLogo.svg"
-                  width="120px"
-                  height="120px"
-                /> */}
+                {/* <SvgIcon src="sampple_icon1.jpg" width="120px" height="120px" /> */}
                 <Box
                   display={"flex"}
                   flexDirection={"column"}
                   alignItems={isMobile ? "flex-start" : "center"}
                   ml={isMobile ? 1 : 0}
                 >
-                  <Typography variant={!isMobile ? "h3" : "h4"} mt={4}>
-                    <strong>EDUERN</strong>
+                  <Typography
+                    variant={!isMobile ? "h3" : "h4"}
+                    mt={4}
+                    color="#FF825B"
+                  >
+                    <strong>Eduern</strong>
                   </Typography>
                   <Typography
                     variant="caption"
-                    color="#cb3d64"
+                    color="#2E186A"
                     fontSize={isMobile ? "0.5rem" : ""}
                   >
-                    <strong>Education Easy, Reliable, and Networked</strong>
+                    Education Easy, Reliable, & Networked
                   </Typography>
                 </Box>
               </LogoContainer>
