@@ -24,7 +24,7 @@ export const ScrollUpContainer = styled("div")<{
     background: rgb(224, 224, 224);
   }
 
-  @media screen and (max-width: 1240px) {
-    display: none;
-  }
+  // @media screen and (max-width: 1240px) {
+  //   display: none;
+  // }
 `;

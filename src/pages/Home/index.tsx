@@ -35,7 +35,8 @@ const Home = () => {
   return (
     <>
       {/* <Header /> */}
-      <Container width={isMobile ? "80vw" : "96vw"}>
+      {/* <Container width={isMobile ? "80vw" : "96vw"}> */}
+      <Container width="auto">
         <ScrollToTop />
         <Introduction
           direction="right"

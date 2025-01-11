@@ -19,12 +19,33 @@ import {
 import { Box, Divider, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useLocation } from "react-router-dom";
 
 const Header = () => {
+  const location = useLocation();
+  const { hash, pathname, search } = location;
   const [visible, setVisibility] = useState(false);
+  const [showMenus, setShowMenus] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  useEffect(() => {
+    console.log("pathname", pathname);
+    if (
+      !pathname.includes("privacy-policy") ||
+      !pathname.includes("terms-conditions")
+    )
+      setShowMenus(true);
+  }, []);
+
+  useEffect(() => {
+    console.log("pathname", pathname);
+    if (
+      pathname.includes("privacy-policy") ||
+      pathname.includes("terms-conditions")
+    )
+      setShowMenus(false);
+  }, [pathname]);
   const toggleButton = () => {
     setVisibility(!visible);
   };
@@ -95,10 +116,20 @@ const Header = () => {
             <Box
               display={"flex"}
               flexDirection={"column"}
-              alignItems={isMobile ? "flex-start" : "center"}
+              alignItems="center"
+              // alignItems={isMobile ? "flex-start" : "center"}
               ml={isMobile ? 1 : 0}
             >
-              <Typography
+              <img
+                src={`/img/svg/eduern-logov2.svg`}
+                alt={"eduern-logov2.svg"}
+                width="150px"
+                height="80px"
+                style={{
+                  marginLeft: -15,
+                }}
+              />
+              {/* <Typography
                 variant={!isMobile ? "h3" : "h4"}
                 mt={4}
                 color="#FF825B"
@@ -111,7 +142,7 @@ const Header = () => {
                 fontSize={isMobile ? "0.5rem" : ""}
               >
                 <strong>Education Easy, Reliable, & Networked</strong>
-              </Typography>
+              </Typography> */}
             </Box>
           </LogoContainer>
           <CustomNavLinkSmall onClick={() => scrollTo("aboutus")}>
@@ -179,28 +210,45 @@ const Header = () => {
               // ml={30}
             >
               <LogoContainer to="/" aria-label="homepage">
-                {/* <SvgIcon src="logo.svg" width="101px" height="64px" /> */}
-                {/* <SvgIcon src="sampple_icon1.jpg" width="120px" height="120px" /> */}
-                <Box
-                  display={"flex"}
-                  flexDirection={"column"}
-                  alignItems={isMobile ? "flex-start" : "center"}
-                  ml={isMobile ? 1 : 0}
-                >
-                  <Typography
-                    variant={!isMobile ? "h3" : "h4"}
-                    mt={4}
-                    color="#FF825B"
+                <Box display={"flex"} flexDirection={"row"}>
+                  <Box>
+                    <img
+                      src={`/img/svg/eduern-logov2.svg`}
+                      alt={"eduern-logov2.svg"}
+                      width={!isMobile ? "310px" : "200px"}
+                      height={!isMobile ? "200px" : "110px"}
+                      style={
+                        !isMobile
+                          ? {
+                              marginLeft: -40,
+                              marginTop: -20,
+                              marginBottom: -70,
+                            }
+                          : {}
+                      }
+                    />
+                  </Box>
+                  {/* <Box
+                    display={"flex"}
+                    flexDirection={"column"}
+                    alignItems={isMobile ? "flex-start" : "center"}
+                    ml={isMobile ? 1 : 0}
                   >
-                    <strong>Eduern</strong>
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="#2E186A"
-                    fontSize={isMobile ? "0.5rem" : ""}
-                  >
-                    Education Easy, Reliable, & Networked
-                  </Typography>
+                    <Typography
+                      variant={!isMobile ? "h3" : "h4"}
+                      mt={4}
+                      color="#FF825B"
+                    >
+                      <strong>Eduern</strong>
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="#2E186A"
+                      fontSize={isMobile ? "0.5rem" : ""}
+                    >
+                      Education Easy, Reliable, & Networked
+                    </Typography>
+                  </Box> */}
                 </Box>
               </LogoContainer>
               {/* <Box
@@ -214,17 +262,20 @@ const Header = () => {
                 </Typography>
               </Box> */}
             </Box>
-            <NotHidden>
-              <MenuItem />
-            </NotHidden>
-
+            {showMenus && (
+              <NotHidden>
+                <MenuItem />
+              </NotHidden>
+            )}
             {/* <Burger onClick={toggleButton} open={visible}> */}
-            <Burger onClick={toggleButton}>
-              {/* <div />
+            {showMenus && (
+              <Burger onClick={toggleButton}>
+                {/* <div />
               <div />
               <div /> */}
-              {visible ? <CloseIcon /> : <Outline />}
-            </Burger>
+                {visible ? <CloseIcon /> : <Outline />}
+              </Burger>
+            )}
           </Row>
           <Drawer
             closable={false}
