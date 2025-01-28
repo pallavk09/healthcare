@@ -5,6 +5,8 @@ import InstagramIcon from "@mui/icons-material/Instagram";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import { NavLink } from "react-router-dom";
+import CallIcon from "@mui/icons-material/Call";
+import EmailIcon from "@mui/icons-material/Email";
 
 export default function PageFooterMobile() {
   return (
@@ -43,7 +45,8 @@ export default function PageFooterMobile() {
           }}
         >
           <p style={{ fontSize: "0.9rem" }}>
-            EDUERN, Shri Lilawati Hospital <br />
+            EDUERN
+            <br />
             Aghore ashram, Sudna, Police line road <br />
             Daltonganj, Jharkhand - 822101 <br /> India
           </p>
@@ -54,6 +57,8 @@ export default function PageFooterMobile() {
         display="flex"
         flexDirection="column"
         textAlign={"center"}
+        justifyContent="center"
+        alignItems="center"
         ml={2}
         mt={-2.5}
       >
@@ -68,29 +73,44 @@ export default function PageFooterMobile() {
         >
           <p>Help & Support</p>
         </Typography>
-        <Typography
-          variant="h8"
-          sx={{
-            fontWeight: 400,
-            opacity: 1,
-            marginTop: -4,
-            fontSize: "0.8em",
-          }}
+        <Box
+          display="flex"
+          flexDirection={"row"}
+          justifyContent={"flex-start"}
+          alignItems="center"
+          gap={1}
         >
-          <p style={{ fontSize: "0.9rem" }}>
-            whatsup@eduern.com or +91-9989847374
-          </p>
-        </Typography>
-        <Typography
-          variant="h7"
-          sx={{
-            fontWeight: 300,
-            opacity: 1,
-            fontSize: "0.8em",
-          }}
+          <CallIcon style={{ color: "#FF825B" }} />
+          <Typography
+            variant="body1"
+            sx={{
+              fontWeight: 400,
+              opacity: 1,
+            }}
+            alignSelf={"flex-start"}
+          >
+            +91 7319987746
+          </Typography>
+        </Box>
+        <Box
+          display="flex"
+          flexDirection={"row"}
+          justifyContent={"flex-start"}
+          alignItems="center"
+          gap={1}
         >
-          © 2024 SYYNER Technology
-        </Typography>
+          <EmailIcon style={{ color: "#FF825B" }} />
+          <Typography
+            variant="body1"
+            sx={{
+              fontWeight: 400,
+              opacity: 1,
+            }}
+            alignSelf={"flex-start"}
+          >
+            eduern.official@gmail.com
+          </Typography>
+        </Box>
         {/* <Box display="flex" flexDirection="row">
           <FacebookIcon sx={{ marginRight: "20px" }} />
           <LinkedInIcon sx={{ marginRight: "20px" }} />

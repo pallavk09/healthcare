@@ -122,11 +122,11 @@ const Home = () => {
           content={ContactContent.text}
           id="contact"
         /> */}
-        <Contact
+        {/* <Contact
           title={ContactContent.title}
           content={ContactContent.text}
           id="contact"
-        />
+        /> */}
       </Container>
       {!isMobile ? <Footer /> : <PageFooterMobile />}
     </>

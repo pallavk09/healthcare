@@ -74,9 +74,9 @@ const Header = () => {
           <CustomNavLinkSmall onClick={() => scrollTo("whyus")}>
             <Span>{"Why Us"}</Span>
           </CustomNavLinkSmall>
-          <CustomNavLinkSmall onClick={() => scrollTo("contact")}>
+          {/* <CustomNavLinkSmall onClick={() => scrollTo("contact")}>
             <Span>{"Get In Touch"}</Span>
-          </CustomNavLinkSmall>
+          </CustomNavLinkSmall> */}
           {/* <MyCustomButton
             variant="contained"
             color="primary"
@@ -121,8 +121,8 @@ const Header = () => {
               ml={isMobile ? 1 : 0}
             >
               <img
-                src={`/img/svg/eduern-logov2.svg`}
-                alt={"eduern-logov2.svg"}
+                src={`/img/svg/product_logov3.png`}
+                alt={"Product Logo"}
                 width="150px"
                 height="80px"
                 style={{
@@ -181,7 +181,7 @@ const Header = () => {
               />
             </span>
           </CustomNavLinkSmall>
-          <CustomNavLinkSmall onClick={() => scrollTo("contact")}>
+          {/* <CustomNavLinkSmall onClick={() => scrollTo("contact")}>
             Get In Touch
             <span>
               <Divider
@@ -192,7 +192,7 @@ const Header = () => {
                 }}
               />
             </span>
-          </CustomNavLinkSmall>
+          </CustomNavLinkSmall> */}
         </Box>
       </>
     );
@@ -213,18 +213,22 @@ const Header = () => {
                 <Box display={"flex"} flexDirection={"row"}>
                   <Box>
                     <img
-                      src={`/img/svg/eduern-logov2.svg`}
-                      alt={"eduern-logov2.svg"}
-                      width={!isMobile ? "310px" : "200px"}
+                      src={`/img/svg/product_logov3.png`}
+                      alt={"Product Logo"}
+                      width={!isMobile ? "370px" : "200px"}
                       height={!isMobile ? "200px" : "110px"}
                       style={
                         !isMobile
                           ? {
-                              marginLeft: -40,
-                              marginTop: -20,
+                              marginLeft: -70,
+                              marginTop: -40,
                               marginBottom: -70,
                             }
-                          : {}
+                          : {
+                              marginLeft: -30,
+                              marginTop: -20,
+                              marginBottom: -20,
+                            }
                       }
                     />
                   </Box>

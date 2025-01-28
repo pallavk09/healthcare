@@ -5,6 +5,8 @@ import InstagramIcon from "@mui/icons-material/Instagram";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import { NavLink } from "react-router-dom";
+import CallIcon from "@mui/icons-material/Call";
+import EmailIcon from "@mui/icons-material/Email";
 
 const Footer = () => {
   return (
@@ -51,14 +53,14 @@ const Footer = () => {
           }}
         >
           <p>
-            EDUERN, Shri Lilawati Hospital <br />
+            EDUERN <br />
             Aghore ashram, Sudna, Police line road <br />
             Daltonganj, Jharkhand - 822101 <br /> India
           </p>
         </Typography>
       </Box>
 
-      <Box display="flex" flexDirection="column" gap={1}>
+      <Box display="flex" flexDirection="column" gap={0}>
         <Typography
           variant="h5"
           sx={{
@@ -73,20 +75,45 @@ const Footer = () => {
         >
           <p>Help & Support</p>
         </Typography>
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 400,
-            // opacity: '1',
-            // color: "whitesmoke",
-            opacity: 1,
-            // marginLeft: 7,
-            marginTop: -4,
-            // gridColumn: 'span 4',
-          }}
+        <Box
+          display="flex"
+          flexDirection={"row"}
+          justifyContent={"flex-start"}
+          alignItems="center"
+          gap={1}
         >
-          <p>whatsup@eduern.com or +91-9989847374</p>
-        </Typography>
+          <CallIcon style={{ color: "#FF825B" }} />
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 400,
+              opacity: 1,
+            }}
+            alignSelf={"flex-start"}
+          >
+            +91 7319987746
+          </Typography>
+        </Box>
+        <Box
+          display="flex"
+          flexDirection={"row"}
+          justifyContent={"flex-start"}
+          alignItems="center"
+          gap={1}
+        >
+          <EmailIcon style={{ color: "#FF825B" }} />
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 400,
+              opacity: 1,
+            }}
+            alignSelf={"flex-start"}
+          >
+            eduern.official@gmail.com
+          </Typography>
+        </Box>
+
         {/* <Typography
           variant="h6"
           sx={{
@@ -107,7 +134,7 @@ const Footer = () => {
           <YouTubeIcon sx={{ marginRight: "20px" }} />
           <InstagramIcon />
         </Box> */}
-        <Typography
+        {/* <Typography
           variant="h6"
           sx={{
             fontWeight: 300,
@@ -117,7 +144,7 @@ const Footer = () => {
           }}
         >
           © 2024 SYYNER Technology
-        </Typography>
+        </Typography> */}
       </Box>
 
       <Box display="flex" flexDirection="column">
