@@ -207,7 +207,7 @@ const NewAdmissionBlock = ({ icon, id, direction }: ContentBlockProps) => {
                       style={{ width: "70%" }}
                     />
                     <Typography variant="caption" color="textSecondary">
-                      By using Asaan you agree our{" "}
+                      By using Eduern you agree our{" "}
                       <Link href="/privacypolicy.html" color="inherit">
                         Privacy Policy
                       </Link>

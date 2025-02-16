@@ -346,9 +346,11 @@ const Header = ({ t }: { t: TFunction }) => {
               <LogoContainer to="/" aria-label="homepage">
                 {/* <SvgIcon src="logo.svg" width="101px" height="64px" /> */}
                 <SvgIcon
-                  src="dummySchoolLogo.svg"
+                  src="vimlapandey.png"
                   width="120px"
-                  height="120px"
+                  height="80px"
+                  margintop="13px"
+                  marginRight="6px"
                 />
               </LogoContainer>
               <Box
@@ -365,12 +367,13 @@ const Header = ({ t }: { t: TFunction }) => {
                   </>
                 ) : (
                   <>
-                    <Typography variant="h4">
-                      <strong>Maharaja Public School</strong>
+                    <Typography variant="h3">
+                      <strong>V.P.M. GYAN NIKETAN SCHOOL</strong>
                     </Typography>
-                    <Typography variant="body2" color="#4b4a54">
+                    <Typography variant="subtitle2" color="#4b4a54">
                       <strong>
-                        NH-30,Rewa-Satna Road, Bela Satna M.P.- 485115
+                        Bairia, Daltonganj, Palamu, (Jharkhand) Contact No.
+                        6205574800, 7481021484
                       </strong>
                     </Typography>
                   </>

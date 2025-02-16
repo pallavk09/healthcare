@@ -46,4 +46,12 @@ You can learn more in the [Create React App documentation](https://facebook.gith
 To learn React, check out the [React documentation](https://reactjs.org/).
 
 ## image URL
+
 https://www.whoooa.rocks/
+
+## MY NOTES
+
+For any new student below records will be created
+
+> Student Record
+> student_fee_collection_records. monthly_payments will be an empty array

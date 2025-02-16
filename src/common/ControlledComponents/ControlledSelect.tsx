@@ -37,6 +37,7 @@ const ControlledSelect: React.FC<ControlledSelectProps> = ({
   disabled,
   ...formControlProps
 }) => {
+  // console.log(errors);
   //   const errorMessage = errors?.[name]?.message?.toString() || "";
   //   console.log(`errorMessage: ${errors}`);
   return (

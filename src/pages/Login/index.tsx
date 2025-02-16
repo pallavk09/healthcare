@@ -1,6 +1,5 @@
 import { lazy } from "react";
-import HeaderLogin from "../../components/HeaderLogin";
-import FooterLogin from "../../components/FooterLogin";
+import MyCustomHeader from "../../components/MyCustomHeader";
 
 const Container = lazy(() => import("../../common/Container"));
 const FormBlock = lazy(() => import("../../components/FormBlock"));
@@ -8,11 +7,10 @@ const FormBlock = lazy(() => import("../../components/FormBlock"));
 const Login = () => {
   return (
     <>
-      {/* <HeaderLogin /> */}
+      <MyCustomHeader />
       <Container>
         <FormBlock icon="waving.svg" id="loginform" direction="left" />
       </Container>
-      <FooterLogin />
     </>
   );
 };

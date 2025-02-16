@@ -19,7 +19,7 @@ export interface newAddmissionApplicationType {
   createdAt: string;
   statusUpdatedOn: string;
   applicationData: string;
-  submissionStatus: "Complete" | "Payment Pending" | "";
+  submissionStatus: "Saved" | "Complete" | "Payment Pending" | "";
   paymentStatus: "Success" | "Fail" | "Pending" | "";
   transactionId: string;
   interview: string;

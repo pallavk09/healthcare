@@ -7,7 +7,7 @@ interface ControlledTextFieldProps {
   name: string; // Name of the field
   control: Control<any>; // Control from react-hook-form
   errors: FieldErrors; // Errors from react-hook-form
-  label: string; // Label for the TextField
+  label?: string; // Label for the TextField
   variant?: "filled" | "outlined" | "standard"; // Optional variant prop for TextField
   size?: "small" | "medium"; // Optional size prop for TextField
   required?: boolean; // Whether the field is required
@@ -36,6 +36,8 @@ const ControlledTextField: React.FC<ControlledTextFieldProps> = ({
   // value,
   disabled,
 }) => {
+  // console.log(errors?.[name.split(".")[0]]);
+  // console.log(errors?.[name]?.message?.toString());
   return (
     <Controller
       name={name}
@@ -47,8 +49,14 @@ const ControlledTextField: React.FC<ControlledTextFieldProps> = ({
           label={label}
           variant={variant}
           size={size}
-          error={Boolean(errors?.[name])}
-          helperText={errors?.[name]?.message?.toString() || ""}
+          //@ts-ignore
+          error={Boolean(errors?.[name.split(".")[0]]?.[name.split(".")[1]])}
+          helperText={
+            //@ts-ignore
+            errors?.[name.split(".")[0]]?.[name.split(".")[1]]?.message || ""
+          }
+          // error={Boolean(errors?.[name])}
+          // helperText={errors?.[name]?.message?.toString() || ""}
           fullWidth={fullWidth}
           required={required}
           sx={sx}

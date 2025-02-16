@@ -23,12 +23,19 @@ export const Styles = createGlobalStyle`
 
 
     body {
-        margin:0;
-        padding:0;
+        margin: 0;
+        padding: 0;
         border: 0;
         outline: 0;
-        background: #fff;
         overflow-x: hidden;
+        background: url('/img/background3.jpg') no-repeat center center fixed;
+        // background-size: cover;
+        // margin:0;
+        // padding:0;
+        // border: 0;
+        // outline: 0;
+        // background: #fff;
+        // overflow-x: hidden;
     }
 
     a:hover {

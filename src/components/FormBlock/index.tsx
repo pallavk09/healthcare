@@ -6,7 +6,13 @@ import { ContentBlockProps } from "./types";
 import { SvgIcon } from "../../common/SvgIcon";
 import { ContentSection } from "./styles";
 
-import { PhoneOutlined } from "@ant-design/icons";
+import {
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  LockOutlined,
+  PhoneOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,6 +22,7 @@ import {
   Button,
   CircularProgress,
   styled,
+  Paper,
 } from "@mui/material";
 import "react-toastify/dist/ReactToastify.css";
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
@@ -25,6 +32,9 @@ import { ListStudents } from "../../api/students";
 import SuccessPopup from "../../common/SuccessPopup";
 import ApiContext from "../../store/context";
 import userDataContext from "../../store/userContext";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -51,7 +61,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [otpValue, setOtpValue] = useState<string | undefined>(undefined);
   const [_userId, setUserId] = useState();
-
+  const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
   const ctx = useContext(userDataContext);
   const [form] = Form.useForm();
@@ -88,71 +98,75 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
   }, [timer]);
 
   const onFinish = async (values: any) => {
-    try {
-      setLoading(true);
-      //1. Get Phone number and send OTP
-      if (values?.mobilenumber && !isOtpSent) {
-        const phoneNumber = "+91" + values.mobilenumber;
-        setUserPhone(phoneNumber);
-        const response = await SendOtp(phoneNumber);
-        console.log(response);
-        if (response) {
-          snackbarRef.current?.showSnackbar(
-            `OTP sent to ${phoneNumber}.`,
-            "success"
-          );
-          setIsOtpSent(true);
-          startTimer();
-        }
-      }
-
-      if (values?.otp && isOtpSent) {
-        const response = await ValidateOtp(userPhone, values.otp, "STUDENT");
-        if (response?.status === "SUCCESS") {
-          //UPDATE CONTEXT WITH USER LOGGED IN TRUE
-          ctx?.user_dispatch({
-            type: "UPDATE_USER_LOGGEDIN",
-            payload: { phone: userPhone!, userId: response?.userId! },
-          });
-          if (response?.message === "User logged in") {
-            setUserId(response?.userId);
-            //USER ALREADY REGISTERED
-            //CHECKING IF STUDENT PRESENT FOR THIS USER
-            console.log("printing response - user logged in");
-            console.log(response);
-            const studentList = await ListStudents(response?.userId);
-            console.log("printing student list - user logged in");
-            console.log(studentList);
-            if (
-              //NO STUDENT PRESENT FOR THIS USER
-              //NAVIGATING TO REGISTRATION PAGE
-              studentList &&
-              studentList?.result &&
-              studentList?.result?.length === 0
-            )
-              navigate(`studentregistration/${response?.userId}`);
-            else if (
-              studentList &&
-              studentList?.result &&
-              studentList?.result?.length > 0
-            )
-              //STUDENT PRESENT FOR THIS USER
-              //NAVIGATING TO DASHBOARD
-              navigate(`studentdashboard/${response?.userId}`);
-          } else if (response?.message === "User registered") {
-            console.log("New user registered", response?.userId);
-            setUserId(response?.userId);
-            setIsPopupOpen(true);
-          }
-        }
-      }
-    } catch (error) {
-      console.log(error);
-      snackbarRef.current?.showSnackbar(`Please Re-Generate OTP`, "error");
-    } finally {
-      setLoading(false);
-    }
+    if (values.username && values.password) navigate("/schooladmin");
   };
+
+  // const onFinish = async (values: any) => {
+  //   try {
+  //     setLoading(true);
+  //     //1. Get Phone number and send OTP
+  //     if (values?.username && !isOtpSent) {
+  //       const phoneNumber = "+91" + values.username;
+  //       setUserPhone(phoneNumber);
+  //       const response = await SendOtp(phoneNumber);
+  //       console.log(response);
+  //       if (response) {
+  //         snackbarRef.current?.showSnackbar(
+  //           `OTP sent to ${phoneNumber}.`,
+  //           "success"
+  //         );
+  //         setIsOtpSent(true);
+  //         startTimer();
+  //       }
+  //     }
+
+  //     if (values?.otp && isOtpSent) {
+  //       const response = await ValidateOtp(userPhone, values.otp, "STUDENT");
+  //       if (response?.status === "SUCCESS") {
+  //         //UPDATE CONTEXT WITH USER LOGGED IN TRUE
+  //         ctx?.user_dispatch({
+  //           type: "UPDATE_USER_LOGGEDIN",
+  //           payload: { phone: userPhone!, userId: response?.userId! },
+  //         });
+  //         if (response?.message === "User logged in") {
+  //           setUserId(response?.userId);
+  //           //USER ALREADY REGISTERED
+  //           //CHECKING IF STUDENT PRESENT FOR THIS USER
+  //           console.log("printing response - user logged in");
+  //           console.log(response);
+  //           const studentList = await ListStudents(response?.userId);
+  //           console.log("printing student list - user logged in");
+  //           console.log(studentList);
+  //           if (
+  //             //NO STUDENT PRESENT FOR THIS USER
+  //             //NAVIGATING TO REGISTRATION PAGE
+  //             studentList &&
+  //             studentList?.result &&
+  //             studentList?.result?.length === 0
+  //           )
+  //             navigate(`studentregistration/${response?.userId}`);
+  //           else if (
+  //             studentList &&
+  //             studentList?.result &&
+  //             studentList?.result?.length > 0
+  //           )
+  //             //STUDENT PRESENT FOR THIS USER
+  //             //NAVIGATING TO DASHBOARD
+  //             navigate(`studentdashboard/${response?.userId}`);
+  //         } else if (response?.message === "User registered") {
+  //           console.log("New user registered", response?.userId);
+  //           setUserId(response?.userId);
+  //           setIsPopupOpen(true);
+  //         }
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     snackbarRef.current?.showSnackbar(`Please Re-Generate OTP`, "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const onFinishFailed = (errorInfo: any) => {
     console.log("Failed:", errorInfo);
@@ -179,15 +193,28 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
         <Box
           display={"flex"}
           flexDirection={"row"}
+          alignItems={"center"}
           justifyContent={"space-between"}
-          mt={-2}
+          // sx={{
+          //   backgroundColor: "gray",
+          // }}
+          // mt={-2}
         >
           {/* <ToastContainer /> */}
           <Col lg={11} md={11} sm={12} xs={24}>
             <SvgIcon src={icon} width="100%" height="100%" />
           </Col>
-          <Col lg={11} md={11} sm={12} xs={24}>
-            <h6 style={{ marginBottom: "15px" }}>Hey, There!</h6>
+
+          <Col
+            lg={11}
+            md={11}
+            sm={12}
+            xs={24}
+            style={{ alignSelf: "flex-end" }}
+          >
+            <Typography variant="h3">
+              <strong>Eduern Login</strong>
+            </Typography>
             {!isOtpSent && (
               <Form
                 form={form}
@@ -197,25 +224,83 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
                 onFinishFailed={onFinishFailed}
               >
                 <Form.Item
-                  name="mobilenumber"
-                  rules={[
-                    { required: true, message: "Enter Mobile Number" },
-                    {
-                      pattern: /^\d{10}$/,
-                      message: "Invalid, must be 10 digits",
-                    },
-                  ]}
+                  name="username"
+                  rules={[{ required: true, message: "Required" }]}
                   style={{ marginTop: "2rem" }}
                 >
+                  <Input
+                    size="middle"
+                    placeholder="Username"
+                    prefix={
+                      <UserOutlined />
+                      // <AccountCircleOutlinedIcon
+                      //   style={{
+                      //     opacity: 0.3,
+                      //   }}
+                      // />
+                    }
+                    style={{ width: "60%" }}
+                    variant="outlined"
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="password"
+                  rules={[{ required: true, message: "Required" }]}
+                >
+                  <Input
+                    size="middle"
+                    placeholder="Password"
+                    prefix={<LockOutlined />}
+                    style={{ width: "60%" }}
+                    variant="outlined"
+                    type={visible ? "text" : "password"}
+                    suffix={
+                      <span
+                        onClick={() => setVisible((prev) => !prev)}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" && setVisible((prev) => !prev)
+                        } // Keyboard accessibility
+                        role="button"
+                        tabIndex={0}
+                        style={{
+                          cursor: "pointer",
+                          padding: "5px",
+                          display: "flex",
+                          alignItems: "center",
+                          fontSize: "18px",
+                          color: "#888",
+                          transition: "color 0.2s",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.color = "#1890ff")
+                        } // Hover effect
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.color = "#888")
+                        }
+                      >
+                        {visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                      </span>
+                    }
+                  />
+                </Form.Item>
+                <Form.Item>
                   <Box display={"flex"} flexDirection={"column"}>
-                    <Input
-                      size="large"
-                      placeholder="Enter 10 digit mobile number"
-                      prefix={<PhoneOutlined />}
-                      style={{ width: "70%" }}
-                    />
+                    <MyCustomButton
+                      variant="contained"
+                      type="submit"
+                      color="primary"
+                      sx={{
+                        width: "60%",
+                      }}
+                      disabled={loading}
+                      startIcon={
+                        loading ? <CircularProgress size={20} /> : null
+                      } // Show loader in button
+                    >
+                      {loading ? "Wait..." : "LOGIN"}
+                    </MyCustomButton>
                     <Typography variant="caption" color="textSecondary">
-                      By using Asaan you agree our{" "}
+                      By using Eduern you agree our{" "}
                       <Link href="/privacypolicy.html" color="inherit">
                         Privacy Policy
                       </Link>
@@ -225,17 +310,6 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
                       </Link>
                     </Typography>
                   </Box>
-                </Form.Item>
-                <Form.Item>
-                  <MyCustomButton
-                    variant="contained"
-                    type="submit"
-                    color="primary"
-                    disabled={loading}
-                    startIcon={loading ? <CircularProgress size={20} /> : null} // Show loader in button
-                  >
-                    {loading ? "Sending..." : "Send OTP"}
-                  </MyCustomButton>
                 </Form.Item>
               </Form>
             )}

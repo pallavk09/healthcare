@@ -98,7 +98,7 @@ const FeesPaymentCart = () => {
     console.log("First time payment");
     const today = moment();
     const feeDueDate = moment().date(monthFeeTimeGap_days);
-
+    console.log(`Today is ${today} and fee due date is ${feeDueDate}`);
     if (today.isAfter(feeDueDate)) {
       console.log("Fee overdue");
       activePayment = true;
@@ -319,7 +319,11 @@ const FeesPaymentCart = () => {
         const endMonth = PaymentActive()
           ? moment().month() + 1
           : moment().month();
-        let pendingMonth = months.slice(startMonth, endMonth);
+        // 15-01-25: Pallav commments
+        // Logic needs to be revisted for year change
+        // Last paid on Oct-24 then someone opens it to Jan-25 then also it should work
+        // let pendingMonth = months.slice(startMonth, endMonth);
+        let pendingMonth = ["November", "December"];
         console.log("Pending Months are");
         console.log(pendingMonth);
 
@@ -452,7 +456,11 @@ const FeesPaymentCart = () => {
     let platformCharge = 60;
     totalFeeToBePaid += platformCharge;
     if (PaymentActive()) {
+      console.log("Fee Summary: Fee active", feeData.length);
+      // 15-01-25: Pallav commments
+      //Need to re call this logic. This IF-ELSE condition do not make sense
       if (feeData && feeData.length === 0) {
+        console.log("Fee Summary: Fee data length is 0");
         return (
           <>
             {studentList.map((student, index) => {
@@ -516,10 +524,11 @@ const FeesPaymentCart = () => {
           </>
         );
       } else {
+        console.log("Fee Summary: fee length not equal to 0");
         return [];
       }
     } else if (feeData && feeData.length > 0) {
-      console.log("Fees data present");
+      console.log("Fee summary: Fees data present");
       let feeCardArray: any[] = [];
       //For each student check fees paid upto which month
       for (const student of students!) {
@@ -547,7 +556,9 @@ const FeesPaymentCart = () => {
         const endMonth = PaymentActive()
           ? moment().month() + 1
           : moment().month();
-        let pendingMonth = months.slice(startMonth, endMonth);
+        // 15-01-25: Pallav commments
+        // let pendingMonth = months.slice(startMonth, endMonth);
+        let pendingMonth = ["November", "December"];
         console.log("Pending Months are");
         console.log(pendingMonth);
 

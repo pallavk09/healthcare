@@ -11,13 +11,18 @@ import {
   Container,
   Avatar,
   Button,
+  Divider,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import NewAdmissionForm from "../../components/Services/NewAdmission";
 import newadmissionContext, {
   newAddmissionApplicationType,
 } from "../../store/newadmissionContext";
-import { ListApplications } from "../../api/newAdmission";
+import {
+  CreateNewApplication,
+  ListApplications,
+  UpdateApplicationData,
+} from "../../api/newAdmission";
 import { json, useLoaderData, useNavigate } from "react-router-dom";
 import { brown } from "@mui/material/colors";
 import { MyCustomButton } from "../../common/MyCustomControls";
@@ -27,35 +32,48 @@ import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import userDataContext from "../../store/userContext";
 import { jwtDecode } from "jwt-decode";
 import { GeneratePrevieUrl } from "../../common/utils/generatePreviewUrl";
+import { VimlaPandeyDataProps } from "../../components/Services/NewAdmission/types";
+import { VIMLA_PANDEY_INITIAL_STATE } from "../../components/Services/NewAdmission/initialStates";
+import { uploadFile, UploadFileType } from "../../api/upload";
+import generateUniqueId from "../../common/utils/generateUniqueId";
+import LoadingDialog from "../../common/LoadingDialog";
+import LockIcon from "@mui/icons-material/Lock";
 
-// export async function Loader({ params }: { params: any }) {
-//   try {
-//     console.log(`params.userId!: ${params.userId!}`);
-//     const applicationList = await ListApplications(params.userId!);
-//     if (applicationList?.result && applicationList?.result.length > 0) {
-//       return applicationList?.result;
-//     } else {
-//       console.log("Admission dashboard Loader. Returning []");
-//       return [];
-//     }
-//   } catch (error: any) {
-//     throw json(
-//       { message: `Could not fetch application list. Error${error.message}` },
-//       { status: 500 }
-//     );
-//   }
-// }
-
+const INITIAL_FORM_STATE: newAddmissionApplicationType = {
+  photoUrl: null,
+  userId: "",
+  phone: "",
+  emailId: "",
+  applicationId: "",
+  currentStatus: "",
+  role: "NEWADMISSION",
+  submissionDate: "",
+  createdAt: "",
+  statusUpdatedOn: "",
+  applicationData: JSON.stringify(VIMLA_PANDEY_INITIAL_STATE),
+  submissionStatus: "",
+  paymentStatus: "",
+  transactionId: "",
+  interview: "",
+};
 const AdmissionDashboard = () => {
   // const loaderData = useLoaderData() as newAddmissionApplicationType[];
-  const [isOpen, setIsOpen] = useState(false);
   const [_userId, setUserId] = useState<string | undefined>();
   const [_phone, setPhone] = useState<string | undefined>();
+  const [isAdmissionDialogOpen, setAdmissionDialogOpen] = useState(false);
+  const [newForm, setNewForm] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [applications, setApplications] = useState<
     newAddmissionApplicationType[] | []
   >();
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const snackbarRef = useRef<SnackbarHandle>(null);
+  const resetFormRef = useRef<() => void>(() => {});
+
+  const [newApplicationData, setNewApplicationData] =
+    useState<newAddmissionApplicationType>(INITIAL_FORM_STATE);
 
   const statusOrder = {
     Verification: 0,
@@ -63,17 +81,16 @@ const AdmissionDashboard = () => {
     Selected: 3,
   };
 
-  // const ctx = useContext(newadmissionContext);
+  const ctx = useContext(newadmissionContext);
   const ctx_userData = useContext(userDataContext);
 
   const onClose = () => {
-    console.log("Dialog Closed");
-    setIsOpen(false);
+    if (resetFormRef.current) {
+      resetFormRef.current(); // Reset the form to its initial state
+    }
+    setAdmissionDialogOpen(false);
+    setIsEditing(false);
   };
-
-  // const GeneratePrevieUrl = (document_id: string) => {
-  //   return `${process.env.REACT_APP_APPWRITE_ENDPOINT}/storage/buckets/${process.env.REACT_APP_APPWRITE_NEW_ADMISSION_BUCKET_ID}/files/${document_id}/preview?project=${process.env.REACT_APP_APPWRITE_PROJECT_ID}`;
-  // };
 
   useEffect(() => {
     console.log("Under useEffect of AdmissionDashboard.");
@@ -199,7 +216,7 @@ const AdmissionDashboard = () => {
                           <Typography variant="body1" display={"inline"}>
                             {
                               JSON.parse(application.applicationData)
-                                .studentfullname
+                                .studentFullName
                             }
                           </Typography>
                         </Box>
@@ -211,6 +228,10 @@ const AdmissionDashboard = () => {
                             type="button"
                             variant="text"
                             sx={{ p: 0, cursor: "pointer" }}
+                            onClick={
+                              () => viewEditForm(application)
+                              // console.log("Application ID clicked", application)
+                            }
                           >
                             <Typography
                               variant="body1"
@@ -253,11 +274,17 @@ const AdmissionDashboard = () => {
                       </Box>
                     </Box>
                     {/**This is underline */}
-                    <Box
+                    <Divider
+                      style={{
+                        // color: "#000",
+                        border: "1.5px solid rgb(255, 130, 92)",
+                      }}
+                    />
+                    {/* <Box
                       width={"100%"}
                       height={"0.2px"}
                       border={"1.5px solid rgb(255, 130, 92)"}
-                    />
+                    /> */}
                     {/**This is status stepper Box */}
                     <Box
                       display={"flex"}
@@ -270,9 +297,22 @@ const AdmissionDashboard = () => {
                       {
                         application.submissionStatus &&
                         application.submissionStatus === "Payment Pending" ? (
-                          <MyCustomButton color="primary" variant="contained">
-                            Make Payment
-                          </MyCustomButton>
+                          <Box
+                            display={"flex"}
+                            flexDirection={"column"}
+                            gap={1}
+                          >
+                            <MyCustomButton
+                              color="primary"
+                              variant="contained"
+                              startIcon={<LockIcon fontSize="small" />}
+                            >
+                              PAY 1000 INR
+                            </MyCustomButton>
+                            <Typography variant="caption" color="textSecondary">
+                              Make payment to submit your application
+                            </Typography>
+                          </Box>
                         ) : (
                           ""
                         )
@@ -327,17 +367,171 @@ const AdmissionDashboard = () => {
     );
   };
 
-  const updateApplicationState = (newApplicationData: any) => {
-    console.log("Inside updateApplicationState");
+  const viewEditForm = (formData: newAddmissionApplicationType) => {
+    setNewForm(false);
+    setNewApplicationData(formData);
+    setAdmissionDialogOpen(true);
+  };
 
-    console.log("Existing Applications");
-    console.log(applications);
+  const formatResponse = (responseObj: any): newAddmissionApplicationType => {
+    let formattedResponse: newAddmissionApplicationType = {
+      photoUrl: responseObj.photoUrl,
+      userId: responseObj.userId,
+      phone: responseObj.phone,
+      emailId: responseObj.emailId,
+      applicationId: responseObj.applicationId,
+      currentStatus: responseObj.currentStatus,
+      role: responseObj.role,
+      submissionDate: responseObj.submissionDate,
+      createdAt: responseObj.createdAt,
+      statusUpdatedOn: responseObj.statusUpdatedOn,
+      applicationData: responseObj.applicationData,
+      submissionStatus: responseObj.submissionStatus,
+      paymentStatus: responseObj.paymentStatus,
+      transactionId: responseObj.transactionId,
+      interview: responseObj.interview,
+    };
 
-    console.log("New Application Data");
-    console.log(newApplicationData);
+    return formattedResponse;
+  };
 
-    const updatedApplicationList = [...applications!, newApplicationData];
-    setApplications(updatedApplicationList);
+  const handleFormSubmit = async (data: VimlaPandeyDataProps) => {
+    try {
+      setIsLoading(true);
+      if (newForm) {
+        console.log("New Form");
+        console.log(data);
+
+        const photofile = data.photofile;
+        console.log(`Photo URL as`);
+        console.log(photofile);
+        const uploadFileObject: UploadFileType = {
+          filepath: photofile!,
+          bucket_id: process.env.REACT_APP_APPWRITE_NEW_ADMISSION_BUCKET_ID!,
+        };
+        const upload = await uploadFile(uploadFileObject);
+        console.log("Photo uploaded. Printing response");
+        console.log(upload);
+        const newApplicationObj: newAddmissionApplicationType = {
+          photoUrl: upload?.$id,
+          userId: _userId!,
+          phone: _phone!,
+          emailId: "",
+          applicationId: generateUniqueId(),
+          currentStatus: "",
+          role: "NEWADMISSION",
+          submissionDate: "",
+          createdAt: "",
+          statusUpdatedOn: "",
+          applicationData: JSON.stringify(data),
+          submissionStatus: "Payment Pending",
+          paymentStatus: "Pending",
+          transactionId: "",
+          interview: "",
+        };
+        console.log("newApplicationObj is below");
+        console.log(newApplicationObj);
+        const response = await CreateNewApplication(newApplicationObj);
+        if (response?.newApplication) {
+          console.log(`Application submission success. `);
+          console.log(response.newApplication);
+          ctx?.dispatch_newadmission({
+            type: "ADD_NEW_APPLICATION",
+            payload: response?.newApplication!,
+          });
+          snackbarRef.current?.showSnackbar(
+            `Application saved successfully. Please proceed with payment`,
+            "success"
+          );
+          // setIsLoading(false);
+          setSubmissionSuccess(true);
+          setApplications([...applications!, response.newApplication]);
+        } else {
+          console.log(`Application submission failed.`);
+          console.log(response);
+          snackbarRef.current?.showSnackbar(
+            `Form Submission failed. Close this popup and try again`,
+            "error"
+          );
+          setIsLoading(false);
+        }
+      } else {
+        console.log("Update Form");
+        console.log(data);
+        console.log(newApplicationData);
+        //@ts-ignore
+        console.log(newApplicationData.$id!);
+        let photoUrl = "";
+        if (data.photofile) {
+          const uploadFileObject: UploadFileType = {
+            filepath: data.photofile,
+            bucket_id: process.env.REACT_APP_APPWRITE_NEW_ADMISSION_BUCKET_ID!,
+          };
+          console.log(uploadFileObject);
+          const upload = await uploadFile(uploadFileObject);
+
+          console.log("Photo uploaded. Printing response");
+          console.log(upload);
+          photoUrl = upload?.$id!;
+        }
+
+        const _updatedApplication = await UpdateApplicationData(
+          //@ts-ignore
+          newApplicationData.$id!,
+          JSON.stringify(data),
+          photoUrl
+        );
+
+        console.log("Application has been updated");
+        console.log(_updatedApplication);
+
+        console.log("Existing Applications");
+        console.log(applications);
+
+        // const updatedApplicationObj: newAddmissionApplicationType = {
+        //   photoUrl: photoUrl,
+        //   userId: newApplicationData.userId,
+        //   phone: newApplicationData.phone,
+        //   emailId: newApplicationData.emailId,
+        //   applicationId: newApplicationData.applicationId,
+        //   currentStatus: newApplicationData.currentStatus,
+        //   role: newApplicationData.role,
+        //   submissionDate: newApplicationData.submissionDate,
+        //   createdAt: newApplicationData.createdAt,
+        //   statusUpdatedOn: "",
+        //   applicationData: JSON.stringify(data),
+        //   submissionStatus: newApplicationData.submissionStatus,
+        //   paymentStatus: newApplicationData.paymentStatus,
+        //   transactionId: newApplicationData.transactionId,
+        //   interview: newApplicationData.interview,
+        // };
+
+        const updatedApplicationsArray: newAddmissionApplicationType[] =
+          applications!.map((application: newAddmissionApplicationType) => {
+            //@ts-ignore
+            return application.$id ===
+              _updatedApplication.updatedApplication.$id
+              ? _updatedApplication.updatedApplication
+              : application;
+          });
+
+        snackbarRef.current?.showSnackbar(
+          `Application updated successfully.`,
+          "success"
+        );
+
+        setApplications(updatedApplicationsArray);
+      }
+    } catch (error: any) {
+      console.log(`Error while submitting. Error: ${error.message}`);
+      console.log(error);
+      snackbarRef.current?.showSnackbar(
+        `Some issue while submitting form. If persist please re-login and try again`,
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -347,7 +541,7 @@ const AdmissionDashboard = () => {
         <Grid spacing={2} container>
           <Grid item xs={12}>
             <Typography variant="caption" color="textSecondary" ml={2}>
-              Click you Application ID to view your application.
+              Click you Application ID to view or edit your application.
             </Typography>
           </Grid>
           <Grid
@@ -359,7 +553,7 @@ const AdmissionDashboard = () => {
           >
             <Card
               raised={true}
-              onClick={() => setIsOpen(true)}
+              // onClick={() => setIsOpen(true)}
               style={{
                 cursor: "pointer",
                 textAlign: "center",
@@ -392,6 +586,10 @@ const AdmissionDashboard = () => {
                       color: "rgb(255, 130, 92)",
                       cursor: "pointer",
                     }}
+                    onClick={() => {
+                      setNewForm(true);
+                      setAdmissionDialogOpen(true);
+                    }}
                   />
                 </Box>
                 <Typography variant="h5">
@@ -409,9 +607,9 @@ const AdmissionDashboard = () => {
             getCardsList(applications)}
         </Grid>
         <Dialog
-          open={isOpen}
+          open={isAdmissionDialogOpen}
           onClose={onClose}
-          maxWidth="md"
+          maxWidth="lg"
           // disableEscapeKeyDown
         >
           <DialogContent
@@ -436,12 +634,17 @@ const AdmissionDashboard = () => {
           >
             <NewAdmissionForm
               onClose={onClose}
-              userId={_userId!}
-              phone={_phone!}
-              newApplicationData={updateApplicationState}
+              onSubmit={handleFormSubmit}
+              newApplicationData={
+                newForm ? INITIAL_FORM_STATE : newApplicationData
+              }
+              resetFormRef={resetFormRef}
+              isEditing={true}
+              onEdit={() => console.log("Ignore")}
             />
           </DialogContent>
         </Dialog>
+        <LoadingDialog open={isLoading} />
       </Container>
     </>
   );

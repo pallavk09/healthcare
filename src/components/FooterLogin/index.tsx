@@ -1,11 +1,12 @@
-import { withTranslation } from "react-i18next";
+// import { withTranslation } from "react-i18next";
 
-import { TFunction } from "i18next";
+// import { TFunction } from "i18next";
 
 import { FooterSection } from "./styles";
 import { Box, Typography } from "@mui/material";
 
-const FooterLogin = ({ t }: { t: TFunction }) => {
+// const FooterLogin = ({ t }: { t: TFunction }) => {
+const FooterLogin = () => {
   return (
     <>
       <FooterSection>
@@ -16,10 +17,11 @@ const FooterLogin = ({ t }: { t: TFunction }) => {
           sx={{
             alignContent: "center",
             alignItems: "center",
+            background: "transparent",
           }}
         >
           <Typography variant="body2">
-            Powered By <strong> Asaan</strong>
+            Powered By <strong> Eduern</strong>
           </Typography>
         </Box>
       </FooterSection>
@@ -27,4 +29,4 @@ const FooterLogin = ({ t }: { t: TFunction }) => {
   );
 };
 
-export default withTranslation()(FooterLogin);
+export default FooterLogin;

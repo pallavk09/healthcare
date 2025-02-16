@@ -48,8 +48,7 @@ const FeePaymentsScreen: React.FC = () => {
   return (
     <>
       <ToastSnackbar ref={snackbarRef} />
-      <HeaderLogin />
-      <Box sx={{ height: "100vh", width: "100%" }}>
+      <Box>
         <FeeDetails filters={filters} feesdata={feesData} />{" "}
         {/* Pass filters to your DataGrid */}
         <Fab
@@ -66,7 +65,6 @@ const FeePaymentsScreen: React.FC = () => {
           onApply={handleFilterApply}
         />
       </Box>
-      <FooterLogin />
     </>
   );
 };

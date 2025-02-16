@@ -42,6 +42,8 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import moment from "moment";
 import dayjs, { Dayjs } from "dayjs";
+import NewAdmissionForm from "../../components/Services/NewAdmission";
+import Header from "../../components/Header";
 
 const CustomNoRowsOverlay = () => {
   return (
@@ -128,6 +130,12 @@ const AdmissionDetails: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<any>(null);
   const [selectedSlot, setSelectedSlot] = useState<any>("");
+  const [isAdmissionDialogOpen, setAdmissionDialogOpen] =
+    useState<boolean>(false);
+
+  const [applicationData, setApplicationData] = useState<any>();
+
+  const resetFormRef = useRef<() => void>(() => {});
 
   const timeSlots = [
     "09:00 AM - 10:00 AM",
@@ -144,9 +152,15 @@ const AdmissionDetails: React.FC = () => {
     React.useState<GridPaginationModel>({ page: 0, pageSize: 5 });
 
   const handleOpenModal = (registration: any) => {
-    console.log(`registration: ${JSON.stringify(registration)}`);
-    setSelectedRegistration(registration);
-    setOpenModal(true);
+    console.log(`registration:`);
+    console.log(registration);
+    // setSelectedRegistration(registration);
+    const formData = {
+      ...registration,
+      applicationData: JSON.stringify(registration.applicationData),
+    };
+    setApplicationData(formData);
+    setAdmissionDialogOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -225,13 +239,17 @@ const AdmissionDetails: React.FC = () => {
           <AnimatedButton
             label="Select"
             onClick={() => handleAction("Confirm Selection", params.row.id)}
-            disabled={params.row.status === "Selection" ? false : true}
+            disabled={
+              params.row.status === "Interview Scheduled" ? false : true
+            }
           />
           {"|"}
           <AnimatedButton
             label="Reject"
             onClick={() => handleAction("Reject Selection", params.row.id)}
-            disabled={params.row.status === "Selection" ? false : true}
+            disabled={
+              params.row.status === "Interview Scheduled" ? false : true
+            }
           />
         </>
       ),
@@ -248,12 +266,13 @@ const AdmissionDetails: React.FC = () => {
         id: rowdata.$id,
         interview: rowdata.interview,
         applicationId: rowdata.applicationId,
-        studentName: detailsObj.studentfullname,
-        guardianName: detailsObj.guardianName,
-        contact: detailsObj.contactNumber,
+        studentName: detailsObj.studentFullName,
+        guardianName: detailsObj.fatherName,
+        contact: detailsObj.fatherEmail,
         status: rowdata.currentStatus,
         applicationData: detailsObj,
         submissionDate: rowdata.submissionDate,
+        photoUrl: rowdata.photoUrl,
       };
       rowdata.currentStatus && formattedRows.push(rowObject);
     }
@@ -381,6 +400,14 @@ const AdmissionDetails: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onAdmissionDialogClose = () => {
+    if (resetFormRef.current) {
+      resetFormRef.current(); // Reset the form to its initial state
+    }
+    setAdmissionDialogOpen(false);
+    // setIsEditing(false);
   };
 
   return (
@@ -529,6 +556,7 @@ const AdmissionDetails: React.FC = () => {
               checkboxSelection={false}
               disableRowSelectionOnClick
               slots={{
+                toolbar: GridToolbar,
                 noRowsOverlay: CustomNoRowsOverlay,
               }}
               // slots={{
@@ -572,49 +600,46 @@ const AdmissionDetails: React.FC = () => {
               }}
             />
 
-            {/* Modal for detailed info */}
-            <Modal open={openModal} onClose={handleCloseModal}>
-              <Box sx={{ ...modalStyle }}>
-                {selectedRegistration && (
-                  <>
-                    <Typography variant="h6">Student Information</Typography>
-                    <Typography variant="body1">
-                      <strong>Student Name:</strong>{" "}
-                      {selectedRegistration.studentName}
-                    </Typography>
-                    <Typography variant="body1">
-                      <strong>Guardian Name:</strong>{" "}
-                      {selectedRegistration.guardianName}
-                    </Typography>
-                    <Typography variant="body1">
-                      <strong>Contact:</strong> {selectedRegistration.contact}
-                    </Typography>
-                    <Typography variant="body1">
-                      <strong>Status:</strong> {selectedRegistration.status}
-                    </Typography>
-
-                    {/* <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() =>
-                        handleAction("Approve", selectedRegistration.id)
-                      }
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={() =>
-                        handleAction("Schedule Test", selectedRegistration.id)
-                      }
-                    >
-                      Schedule Test
-                    </Button> */}
-                  </>
-                )}
-              </Box>
-            </Modal>
+            {/* This shows the actual form for Admin verification */}
+            <Dialog
+              open={isAdmissionDialogOpen}
+              onClose={onAdmissionDialogClose}
+              maxWidth="lg"
+              // disableEscapeKeyDown
+            >
+              <DialogContent
+                sx={{
+                  overflowY: "auto",
+                  "&::-webkit-scrollbar": {
+                    width: "11px", // Default width of the scrollbar
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    backgroundColor: "#f1f1f1", // Background of the scrollbar track
+                    borderRadius: "10px",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: "#888", // Color of the scroll thumb
+                    borderRadius: "10px", // Rounded corners
+                    transition: "all 0.3s ease", // Smooth transition for hover effect
+                  },
+                  "&::-webkit-scrollbar-thumb:hover": {
+                    backgroundColor: "#555", // Darker color on hover for the thumb
+                    width: "15px", // Increased thumb width on hover
+                    transform: "scaleX(1.5)", // Scale the thumb horizontally
+                  },
+                }}
+              >
+                <NewAdmissionForm
+                  onClose={onAdmissionDialogClose}
+                  onSubmit={() => console.log("Ignore")}
+                  newApplicationData={applicationData}
+                  resetFormRef={resetFormRef}
+                  isEditing={false}
+                  onEdit={() => console.log("Ignore")}
+                  viewOnly={true}
+                />
+              </DialogContent>
+            </Dialog>
           </Grid>
         </Grid>
       </Box>

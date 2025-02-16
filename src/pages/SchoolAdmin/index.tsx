@@ -1,20 +1,12 @@
 // import { lazy } from "react";
-import React from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  Button,
-  SvgIcon,
-  styled,
-} from "@mui/material";
-import SchoolIcon from "@mui/icons-material/School"; // MUI Icon
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn"; // MUI Icon
+import React, { useEffect, useState } from "react";
+import { Typography, Grid, Button, styled, Box } from "@mui/material";
+import { Divider, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-import HeaderLogin from "../../components/HeaderLogin";
 import FooterLogin from "../../components/FooterLogin";
+import ArrowCircleRightIcon from "@mui/icons-material/ArrowCircleRight";
+import moment from "moment";
 
 // const Container = lazy(() => import("../../common/Container"));
 
@@ -24,7 +16,7 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
   fontWeight: "700",
   border: "1px solid #edf3f5",
   borderRadius: "4px",
-  background: "#2e186a",
+  background: "#09829d",
   boxShadow: "0 16px 30px rgb(23 31 114 / 20%)",
   marginTop: "1rem",
   "&:hover": {
@@ -34,111 +26,197 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
   },
 }));
 
+const PaperCard = (props: any) => {
+  return (
+    <>
+      <Paper
+        sx={{
+          boxShadow: "0 3px 5px 2px rgba(0, 0, 0, .3)",
+          position: "relative",
+          borderRadius: 2,
+          padding: (theme) => theme.spacing(1, 2),
+          width: "60%",
+          margin: (theme) => theme.spacing(2),
+        }}
+      >
+        <Grid container>
+          <Grid
+            container
+            sx={{
+              padding: (theme) => theme.spacing(1),
+              // margin: (theme) => theme.spacing(1),
+            }}
+            flexDirection={"row"}
+            justifyContent="space-between"
+          >
+            {/* <Diversity2Icon style={{ fontSize: "100px" }} /> */}
+
+            <Grid
+              container
+              // sx={{
+              //   padding: (theme) => theme.spacing(0),
+              //   margin: (theme) => theme.spacing(0),
+              // }}
+              flexDirection={"column"}
+              alignItems={"flex-start"}
+              justifyContent="flex-start"
+            >
+              <Typography variant="h5">
+                <strong>{props.title}</strong>
+              </Typography>
+              <Typography variant="caption" align="left" color="text.secondary">
+                {props.caption}
+              </Typography>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        <Divider style={{ color: "#FF825B", border: "1px solid" }} />
+        {/* <Box
+          width={"100%"}
+          height={"5px"}
+          // ml={-3}
+          mt={1}
+          sx={{
+            background: "linear-gradient(to right, #ff825b, white)",
+          }}
+        /> */}
+
+        <Grid
+          container
+          // xs
+          justifyContent={"flex-start"}
+          sx={{
+            padding: (theme) => theme.spacing(0),
+            margin: (theme) => theme.spacing(1, 0),
+          }}
+        >
+          <MyCustomButton
+            type="button"
+            variant="contained"
+            size="medium"
+            endIcon={<ArrowCircleRightIcon />}
+            onClick={props.onClick}
+          >
+            <strong>{"Proceed"}</strong>
+          </MyCustomButton>
+        </Grid>
+      </Paper>
+    </>
+  );
+};
+
 const SchoolAdmin: React.FC = () => {
   const navigate = useNavigate();
+  // const [quote, setQuote] = useState("");
+
+  // useEffect(() => {
+  //   fetch("https://zenquotes.io/api/random")
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       setQuote(data[0].q + " - " + data[0].a);
+  //     });
+  // }, []);
 
   const handleCardClick = (path: string) => {
     navigate(path);
   };
+
+  const onMyPatymentsClick = () => {
+    //props.onClick();
+  };
+  const getGreeting = () => {
+    const hour = moment().hour(); // Get current hour (0-23)
+
+    if (hour >= 5 && hour < 12) {
+      return "GOOD MORNING";
+    } else if (hour >= 12 && hour < 17) {
+      return "GOOD AFTERNOON";
+    } else if (hour >= 17 && hour < 21) {
+      return "GOOD EVENING";
+    } else {
+      return "GOOD NIGHT";
+    }
+  };
   return (
     <>
-      <Grid
-        container
-        spacing={3}
-        direction="row"
-        justifyContent="center"
-        alignItems="center"
-        style={{ minHeight: "100vh" }} // Full screen center alignment
-      >
-        {/* Card 1: Summary of New Admission Requests */}
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4} // On larger screens, each card will take 50% of the width, centered
-          style={{ display: "flex", justifyContent: "center" }}
+      <Box display={"flex"} flexDirection={"column"} width={"100%"}>
+        <Typography
+          variant="h3"
+          sx={{
+            color: "#2E186A",
+          }}
+          alignSelf={"center"}
+          mt={2}
         >
-          <Card
-            onClick={() => handleCardClick("/admission-details")}
-            style={{
-              cursor: "pointer",
-              textAlign: "center",
-              padding: "2rem",
-              minWidth: "300px",
-            }}
+          <strong>WELCOME ADMIN AND {getGreeting()}</strong>
+        </Typography>
+        <Box
+          display={"flex"}
+          flexDirection={"row"}
+          alignItems={"center"}
+          justifyContent={"space-between"}
+          width={"auto"}
+        >
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            alignItems={"flex-end"}
+            justifyContent={"flex-end"}
+            width={"80%"}
           >
-            <CardContent>
-              {/* Admission Icon */}
-              <SvgIcon
-                component={SchoolIcon}
-                style={{ fontSize: 60, color: "#3f51b5" }}
-              />
-              <Typography
-                variant="h5"
-                // component="div"
-                style={{ marginTop: "1rem" }}
-              >
-                New Admission Requests
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                style={{ marginTop: "0.5rem" }}
-              >
-                View and manage student admission requests.
-              </Typography>
-              <MyCustomButton variant="contained" color="primary">
-                View Details
-              </MyCustomButton>
-            </CardContent>
-          </Card>
-        </Grid>
+            <PaperCard
+              title={"Fees Management"}
+              caption={"View Fees Record. Collect Fees."}
+              onClick={() => navigate("fees-details")}
+            />
+            <PaperCard
+              title={"Credentials Manager"}
+              caption={"View Fees Record. Collect Fees."}
+              onClick={() => navigate("fees-details")}
+            />
+          </Box>
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            alignItems={"center"}
+            justifyContent={"center"}
+            width={"80%"}
+          >
+            <PaperCard
+              title={"Students Management"}
+              caption={"View, Edit and Add Students here"}
+              onClick={() => navigate("students-management")}
+              // onClick={() => navigate("all-student-data")}
+            />
 
-        {/* Card 2: Summary of Fees Payments */}
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4} // On larger screens, each card will take 50% of the width, centered
-          style={{ display: "flex", justifyContent: "center" }}
-        >
-          <Card
-            onClick={() => handleCardClick("/fees-details")}
-            style={{
-              cursor: "pointer",
-              textAlign: "center",
-              padding: "2rem",
-              minWidth: "300px",
-            }}
+            <PaperCard
+              title={"Report Center"}
+              caption={"Fetch all kind of report"}
+              onClick={() => console.log("View Report Clicked")}
+            />
+          </Box>
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            alignItems={"flex-start"}
+            justifyContent={"flex-start"}
+            width={"80%"}
           >
-            <CardContent>
-              {/* Fees Icon */}
-              <SvgIcon
-                component={MonetizationOnIcon}
-                style={{ fontSize: 60, color: "#4caf50" }}
-              />
-              <Typography
-                variant="h5"
-                // component="div"
-                style={{ marginTop: "1rem" }}
-              >
-                Fees Payments
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                style={{ marginTop: "0.5rem" }}
-              >
-                Review fee payments and pending amounts.
-              </Typography>
-              <MyCustomButton variant="contained" color="primary">
-                View Details
-              </MyCustomButton>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-      <FooterLogin />
+            <PaperCard
+              title={"Staff Management"}
+              caption={"View Staff Details here."}
+              onClick={() => navigate("all-teacher-data")}
+            />
+
+            <PaperCard
+              title={"Control and Settings"}
+              caption={"Fetch all kind of report"}
+              onClick={() => navigate("controls-settings")}
+            />
+          </Box>
+        </Box>
+      </Box>
     </>
   );
 };

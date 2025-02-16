@@ -59,6 +59,26 @@ const UpdateApplicationStatus = async (
   }
 };
 
+const UpdateApplicationData = async (
+  documentId: string,
+  applicationData: any,
+  photoUrl: string
+) => {
+  const data = JSON.stringify({ documentId, applicationData, photoUrl });
+  const response = await axios_instance.post(
+    "/newadmission/update-application-data",
+    data
+  );
+  console.log(response);
+  if (response?.data?.status === "SUCCESS") {
+    console.log("UpdateApplicationData. Success");
+    console.log(response);
+    return response?.data;
+  } else {
+    return [];
+  }
+};
+
 const ScheduleInterview = async (
   documentId: string,
   interviewDateSlot: string,
@@ -85,4 +105,5 @@ export {
   ListAllApplications,
   UpdateApplicationStatus,
   ScheduleInterview,
+  UpdateApplicationData,
 };

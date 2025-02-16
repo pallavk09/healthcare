@@ -23,6 +23,9 @@ export interface SvgIconProps {
   src: string;
   width: string;
   height: string;
+  margintop?: string;
+  marginRight?: string;
+  marginLeft?: string;
 }
 
 export interface InputProps {

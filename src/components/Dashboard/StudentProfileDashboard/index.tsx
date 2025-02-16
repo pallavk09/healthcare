@@ -108,8 +108,8 @@ const StudentProfileDashboard = ({
                 <StyledCard
                   buttonName="View Details"
                   onClick={NavigateToFeesScreen}
-                  caption="Manage and view your fees payments"
-                  title="Fees Payment"
+                  caption="View meetings and teachers feedback"
+                  title="Meetings and Notifications"
                   color="linear-gradient(60deg, rgba(67,160,71,1) 0%, rgba(255,235,59,1) 100%)"
                   iconPerformance={SubwayIcon}
                 />
