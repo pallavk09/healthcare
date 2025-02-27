@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   DataGrid,
   GridColDef,
@@ -9,30 +9,20 @@ import {
   GridToolbarFilterButton,
   GridOverlay,
   GridToolbarQuickFilter,
-  GridValueGetter,
-  GridValueSetter,
 } from "@mui/x-data-grid";
-import {
-  Button,
-  Typography,
-  Box,
-  Grid,
-  styled,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-} from "@mui/material";
-import { tableCellClasses } from "@mui/material/TableCell";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
+import { Button, Typography, Box, styled, TextField } from "@mui/material";
+
 import { useNavigate } from "react-router-dom";
 
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import HomeIcon from "@mui/icons-material/Home";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
-import { classes } from "../../Config/classes";
+import { useForm } from "react-hook-form";
+import ControlledSelect from "../../common/ControlledComponents/ControlledSelect";
+import { classes_records } from "../../Config/classes_records";
+import { exam_records } from "../../Config/exams_records";
+import { sections } from "../../Config/sections_records";
+import { academic_records } from "../../Config/academic_records";
 
 const CustomNoRowsOverlay = () => {
   return (
@@ -73,152 +63,435 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
 }));
 
 const ManageMarks = () => {
-  const rowData = [
-    {
-      id: 1,
-      name: "John Doe",
-      roll_no: 2,
-      subjects: {
-        hindi: 0,
-        english: 0,
-        maths: 0,
-      },
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      roll_no: 4,
-      subjects: {
-        hindi: 0,
-        english: 0,
-        maths: 0,
-      },
-    },
-    {
-      id: 3,
-      name: "Alice Brown",
-      roll_no: 5,
-      subjects: {
-        hindi: 0,
-        english: 0,
-        maths: 0,
-      },
-    },
-  ];
   const navigate = useNavigate();
-  const [applications, setApplications] = useState<any>([]);
-  const [attendanceRecord, setAttendanceRecord] = useState({
-    exam: false,
-    subject: false,
-  });
-
-  const [classList, setClassList] = useState<{}[]>([]);
+  const [sectionList, setSectionList] = useState<any>([]);
+  const [classRecords, setClassRecords] = useState<any>([]);
+  const [exams, setExams] = useState<any>([]);
+  const [examSession, setExamSession] = useState(undefined);
+  const [rows, setRows] = useState<any>([]);
+  const [edit, setEdit] = useState<boolean>(false);
   const [paginationModel, setPaginationModel] =
-    React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
+    React.useState<GridPaginationModel>({ page: 0, pageSize: 10 });
 
   useEffect(() => {
-    setClassList(classes);
+    setClassRecords(classes_records);
+    setSectionList(sections);
   }, []);
 
+  useEffect(() => {
+    console.log(examSession);
+    const filteredExamList = exam_records.filter(
+      (examItem) => examItem.session === examSession
+    );
+
+    console.log("filteredExamList");
+    console.log(filteredExamList);
+    setExams(filteredExamList);
+  }, [examSession]);
+
+  const {
+    handleSubmit,
+    reset,
+    formState: { errors },
+    control,
+  } = useForm({
+    defaultValues: {
+      session: "",
+      exam_id: "",
+      class_id: "",
+      section_id: "",
+    },
+    mode: "onTouched",
+  });
+
   // Handle row updates
-  const handleProcessRowUpdate = (newRow: any) => {
-    setApplications((prevRows: any) =>
-      prevRows.map((row: any) => (row.id === newRow.id ? newRow : row))
+  // const handleProcessRowUpdate = (newRow: any) => {
+  //   setApplications((prevRows: any) =>
+  //     prevRows.map((row: any) => (row.id === newRow.id ? newRow : row))
+  //   );
+  // };
+
+  // Handle value changes for a cell
+  const handleValueChange = (id: string, field: string, value: string) => {
+    console.log(id, field, value);
+    setRows((prevRows: any) =>
+      prevRows.map((row: any) =>
+        row.id === id ? { ...row, [field]: value } : row
+      )
     );
   };
 
-  const RecordAttendanceChangeHandler = (event: SelectChangeEvent) => {
-    console.log(event.target.value);
-    if (event.target.value === "exam") {
-      setAttendanceRecord({
-        exam: true,
-        subject: false,
-      });
-    }
-    if (event.target.value === "subject") {
-      setAttendanceRecord({
-        exam: false,
-        subject: true,
-      });
-    }
-  };
-
-  const ShowStudentsHandler = async () => {
-    console.log("Inside Save Data");
-    setApplications(rowData);
-  };
-
-  // Function to save all attendance data
-  const handleSave = () => {
-    console.log("Saving attendance:", applications);
-    // Make API call here to save data
-  };
-
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1, type: "number" },
     { field: "name", headerName: "Student Name", flex: 1, type: "string" },
-    { field: "roll_no", headerName: "Roll No", flex: 1, type: "string" },
-
+    { field: "subject_name", headerName: "Subject", flex: 1, type: "string" },
     {
-      field: "hindi",
-      headerName: "Hindi",
+      field: "max_marks",
+      headerName: "Max Marks",
       flex: 1,
-      editable: true,
-      type: "number",
-      valueGetter: (_, row) => row.subjects.hindi,
-      valueSetter: (params: any) => {
-        if (!params || !params.row) return params; // Prevent undefined errors
-        return {
-          ...params.row,
-          subjects: { ...params.row.subjects, hindi: params.value || 0 },
-        };
-      },
+      renderCell: (params) => (
+        <TextField
+          type="number"
+          variant="standard"
+          value={params.value || ""}
+          onChange={(e) =>
+            handleValueChange(params.id as string, params.field, e.target.value)
+          }
+          disabled={true}
+          sx={{
+            borderRadius: 1,
+            padding: 1,
+            paddingRight: 2,
+            textAlign: "center",
+            width: "100%",
+          }}
+        />
+      ),
     },
     {
-      field: "english",
-      headerName: "English",
+      field: "pass_marks",
+      headerName: "Passing Marks",
       flex: 1,
-      editable: true,
-      type: "number",
-      valueGetter: (_, row) => row.subjects.english,
-      valueSetter: (params: any) => {
-        if (!params || !params.row) return params;
-        return {
-          ...params.row,
-          subjects: { ...params.row.subjects, english: params.value || 0 },
-        };
-      },
+      renderCell: (params) => (
+        <TextField
+          type="number"
+          variant="standard"
+          value={params.value || ""}
+          onChange={(e) =>
+            handleValueChange(params.id as string, params.field, e.target.value)
+          }
+          disabled={true}
+          sx={{
+            borderRadius: 1,
+            padding: 1,
+            paddingRight: 2,
+            textAlign: "center",
+            width: "100%",
+          }}
+        />
+      ),
     },
     {
-      field: "maths",
-      headerName: "Maths",
+      field: "marks_obtained",
+      headerName: "Marks Obtained",
       flex: 1,
-      editable: true,
-      type: "number",
-      valueGetter: (_, row) => row.subjects.maths,
-      valueSetter: (params: any) => {
-        if (!params || !params.row) return params;
-        return {
-          ...params.row,
-          subjects: { ...params.row.subjects, maths: params.value || 0 },
-        };
-      },
+      renderCell: (params) => (
+        <TextField
+          type="number"
+          variant="standard"
+          value={params.value || ""}
+          onChange={(e) =>
+            handleValueChange(params.id as string, params.field, e.target.value)
+          }
+          sx={{
+            borderRadius: 1,
+            padding: 1,
+            paddingRight: 2,
+            textAlign: "center",
+            width: "100%",
+          }}
+        />
+      ),
     },
   ];
 
-  // const initialState = {
-  //   columns: {
-  //     columnVisibilityModel: {}, // Ensures all columns are visible
-  //   },
-  //   editing: {
-  //     editRowsModel: {
-  //       // ✅ Enables edit mode for all rows in "Days Present" by default
-  //       1: { daysPresent: { mode: "edit" } },
-  //       2: { daysPresent: { mode: "edit" } },
-  //       3: { daysPresent: { mode: "edit" } },
-  //     },
-  //   },
+  const flattenAcademicRecords = (academicRecords: any) => {
+    const flatData = [] as any;
+
+    academicRecords.forEach((student: any) => {
+      const { id, student_id, name, performance } = student;
+
+      Object.entries(performance).forEach(([session, termData]: [any, any]) => {
+        Object.entries(termData.exams).forEach(
+          ([exam_id, exam]: [any, any]) => {
+            exam.marks_details.forEach((subject: any) => {
+              flatData.push({
+                id: `${id}-${exam_id}-${subject.subject_name}`, // Unique row ID
+                student_id,
+                name,
+                subject_name: subject.subject_name,
+                exam_id,
+                session,
+                code: exam.exam_code || "", // Ensure code is available
+                exam_name: exam.exam_name,
+                max_marks: subject.subject_max_marks.toString(),
+                pass_marks: subject.subject_pass_marks.toString(),
+                marks_obtained: subject.marks_obtained.toString(),
+              });
+            });
+          }
+        );
+      });
+    });
+
+    return flatData;
+  };
+
+  const HandleShowSubjects = (data: any) => {
+    console.log("Go Clicked for Class");
+    console.log(data);
+    // //As soon as class is assingned to any students, its entry will be made in academic_Records
+    // //For given class_id and section_id fetch all students
+    // const student_list = academic_records.filter(
+    //   (item: any) =>
+    //     item.class_id === data.class_id && item.section_id === data.section_id
+    // );
+
+    // //For given session and exam_id fetch max_marks and pass_marks
+    // const marksDetails = exam_records.find(
+    //   (item: any) =>
+    //     item.session === data.session && item.exam_id === data.exam_id
+    // );
+
+    // const _max_marks = marksDetails?.max_marks;
+    // const _pass_marks = marksDetails?.pass_marks;
+
+    // const exam_schedule_details = exam_schedules.find(
+    //   (item: any) =>
+    //     item.class_id === data.class_id &&
+    //     item.session === data.session &&
+    //     item.exam_id === data.exam_id
+    // );
+
+    // const exam_schedule_array = exam_schedule_details?.exam_schedule;
+
+    // const student_subject_marks = student_list.flatMap((student: any) =>
+    //   exam_schedule_array?.map((subjectObj) => ({
+    //     id: `${student.id}-${subjectObj.id}`,
+    //     student_id: student.student_id,
+    //     name: student.name,
+    //     subject_name: subjectObj.subject,
+    //     exam_id: marksDetails?.exam_id,
+    //     session: marksDetails?.session,
+    //     exam_code: marksDetails?.code,
+    //     exam_name: marksDetails?.name,
+    //     max_marks: marksDetails?.max_marks,
+    //     pass_marks: marksDetails?.pass_marks,
+    //     marks_obtained: 0,
+    //   }))
+    // );
+
+    // console.log("student_subject_marks");
+    // console.log(student_subject_marks);
+
+    const flatMappedExamData = flattenAcademicRecords(academic_records);
+    console.log("flatMappedExamData");
+    console.log(flatMappedExamData);
+
+    setRows(flatMappedExamData);
+  };
+
+  const ResetScreen = () => {};
+
+  // const HandleClassChange = (event: any) => {
+  //   console.log("Class Change Event");
+  //   // console.log(event.target.value);
+  //   setSelectedClass(event.target.value);
+  //   ResetScreen();
   // };
+
+  const HandleSessionChange = (event: any) => {
+    console.log("Session Change Event");
+    console.log(event.target.value);
+    setExamSession(event.target.value);
+    ResetScreen();
+  };
+
+  // const HandleExamChange = (event: any) => {
+  //   console.log("Exam Change Event");
+  //   console.log(event.target.value);
+  //   setSelectedExam(event.target.value);
+  //   ResetScreen();
+  // };
+
+  const updateAcademicRecords = (academicRecords: any, examResults: any) => {
+    examResults.forEach((record: any) => {
+      const {
+        student_id,
+        session,
+        exam_id,
+        code: exam_code,
+        exam_name,
+        subject_name,
+        max_marks,
+        pass_marks,
+        marks_obtained,
+        total_working_days = 0, // Default value
+        total_days_present = 0, // Default value
+      } = record;
+
+      // Find student record
+      const studentRecord = academicRecords.find(
+        (s: any) => s.student_id === student_id
+      );
+      if (!studentRecord) return; // Skip if student not found
+
+      // Ensure performance[session] exists
+      if (!studentRecord.performance[session]) {
+        studentRecord.performance[session] = { exams: {} };
+      }
+
+      // Check if the exam exists
+      if (!studentRecord.performance[session].exams[exam_id]) {
+        studentRecord.performance[session].exams[exam_id] = {
+          exam_code,
+          exam_name,
+          max_marks: 0,
+          pass_marks: 0,
+          total_marks_obtained: 0,
+          total_working_days,
+          total_days_present,
+          marks_details: [],
+        };
+      }
+
+      const examRef = studentRecord.performance[session].exams[exam_id];
+
+      // Check if subject already exists in marks_details
+      const subjectIndex = examRef.marks_details.findIndex(
+        (m: any) => m.subject_name === subject_name
+      );
+
+      if (subjectIndex > -1) {
+        // If subject exists, update marks_obtained
+        examRef.marks_details[subjectIndex].marks_obtained =
+          Number(marks_obtained);
+      } else {
+        // If subject does not exist, add it
+        examRef.marks_details.push({
+          subject_name,
+          marks_obtained: Number(marks_obtained),
+          subject_max_marks: Number(max_marks),
+          subject_pass_marks: Number(pass_marks),
+        });
+      }
+
+      // Recalculate total max_marks, pass_marks, and total_marks_obtained
+      examRef.max_marks = examRef.marks_details.reduce(
+        (sum: any, s: any) => sum + Number(s.subject_max_marks),
+        0
+      );
+      examRef.pass_marks = examRef.marks_details.reduce(
+        (sum: any, s: any) => sum + Number(s.subject_pass_marks),
+        0
+      );
+      examRef.total_marks_obtained = examRef.marks_details.reduce(
+        (sum: any, s: any) => sum + Number(s.marks_obtained),
+        0
+      );
+    });
+
+    return academicRecords;
+  };
+
+  const handleSave = () => {
+    // Replace this with your save logic, such as an API call
+    console.log("Saved data:", rows);
+    const updatedAcademicRecords = updateAcademicRecords(
+      academic_records,
+      rows
+    );
+    console.log(updatedAcademicRecords);
+
+    // const academic_Records = [
+    //   {
+    //     id: "3dd5eb92",
+    //     student_id: "2d154321",
+    //     name: "Diane Lowe 1",
+    //     academic_year: "2025-2026",
+    //     class_id: "2d154378",
+    //     section_id: "2d154374",
+    //     roll_number: 24,
+    //     performance: {
+    //       term1: {
+    //         exams: {
+    //           "2d154374": {
+    //             exam_code: "PT",
+    //             exam_name: "Periodic Test",
+    //             max_marks: 10,
+    //             pass_marks: 5,
+    //             total_working_days: 183,
+    //             total_days_present: 180,
+    //             marks_details: [
+    //               {
+    //                 subject_name: "Maths",
+    //                 marks_obtained: 7,
+    //               },
+    //               {
+    //                 subject_name: "English",
+    //                 marks_obtained: 4,
+    //               },
+    //               {
+    //                 subject_name: "Hindi",
+    //                 marks_obtained: 8,
+    //               },
+    //             ],
+    //           },
+    //         },
+    //       },
+    //       term2: {
+    //         exams: {},
+    //       },
+    //     },
+    //     remarks: "Aut tripudio vilis.",
+    //   },
+    // ];
+
+    // const academic_Records = [
+    //   {
+    //     id: "3dd5eb92",
+    //     student_id: "2d154321",
+    //     name: "Diane Lowe 1",
+    //     academic_year: "2025-2026",
+    //     class_id: "2d154378",
+    //     section_id: "2d154374",
+    //     roll_number: 24,
+    //     performance: [
+    //       {
+    //         session: "term1",
+    //         exam_performance: [
+    //           {
+    //             exam_id: "",
+    //             exam_code: "",
+    //             exam_name: "",
+    //             max_marks: "",
+    //             pass_marks: "",
+    //             total_working_days: "",
+    //             total_days_present: "",
+    //             marks_details: [
+    //               {
+    //                 subject_name: "",
+    //                 marks_obtained: "",
+    //               },
+    //             ],
+    //           },
+    //         ],
+    //       },
+    //       {
+    //         session: "term2",
+    //         exam_performance: [
+    //           {
+    //             exam_id: "",
+    //             exam_code: "",
+    //             exam_name: "",
+    //             max_marks: "",
+    //             pass_marks: "",
+    //             total_working_days: "",
+    //             total_days_present: "",
+    //             marks_details: [
+    //               {
+    //                 subject_name: "",
+    //                 marks_obtained: "",
+    //               },
+    //             ],
+    //           },
+    //         ],
+    //       },
+    //     ],
+
+    //     remarks: "Aut tripudio vilis.",
+    //   },
+    // ];
+  };
 
   return (
     <>
@@ -263,207 +536,159 @@ const ManageMarks = () => {
           alignItems={"center"}
           width={"90vw"}
         >
-          <FormControl
-            sx={{ minWidth: 180, ml: 0 }}
-            size="small"
-            disabled={false}
+          <Typography variant="h6" alignSelf={"center"}>
+            <strong>Update Marks</strong>
+          </Typography>
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            p={2}
+            pt={0}
+            height="auto"
+            justifyContent={"center"}
+            alignItems={"center"}
+            mt={1}
           >
-            <InputLabel id="select-attendance-label">
-              Record Attendance
-            </InputLabel>
-            <Select
-              labelId="select-attendance-label"
-              id="select-attendance"
-              label="Record Attendance"
-              onChange={RecordAttendanceChangeHandler}
-              variant="standard"
-            >
-              <MenuItem value={"exam"}>Exam Wise</MenuItem>
-              <MenuItem value={"month"}>Month Wise</MenuItem>
-            </Select>
-          </FormControl>
-
-          {(attendanceRecord.subject || attendanceRecord.exam) && (
-            <Box
-              display={"flex"}
-              flexDirection={"row"}
-              justifyContent={"space-evenly"}
-              gap={3}
-              width="auto"
-              mt={3}
-              mb={3}
-            >
-              <FormControl
-                sx={{ minWidth: 130, ml: 0 }}
-                size="small"
-                disabled={false}
+            <form onSubmit={handleSubmit(HandleShowSubjects)}>
+              <Box
+                display={"flex"}
+                flexDirection={"row"}
+                justifyContent={"space-evenly"}
+                gap={3}
+                width="70vw"
               >
-                <InputLabel id="select-class-label">Class</InputLabel>
-                <Select
-                  labelId="select-class-label"
-                  id="select-class"
+                <ControlledSelect
+                  name={`class_id`}
+                  control={control}
+                  errors={errors}
                   label="Class"
-                  // onChange={(event) => handleClassSelect(index, event)}
-                  variant="standard"
-                >
-                  {classList &&
-                    classList?.length > 0 &&
-                    classList.map((item: any, index) => (
-                      <MenuItem value={item.name} key={index}>
-                        {item.name}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-
-              <FormControl
-                sx={{ minWidth: 130, ml: 0 }}
-                size="small"
-                disabled={false}
-              >
-                <InputLabel id="select-section-label">Section</InputLabel>
-                <Select
-                  labelId="select-section-label"
-                  id="select-section"
+                  rules={{ required: "Required" }}
+                  options={classRecords.map((item: any) => ({
+                    value: item.class_id,
+                    label: item.name,
+                  }))}
+                  sx={{ width: "30%" }}
+                  // selectProps={{ onChange: HandleClassChange }}
+                />
+                <ControlledSelect
+                  name={`section_id`}
+                  control={control}
+                  errors={errors}
                   label="Section"
-                  // onChange={(event) => handleClassSelect(index, event)}
-                  variant="standard"
-                >
-                  <MenuItem value="a">A</MenuItem>
-                  <MenuItem value="b">B</MenuItem>
-                  <MenuItem value="c">C</MenuItem>
-                  <MenuItem value="d">D</MenuItem>
-                </Select>
-              </FormControl>
+                  rules={{ required: "Required" }}
+                  options={sectionList.map((item: any) => ({
+                    value: item.section_id,
+                    label: item.name,
+                  }))}
+                  sx={{ width: "30%" }}
+                  // selectProps={{ onChange: HandleClassChange }}
+                />
 
-              {attendanceRecord.exam ? (
-                <FormControl
-                  sx={{ minWidth: 130, ml: 0 }}
-                  size="small"
-                  disabled={false}
-                >
-                  <InputLabel id="select-exam-label">Exam</InputLabel>
-                  <Select
-                    labelId="select-exam-label"
-                    id="select-exam"
-                    label="Select Exam"
-                    // onChange={(event) => handleClassSelect(index, event)}
-                    variant="standard"
-                  >
-                    <MenuItem value="pt1">Term 1: PT</MenuItem>
-                    <MenuItem value="sea1">Term 1: SEA</MenuItem>
-                    <MenuItem value="sa1">Term 1: SA</MenuItem>
-                    <MenuItem value="pt2">Term 2: PT</MenuItem>
-                    <MenuItem value="sea2">Term 2: SEA</MenuItem>
-                    <MenuItem value="sa2">Term 2: SA</MenuItem>
-                  </Select>
-                </FormControl>
-              ) : attendanceRecord.subject ? (
-                <FormControl
-                  sx={{ minWidth: 130, ml: 0 }}
-                  size="small"
-                  disabled={false}
-                >
-                  <InputLabel id="select-exam-label">Month</InputLabel>
-                  <Select
-                    labelId="select-exam-label"
-                    id="select-exam"
-                    label="Select Exam"
-                    // onChange={(event) => handleClassSelect(index, event)}
-                    variant="standard"
-                  >
-                    <MenuItem value="english">English</MenuItem>
-                    <MenuItem value="hindi">Hindi</MenuItem>
-                  </Select>
-                </FormControl>
-              ) : (
-                ""
-              )}
+                <ControlledSelect
+                  name={`session`}
+                  control={control}
+                  errors={errors}
+                  label="Session"
+                  rules={{ required: "Required" }}
+                  options={[
+                    { value: "", label: "Select" },
+                    { value: "term1", label: "Term 1" },
+                    { value: "term2", label: "Term 2" },
+                  ]}
+                  sx={{ width: "30%" }}
+                  selectProps={{ onChange: HandleSessionChange }}
+                />
 
+                <ControlledSelect
+                  name={`exam_id`}
+                  control={control}
+                  errors={errors}
+                  label="Exam"
+                  rules={{ required: "Required" }}
+                  options={exams.map((item: any) => ({
+                    value: item.exam_id,
+                    label: item.name,
+                  }))}
+                  sx={{ width: "30%" }}
+                  disabled={examSession == null || examSession == undefined}
+                  // selectProps={{ onChange: HandleExamChange }}
+                />
+
+                <MyCustomButton
+                  variant="contained"
+                  type="submit"
+                  sx={{
+                    width: "10%",
+                    height: "70%",
+                    alignSelf: "center",
+                  }}
+                >
+                  {"Go"}
+                </MyCustomButton>
+              </Box>
+            </form>
+            {rows && rows.length > 0 && (
+              <>
+                <DataGrid
+                  rows={rows}
+                  columns={columns}
+                  rowHeight={50}
+                  paginationModel={paginationModel}
+                  onPaginationModelChange={setPaginationModel}
+                  pageSizeOptions={[10, 20, 30]}
+                  checkboxSelection={false}
+                  disableRowSelectionOnClick
+                  slots={{
+                    toolbar: GridToolbar,
+                    noRowsOverlay: CustomNoRowsOverlay,
+                  }}
+                  slotProps={{ toolbar: { showQuickFilter: true } }}
+                  sx={{
+                    width: "80vw",
+                    maxWidth: "90vw",
+                    height: "65vh",
+                    marginTop: "15px",
+
+                    "& .MuiDataGrid-row:hover": {
+                      transform: "scale(1)",
+                      backgroundColor: "#f5f5f5",
+                      "& .MuiDataGrid-cell": {
+                        color: "#2E186A",
+                        fontWeight: "bold",
+                      },
+                    },
+                    "& .MuiDataGrid-row.Mui-selected": {
+                      backgroundColor: "#f0f0f0",
+                    },
+                    "& .MuiDataGrid-columnHeaders": {
+                      backgroundColor: "#1e88e5",
+                      // fontFamily: "Motiva Sans Bold",
+                      color: "#2e186a",
+                      fontSize: "1rem",
+                      borderBottom: "2px solid #fff",
+                    },
+                    "& .MuiDataGrid-columnHeaderTitle": {
+                      textOverflow: "clip",
+                      whiteSpace: "normal",
+                      lineHeight: "1",
+                    },
+                    "& .MuiDataGrid-columnHeader": {
+                      padding: "0px 10px",
+                    },
+                  }}
+                />
+              </>
+            )}
+            {rows && rows.length > 0 && (
               <MyCustomButton
-                onClick={ShowStudentsHandler}
                 variant="contained"
-                disabled={false}
-                type="button"
+                onClick={handleSave}
+                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
               >
-                Show Students
+                {!edit ? "Save" : "Update"}
               </MyCustomButton>
-            </Box>
-          )}
-
-          <DataGrid
-            rows={applications}
-            columns={columns}
-            rowHeight={40}
-            // initialState={initialState}
-            processRowUpdate={handleProcessRowUpdate}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[50, 100, 150]}
-            checkboxSelection={false}
-            disableRowSelectionOnClick
-            slots={{
-              toolbar: GridToolbar,
-              noRowsOverlay: CustomNoRowsOverlay,
-            }}
-            slotProps={{ toolbar: { showQuickFilter: true } }}
-            sx={{
-              width: "80vw",
-              maxWidth: "90vw",
-              minHeight: "40vh",
-              height: "65vh",
-              marginTop: "15px",
-              "& .MuiDataGrid-cell--editable": {
-                backgroundColor: "white", // White background for editable fields
-                border: "1px solid #2E186A", // Gray border for a subtle look
-                paddingTop: "2px",
-                paddingBottom: "2px",
-              },
-              "& .MuiDataGrid-cell--editing": {
-                backgroundColor: "#fff", // Ensure background remains white while editing
-                border: "2px solid #35821d", // Blue border when focused
-                boxShadow: "1px 1px 5px #35821d", // Optional shadow effect
-                paddingTop: "2px",
-                paddingBottom: "2px",
-              },
-
-              "& .MuiDataGrid-row:hover": {
-                transform: "scale(1)",
-                backgroundColor: "#f5f5f5",
-                "& .MuiDataGrid-cell": {
-                  color: "#2E186A",
-                  fontWeight: "bold",
-                },
-              },
-              "& .MuiDataGrid-row.Mui-selected": {
-                backgroundColor: "#f0f0f0",
-              },
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#1e88e5",
-                // fontFamily: "Motiva Sans Bold",
-                color: "#2e186a",
-                fontSize: "1rem",
-                borderBottom: "2px solid #fff",
-              },
-              "& .MuiDataGrid-columnHeaderTitle": {
-                textOverflow: "clip",
-                whiteSpace: "normal",
-                lineHeight: "1",
-              },
-              "& .MuiDataGrid-columnHeader": {
-                padding: "0px 10px",
-              },
-            }}
-          />
-
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSave}
-            style={{ marginTop: 20 }}
-          >
-            Save Attendance
-          </Button>
+            )}
+          </Box>
         </Box>
       </Box>
     </>

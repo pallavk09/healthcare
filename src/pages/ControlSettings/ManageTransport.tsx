@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   DataGrid,
   GridColDef,
@@ -22,33 +22,30 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Checkbox,
-  ListItemText,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
 import { tableCellClasses } from "@mui/material/TableCell";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
 import { useNavigate } from "react-router-dom";
 
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import HomeIcon from "@mui/icons-material/Home";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
-import { subjects } from "../../Config/subjects";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { classes } from "../../Config/classes";
 
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import moment from "moment";
+import { useForm } from "react-hook-form";
+import { v4 as uuid } from "uuid";
+import ControlledTextField from "../../common/ControlledComponents/ControlledTextField";
+import ControlledSelect from "../../common/ControlledComponents/ControlledSelect";
+import { vehicles_records } from "../../Config/vehicles_records";
+import { stops_records } from "../../Config/stops_records";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -109,15 +106,18 @@ const AnimatedButton = ({
   label,
   onClick,
   disabled,
+  type,
 }: {
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
   disabled?: boolean;
+  type?: "submit" | "reset" | "button";
 }) => {
   return (
     <Button
       variant="text"
       onClick={onClick}
+      type={type}
       sx={{
         position: "relative",
         // fontFamily: "Motiva Sans Bold",
@@ -167,94 +167,113 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const ManageTransport = () => {
-  const rowData = [
-    {
-      id: 1,
-      vehicle_no: 1,
-      type: "auto",
-      registration_no: "JH 03AF 1234",
-      driver_name: "tom Harry",
-      created_on: "10/12/2025",
-    },
-    {
-      id: 2,
-      vehicle_no: 1,
-      type: "auto",
-      registration_no: "JH 03AF 1234",
-      driver_name: "tom Harry",
-      created_on: "10/12/2025",
-    },
-    {
-      id: 3,
-      vehicle_no: 1,
-      type: "auto",
-      registration_no: "JH 03AF 1234",
-      driver_name: "tom Harry",
-      created_on: "10/12/2025",
-    },
-    {
-      id: 4,
-      vehicle_no: 1,
-      type: "auto",
-      registration_no: "JH 03AF 1234",
-      driver_name: "tom Harry",
-      created_on: "10/12/2025",
-    },
-  ];
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
-  const rowDataStops = [
-    {
-      id: 1,
-      name: "Jail Hata",
-      created_on: "10/12/2025",
-    },
-    {
-      id: 2,
-      name: "Redma",
-      created_on: "10/12/2025",
-    },
-    {
-      id: 3,
-      name: "Bairiya",
-      created_on: "10/12/2025",
-    },
-    {
-      id: 4,
-      name: "Hamidganj",
-      created_on: "10/12/2025",
-    },
-  ];
+const ManageTransport = () => {
+  const snackbarRef = React.useRef<SnackbarHandle>(null);
   const navigate = useNavigate();
   const [applications, setApplications] = useState<any>([]);
-  const [classList, setClassList] = useState<{}[]>([]);
   const [paginationModel, setPaginationModel] =
     React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
+  const [selectedRow, setSelectedRow] = useState<any>();
+  const [edit, setEdit] = useState<boolean>(false);
 
-  const [dates, setDates] = useState({
-    date1: null,
-    date2: null,
-    date3: null,
-    date4: null,
+  const [applicationsStops, setApplicationsStop] = useState<any>([]);
+  const [selectedRowStop, setSelectedRowStop] = useState<any>();
+  const [editStop, setEditStop] = useState<boolean>(false);
+
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+    trigger,
+    reset,
+  } = useForm({
+    defaultValues: {
+      vehicle_no: "",
+      type: "",
+      registration_no: "",
+      driver_name: "",
+    },
+    mode: "onTouched",
   });
+
+  const {
+    handleSubmit: handleSubmitStops,
+    control: controlStops,
+    formState: { errors: errorsStop },
+    reset: resetStops,
+  } = useForm({
+    defaultValues: {
+      name: "",
+      vehicle_id: "",
+    },
+    mode: "onTouched",
+  });
+
+  const {
+    handleSubmit: handleSubmitTransportCost,
+    control: controlTransportCost,
+    formState: { errors: errorsTransportCost },
+    reset: resetTransportCost,
+  } = useForm({
+    defaultValues: {},
+    mode: "onTouched",
+  });
+
   useEffect(() => {
     const _classList = classes.map((classObj) => classObj.title);
-    setClassList(_classList);
-    setApplications(rowData);
+    setApplications(vehicles_records);
+    setApplicationsStop(stops_records);
   }, []);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("Event Value: ", event.target.value);
-  };
+  useEffect(() => {
+    const stop_records_vehicle = stops_records.map((record: any) => {
+      const {
+        vehicle_no = "",
+        registration_no = "",
+        driver_name = "",
+      } = applications.find(
+        (item: any) => item.vehicle_id === record.vehicle_id
+      ) || {};
+      return {
+        ...record,
+        vehicle_no,
+        registration_no,
+        driver_name,
+      };
+    });
+    console.log("stop_records_vehicle");
+    console.log(stop_records_vehicle);
+    setApplicationsStop(stop_records_vehicle);
+  }, [applications]);
 
-  const handleDateChange = (key: string, newValue: any) => {
-    setDates((prev) => ({ ...prev, [key]: newValue }));
-  };
+  useEffect(() => {
+    if (selectedRow) {
+      reset(selectedRow); // Reset form with selected row values
+    }
+  }, [selectedRow, reset]);
 
-  const saveData = async () => {
-    console.log("Inside Save Data");
-  };
+  useEffect(() => {
+    if (selectedRowStop) {
+      resetStops(selectedRowStop); // Reset form with selected row values
+    }
+  }, [selectedRowStop, resetStops]);
 
+  //Vehicle Table
   const columns: GridColDef[] = [
     { field: "vehicle_no", headerName: "Vehicle No", flex: 1 },
     { field: "type", headerName: "Type", flex: 1 },
@@ -271,22 +290,35 @@ const ManageTransport = () => {
         <>
           <AnimatedButton
             label="Edit"
-            onClick={() => console.log("Get TC Clicked")}
+            onClick={() => {
+              console.log(params);
+              setSelectedRow({
+                vehicle_no: params.row.vehicle_no,
+                type: params.row.type,
+                registration_no: params.row.registration_no,
+                driver_name: params.row.driver_name,
+              });
+              setEdit(true);
+            }}
             disabled={false}
           />
-          {"|"}
+          {/* {"|"}
           <AnimatedButton
             label="Remove"
             onClick={() => console.log("Get TC Clicked")}
             disabled={false}
-          />
+          /> */}
         </>
       ),
     },
   ];
 
+  //Stops Table
   const columnsStops: GridColDef[] = [
     { field: "name", headerName: "Name", flex: 1 },
+    { field: "vehicle_no", headerName: "Vehicle No", flex: 1 },
+    { field: "registration_no", headerName: "Registration", flex: 1 },
+    { field: "driver_name", headerName: "Driver", flex: 1 },
     { field: "created_on", headerName: "Created On", flex: 1 },
     {
       field: "actions",
@@ -298,22 +330,236 @@ const ManageTransport = () => {
         <>
           <AnimatedButton
             label="Edit"
-            onClick={() => console.log("Get TC Clicked")}
+            onClick={() => {
+              console.log(params);
+              setSelectedRowStop({
+                stop_id: params.row.stop_id,
+                name: params.row.name,
+                vehicle_id: params.row.vehicle_id,
+              });
+              setEditStop(true);
+            }}
             disabled={false}
           />
-          {"|"}
+          {/* {"|"}
           <AnimatedButton
             label="Remove"
             onClick={() => console.log("Get TC Clicked")}
             disabled={false}
-          />
+          /> */}
         </>
       ),
     },
   ];
 
+  const onResetHandler = () => {
+    reset({
+      vehicle_no: "",
+      type: "",
+      registration_no: "",
+      driver_name: "",
+    });
+    setEdit(false);
+  };
+
+  const isDuplicate = (vehicle_no: string, registration_no: string) => {
+    return applications.some(
+      (vehicle: any) =>
+        vehicle.vehicle_no === vehicle_no ||
+        vehicle.registration_no === registration_no
+    );
+  };
+
+  const updateItem = (updatedVehicle: any) => {
+    setApplications((prevVehicle: any) =>
+      prevVehicle.map((vehicle: any) =>
+        vehicle.vehicle_no === updatedVehicle.vehicle_no
+          ? { ...vehicle, ...updatedVehicle }
+          : vehicle
+      )
+    );
+  };
+
+  const handleFormSubmit = async (data: any) => {
+    console.log("Handle submit for Subject");
+    console.log(data);
+    if (edit) {
+      updateItem(data);
+      setEdit(false);
+      reset({
+        vehicle_no: "",
+        type: "",
+        registration_no: "",
+        driver_name: "",
+      });
+      snackbarRef.current?.showSnackbar(
+        `Vehicle updated successfully.`,
+        "success"
+      );
+    } else {
+      if (isDuplicate(data.vehicle_no, data.registration_no)) {
+        console.log("Duplicate");
+        snackbarRef.current?.showSnackbar(
+          `Vehicle Already Present.`,
+          "warning"
+        );
+        return;
+      }
+      const _id = uuid().slice(0, 5);
+      const vehicle_item = {
+        ...data,
+        vehicle_id: _id,
+        id: _id,
+        created_on: moment().format("DD/MM/YYYY"),
+      };
+
+      const newApplicationList = [...applications, vehicle_item];
+      console.log(newApplicationList);
+      setApplications(newApplicationList);
+      setEdit(false);
+      reset({
+        vehicle_no: "",
+        type: "",
+        registration_no: "",
+        driver_name: "",
+      });
+      snackbarRef.current?.showSnackbar(
+        `Vehicle added successfully.`,
+        "success"
+      );
+    }
+  };
+
+  const onResetHandlerStops = () => {
+    resetStops({
+      name: "",
+      vehicle_id: "",
+    });
+    setEditStop(false);
+  };
+
+  const isDuplicateStop = (name: string) => {
+    return applicationsStops.some(
+      (stopItem: any) =>
+        stopItem.name?.toString().toLowerCase() ===
+        name?.toString().toLowerCase()
+    );
+  };
+
+  const updateStop = (updatedStop: any) => {
+    console.log("updatedStop");
+    console.log(updatedStop);
+    setApplicationsStop((prevStop: any) => {
+      console.log("prevStop");
+      console.log(prevStop);
+      const {
+        vehicle_no = "",
+        registration_no = "",
+        driver_name = "",
+      } = applications.find(
+        (item: any) => updatedStop.vehicle_id === item.vehicle_id
+      ) || {};
+
+      return prevStop.map((stopItem: any) =>
+        stopItem.stop_id === updatedStop.stop_id
+          ? {
+              ...stopItem,
+              name: updatedStop.name,
+              vehicle_id: updatedStop.vehicle_id,
+              vehicle_no,
+              registration_no,
+              driver_name,
+            }
+          : stopItem
+      );
+    });
+  };
+
+  const handleFormSubmitStop = async (data: any) => {
+    console.log("Handle Stops for Subject");
+    console.log(data);
+    if (editStop) {
+      updateStop(data);
+      setEditStop(false);
+      resetStops({
+        name: "",
+        vehicle_id: "",
+      });
+      snackbarRef.current?.showSnackbar(
+        `Entry updated successfully.`,
+        "success"
+      );
+    } else {
+      if (isDuplicateStop(data.name)) {
+        console.log("Duplicate");
+        snackbarRef.current?.showSnackbar(`Stop Already Present.`, "warning");
+        return;
+      }
+      const _id = uuid().slice(0, 5);
+
+      const {
+        vehicle_no = "",
+        registration_no = "",
+        driver_name = "",
+      } = applications.find(
+        (item: any) => item.vehicle_id === data.vehicle_id
+      ) || {};
+
+      const newStop_record = {
+        name: data.name,
+        vehicle_no,
+        registration_no,
+        driver_name,
+        stop_id: _id,
+        id: _id,
+        created_on: moment().format("DD/MM/YYYY"),
+      };
+
+      const newApplicationList = [...applicationsStops, newStop_record];
+      console.log(newApplicationList);
+      setApplicationsStop(newApplicationList);
+      setEditStop(false);
+      resetStops({
+        name: "",
+        vehicle_id: "",
+      });
+      snackbarRef.current?.showSnackbar(`Stop added successfully.`, "success");
+    }
+  };
+
+  const handleFormSubmitTransportCost = async (data: any) => {
+    console.log("Under handleFormSubmitTransportCost");
+    console.log(data);
+
+    const costData = Object.entries(data).map(([key, value]: [string, any]) => {
+      const _id = uuid().slice(0, 5);
+      return {
+        id: _id,
+        transport_structure_id: _id,
+        stop_name: key,
+        fee_collection_cycle: 10,
+        monthly_fees: value
+          ? Object.entries(value).map(([_month, fee]) => {
+              const feeAmount = Number(fee); // Ensure it's treated as a number
+              return {
+                month: _month,
+                fees_particulars: {
+                  transport: feeAmount,
+                },
+                total_fees: feeAmount,
+              };
+            })
+          : [],
+      };
+    });
+
+    console.log("costData");
+    console.log(costData);
+  };
+
   return (
     <>
+      <ToastSnackbar ref={snackbarRef} />
       <Box
         display={"flex"}
         flexDirection={"row"}
@@ -345,6 +591,7 @@ const ManageTransport = () => {
         height="auto"
         width="auto"
       >
+        {/* Add Vehicle */}
         <Box
           display={"flex"}
           flexDirection={"column"}
@@ -358,81 +605,85 @@ const ManageTransport = () => {
           <Typography variant="h6" alignSelf={"center"}>
             <strong>Add Vehicles</strong>
           </Typography>
-
-          <Box
-            display={"flex"}
-            flexDirection={"row"}
-            justifyContent={"space-evenly"}
-            gap={3}
-            width="auto"
+          <form
+            onSubmit={handleSubmit(handleFormSubmit)}
+            onReset={onResetHandler}
           >
-            <TextField
-              // fullWidth
-              variant="standard"
-              label="Vehicle No"
-              size="small"
-              type="number"
-              // value={row.code}
-              onChange={handleChange}
-              // error={!!row?.errors?.code}
-              // helperText={row?.errors?.code}
-              disabled={false}
-            />
-
-            <FormControl
-              sx={{ minWidth: 130, ml: 0 }}
-              size="small"
-              // error={!!row.errors?.marking}
-              disabled={false}
+            <Box
+              display={"flex"}
+              flexDirection={"row"}
+              justifyContent={"space-evenly"}
+              gap={3}
+              width="70vw"
             >
-              <InputLabel id="select-rebate-label">Type</InputLabel>
-              <Select
-                labelId="select-rebate-label"
-                id="select-rebate"
-                // value={row?.marking}
-                label="Type"
-                // onChange={(event) => handleClassSelect(index, event)}
+              <ControlledTextField
                 variant="standard"
-                size="small"
+                name="vehicle_no"
+                control={control}
+                errors={errors}
+                label="Vehicle No"
+                rules={{
+                  required: "Required",
+                }}
+                required
+              />
+
+              <ControlledSelect
+                name="type"
+                control={control}
+                errors={errors}
+                label="Type"
+                rules={{ required: "Required" }}
+                options={[
+                  { value: "", label: "Select" },
+                  { value: "auto", label: "Auto" },
+                  { value: "jeep", label: "Jeep" },
+                  { value: "bus", label: "Bus" },
+                  { value: "eriskshaw", label: "E-Rikshaw" },
+                ]}
+                sx={{ width: "50%" }}
+              />
+
+              <ControlledTextField
+                variant="standard"
+                name="registration_no"
+                control={control}
+                errors={errors}
+                label="Registration No"
+                rules={{
+                  required: "Required",
+                }}
+                required
+              />
+
+              <ControlledTextField
+                variant="standard"
+                name="driver_name"
+                control={control}
+                errors={errors}
+                label="Driver Name"
+                rules={{
+                  required: "Required",
+                }}
+                required
+              />
+
+              <MyCustomButton
+                variant="contained"
+                type="submit"
+                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
               >
-                <MenuItem value={"auto"}>Auto</MenuItem>
-                <MenuItem value={"jeep"}>Jeep</MenuItem>
-                <MenuItem value={"bus"}>Bus</MenuItem>
-                <MenuItem value={"erikshaw"}>E-Rikshaw</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              // fullWidth
-              variant="standard"
-              label="Registration No"
-              size="small"
-              // value={row.code}
-              onChange={handleChange}
-              // error={!!row?.errors?.code}
-              // helperText={row?.errors?.code}
-              disabled={false}
-            />
-            <TextField
-              // fullWidth
-              variant="standard"
-              label="Driver's Name"
-              size="small"
-              // value={row.code}
-              onChange={handleChange}
-              // error={!!row?.errors?.code}
-              // helperText={row?.errors?.code}
-              disabled={false}
-            />
-            <MyCustomButton
-              onClick={saveData}
-              variant="contained"
-              disabled={false}
-            >
-              Add
-            </MyCustomButton>
-          </Box>
-
+                {!edit ? "Add" : "Save"}
+              </MyCustomButton>
+              <MyCustomButton
+                variant="contained"
+                type="reset"
+                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+              >
+                Clear
+              </MyCustomButton>
+            </Box>
+          </form>
           <DataGrid
             rows={applications}
             columns={columns}
@@ -483,6 +734,7 @@ const ManageTransport = () => {
           />
         </Box>
 
+        {/* Add Stops */}
         <Box
           display={"flex"}
           flexDirection={"column"}
@@ -496,37 +748,61 @@ const ManageTransport = () => {
           <Typography variant="h6" alignSelf={"center"}>
             <strong>Add Stops</strong>
           </Typography>
-
-          <Box
-            display={"flex"}
-            flexDirection={"row"}
-            justifyContent={"space-evenly"}
-            gap={3}
-            width="auto"
+          <form
+            onSubmit={handleSubmitStops(handleFormSubmitStop)}
+            onReset={onResetHandlerStops}
           >
-            <TextField
-              // fullWidth
-              variant="standard"
-              label="Stop Name"
-              size="small"
-              // value={row.code}
-              onChange={handleChange}
-              // error={!!row?.errors?.code}
-              // helperText={row?.errors?.code}
-              disabled={false}
-            />
-
-            <MyCustomButton
-              onClick={saveData}
-              variant="contained"
-              disabled={false}
+            <Box
+              display={"flex"}
+              flexDirection={"row"}
+              justifyContent={"space-evenly"}
+              gap={3}
+              width="50vw"
             >
-              Add
-            </MyCustomButton>
-          </Box>
+              <ControlledTextField
+                variant="standard"
+                name="name"
+                control={controlStops}
+                errors={errorsStop}
+                label="Stop Name"
+                rules={{
+                  required: "Required",
+                }}
+                sx={{ width: "30%" }}
+                required
+              />
 
+              <ControlledSelect
+                name="vehicle_id"
+                control={controlStops}
+                errors={errorsStop}
+                label="Vehicle No"
+                rules={{ required: "Required" }}
+                options={applications.map((vehicleItem: any) => ({
+                  value: vehicleItem.vehicle_id,
+                  label: vehicleItem.vehicle_no,
+                }))}
+                sx={{ width: "30%" }}
+              />
+
+              <MyCustomButton
+                variant="contained"
+                type="submit"
+                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+              >
+                {!editStop ? "Add" : "Save"}
+              </MyCustomButton>
+              <MyCustomButton
+                variant="contained"
+                type="reset"
+                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+              >
+                Clear
+              </MyCustomButton>
+            </Box>
+          </form>
           <DataGrid
-            rows={rowDataStops}
+            rows={applicationsStops}
             columns={columnsStops}
             rowHeight={40}
             paginationModel={paginationModel}
@@ -574,6 +850,8 @@ const ManageTransport = () => {
             }}
           />
         </Box>
+
+        {/* Configure Monthly Cost */}
         <Box
           display={"flex"}
           flexDirection={"column"}
@@ -584,304 +862,95 @@ const ManageTransport = () => {
           alignItems={"center"}
           mt={1}
         >
-          <Accordion
-            sx={{
-              mt: 2,
-              width: "80vw",
-            }}
+          <form
+            onSubmit={handleSubmitTransportCost(handleFormSubmitTransportCost)}
           >
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">
-                <strong>Assign Stops to Vehicles</strong>
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                <Grid item xs={12} display={"flex"} flexDirection={"column"}>
-                  <>
-                    <Box
-                      display={"flex"}
-                      flexDirection={"row"}
-                      alignItems={"center"}
-                      justifyContent={"flex-end"}
-                      mb={2}
-                    >
-                      {/* <AnimatedButton
-                            label="Generate Admit Card"
-                            onClick={() => console.log("Get TC Clicked")}
-                            disabled={false}
-                          />
-                          {"|"} */}
-                      <AnimatedButton
-                        label="Edit"
-                        onClick={() => console.log("Get TC Clicked")}
-                        disabled={false}
-                      />
-                      {"|"}
-                      <AnimatedButton
-                        label="Save"
-                        onClick={() => console.log("Get TC Clicked")}
-                        disabled={false}
-                      />
-                    </Box>
-                    <TableContainer component={Paper}>
-                      <Table size="medium" aria-label="a dense table">
-                        <TableHead>
-                          <TableRow>
-                            <StyledTableCell>Vehicles</StyledTableCell>
-                            <StyledTableCell align="center">
-                              Stops
-                            </StyledTableCell>
-                          </TableRow>
-                        </TableHead>
-
-                        <TableBody>
-                          {classList.length > 0 &&
-                            classList.map((name) => (
-                              <StyledTableRow>
-                                <StyledTableCell component="th" scope="row">
-                                  {`${name}`}
+            <Accordion
+              sx={{
+                mt: 2,
+                width: "95vw",
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="h6">
+                  <strong>Configure Monthly Cost</strong>
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} display={"flex"} flexDirection={"column"}>
+                    <>
+                      <Box
+                        display={"flex"}
+                        flexDirection={"row"}
+                        alignItems={"center"}
+                        justifyContent={"flex-end"}
+                        mb={2}
+                      >
+                        <AnimatedButton
+                          label="Edit"
+                          onClick={() => console.log("Get TC Clicked")}
+                          disabled={false}
+                        />
+                        {"|"}
+                        <AnimatedButton
+                          label="Save"
+                          disabled={false}
+                          type={"submit"}
+                        />
+                      </Box>
+                      <TableContainer component={Paper}>
+                        <Table size="medium" aria-label="a dense table">
+                          <TableHead>
+                            <TableRow>
+                              <StyledTableCell>Stops</StyledTableCell>
+                              {MONTHS.map((month: string) => (
+                                <StyledTableCell align="center" key={month}>
+                                  {month}
                                 </StyledTableCell>
-                                <StyledTableCell align="right">
-                                  <FormControl
-                                    sx={{ width: 900 }}
-                                    // disabled={disabled}
-                                  >
-                                    <InputLabel id="demo-multiple-checkbox-label">
-                                      Stops
-                                    </InputLabel>
-                                    <Select
-                                      labelId="demo-multiple-checkbox-label"
-                                      id="demo-multiple-checkbox"
-                                      multiple
-                                      value={[]}
-                                      // onChange={(e) =>
-                                      //   handleChangeCheckBox(e, index)
-                                      // }
-                                      // onChange={handleChangeCheckBox}
-                                      renderValue={(selected: any) =>
-                                        selected.join(", ")
-                                      }
-                                      MenuProps={MenuProps}
-                                      variant="standard"
-                                    >
-                                      <MenuItem value={"name1"}>
-                                        <Checkbox
-                                          checked={false}
-                                          //  checked={row.subjects.includes(
-                                          //     name
-                                          //   )}
-                                          // checked={row.subjects.includes(
-                                          //   name
-                                          // )}
-                                        />
-
-                                        <ListItemText primary={"name1"} />
-                                      </MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                </StyledTableCell>
-                              </StyledTableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </>
-                </Grid>
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
-
-          <Accordion
-            sx={{
-              mt: 2,
-              width: "80vw",
-            }}
-          >
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">
-                <strong>Configure Monthly Cost</strong>
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                <Grid item xs={12} display={"flex"} flexDirection={"column"}>
-                  <>
-                    <Box
-                      display={"flex"}
-                      flexDirection={"row"}
-                      alignItems={"center"}
-                      justifyContent={"flex-end"}
-                      mb={2}
-                    >
-                      {/* <AnimatedButton
-                            label="Generate Admit Card"
-                            onClick={() => console.log("Get TC Clicked")}
-                            disabled={false}
-                          />
-                          {"|"} */}
-                      <AnimatedButton
-                        label="Edit"
-                        onClick={() => console.log("Get TC Clicked")}
-                        disabled={false}
-                      />
-                      {"|"}
-                      <AnimatedButton
-                        label="Save"
-                        onClick={() => console.log("Get TC Clicked")}
-                        disabled={false}
-                      />
-                    </Box>
-                    <TableContainer component={Paper}>
-                      <Table size="medium" aria-label="a dense table">
-                        <TableHead>
-                          <TableRow>
-                            <StyledTableCell>Subject</StyledTableCell>
-                            <StyledTableCell align="center">
-                              Jan
-                            </StyledTableCell>
-                            <StyledTableCell align="center">
-                              Feb
-                            </StyledTableCell>
-                            <StyledTableCell align="center">
-                              Mar
-                            </StyledTableCell>
-                            <StyledTableCell align="center">
-                              Apr
-                            </StyledTableCell>
-                          </TableRow>
-                        </TableHead>
-                        <LocalizationProvider dateAdapter={AdapterMoment}>
+                              ))}
+                            </TableRow>
+                          </TableHead>
                           <TableBody>
-                            <StyledTableRow>
-                              <StyledTableCell component="th" scope="row">
-                                {"Stop1"}
-                              </StyledTableCell>
-                              {["date1", "date2", "date3", "date4"].map(
-                                (key) => (
-                                  <StyledTableCell align="right" key={key}>
-                                    <DatePicker
-                                      value={dates[key as keyof typeof dates]}
-                                      onChange={(newValue) =>
-                                        handleDateChange(key, newValue)
-                                      }
-                                      format="DD/MM/YYYY"
-                                      slotProps={{
-                                        textField: {
-                                          size: "small",
-                                          fullWidth: true,
-                                        },
-                                      }}
-                                    />
+                            {applicationsStops.map(
+                              (stopItem: any, stopIndex: number) => (
+                                <StyledTableRow key={stopIndex}>
+                                  <StyledTableCell component="th" scope="row">
+                                    {stopItem.name}
                                   </StyledTableCell>
-                                )
-                              )}
-                            </StyledTableRow>
-                            <StyledTableRow>
-                              <StyledTableCell component="th" scope="row">
-                                {"Stop2"}
-                              </StyledTableCell>
-                              {["date1", "date2", "date3", "date4"].map(
-                                (key) => (
-                                  <StyledTableCell align="right" key={key}>
-                                    <DatePicker
-                                      value={dates[key as keyof typeof dates]}
-                                      onChange={(newValue) =>
-                                        handleDateChange(key, newValue)
-                                      }
-                                      format="DD/MM/YYYY"
-                                      slotProps={{
-                                        textField: {
-                                          size: "small",
-                                          fullWidth: true,
-                                        },
-                                      }}
-                                    />
-                                  </StyledTableCell>
-                                )
-                              )}
-                            </StyledTableRow>
-                            <StyledTableRow>
-                              <StyledTableCell component="th" scope="row">
-                                {"Stop3"}
-                              </StyledTableCell>
-                              {["date1", "date2", "date3", "date4"].map(
-                                (key) => (
-                                  <StyledTableCell align="right" key={key}>
-                                    <DatePicker
-                                      value={dates[key as keyof typeof dates]}
-                                      onChange={(newValue) =>
-                                        handleDateChange(key, newValue)
-                                      }
-                                      format="DD/MM/YYYY"
-                                      slotProps={{
-                                        textField: {
-                                          size: "small",
-                                          fullWidth: true,
-                                        },
-                                      }}
-                                    />
-                                  </StyledTableCell>
-                                )
-                              )}
-                            </StyledTableRow>
-                            <StyledTableRow>
-                              <StyledTableCell component="th" scope="row">
-                                {"Stop4"}
-                              </StyledTableCell>
-                              {["date1", "date2", "date3", "date4"].map(
-                                (key) => (
-                                  <StyledTableCell align="right" key={key}>
-                                    <DatePicker
-                                      value={dates[key as keyof typeof dates]}
-                                      onChange={(newValue) =>
-                                        handleDateChange(key, newValue)
-                                      }
-                                      format="DD/MM/YYYY"
-                                      slotProps={{
-                                        textField: {
-                                          size: "small",
-                                          fullWidth: true,
-                                        },
-                                      }}
-                                    />
-                                  </StyledTableCell>
-                                )
-                              )}
-                            </StyledTableRow>
-                            <StyledTableRow>
-                              <StyledTableCell component="th" scope="row">
-                                {"Stop5"}
-                              </StyledTableCell>
-                              {["date1", "date2", "date3", "date4"].map(
-                                (key) => (
-                                  <StyledTableCell align="right" key={key}>
-                                    <DatePicker
-                                      value={dates[key as keyof typeof dates]}
-                                      onChange={(newValue) =>
-                                        handleDateChange(key, newValue)
-                                      }
-                                      format="DD/MM/YYYY"
-                                      slotProps={{
-                                        textField: {
-                                          size: "small",
-                                          fullWidth: true,
-                                        },
-                                      }}
-                                    />
-                                  </StyledTableCell>
-                                )
-                              )}
-                            </StyledTableRow>
+                                  {/* <StyledTableCell
+                                    align="right"
+                                    key={stopIndex}
+                                  >OPTION TO ENTER AMOUNT FOR ALL MONTHS</StyledTableCell> */}
+                                  {MONTHS.map((key) => (
+                                    <StyledTableCell align="right" key={key}>
+                                      <ControlledTextField
+                                        variant="standard"
+                                        name={`${stopItem.name}.${key}`}
+                                        control={controlTransportCost}
+                                        errors={errorsTransportCost}
+                                        // label="₹Amount"
+                                        type="number"
+                                        // rules={{
+                                        //   required: "Required",
+                                        // }}
+                                        // sx={{ width: "40%" }}
+                                        // required
+                                      />
+                                    </StyledTableCell>
+                                  ))}
+                                </StyledTableRow>
+                              )
+                            )}
                           </TableBody>
-                        </LocalizationProvider>
-                      </Table>
-                    </TableContainer>
-                  </>
+                        </Table>
+                      </TableContainer>
+                    </>
+                  </Grid>
                 </Grid>
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
+              </AccordionDetails>
+            </Accordion>
+          </form>
         </Box>
       </Box>
     </>

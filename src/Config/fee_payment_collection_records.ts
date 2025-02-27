@@ -1,5 +1,17 @@
 export const fee_payment_collection_records = [
   {
+    id: "44cd6408",
+    payment_id: "3897b64hdj",
+    month: "February",
+    transaction_id: "7bf82b28",
+    payment_date: "2025-02-15",
+    amount_due: 1250,
+    amount_paid: 1250,
+    rebate_amount: 0,
+    payment_status: "Paid",
+    remark: "Toties similique inflammatio.",
+  },
+  {
     id: "44cd6407-e0f2-4a5b-8fea-99d1e00de5a7",
     payment_id: "3897b64c-a59c-48c5-be0f-3aa93fc28b27",
     month: "January",

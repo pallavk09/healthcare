@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   DataGrid,
   GridColDef,
@@ -28,18 +28,18 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import { number } from "yup";
 import ProfileDialogFeesPayment from "../../components/ProfileDialogFeesPayment";
 
-import { students } from "../../Config/students";
-import { fees_structure_records } from "../../Config/fees_structure_records";
-import { student_fee_collection_records } from "../../Config/student_fee_collection_records";
-import { fee_payment_collection_records } from "../../Config/fee_payment_collection_records";
 import moment from "moment";
 import HomeIcon from "@mui/icons-material/Home";
 import { useNavigate } from "react-router-dom";
 import { student_transport_collection } from "../../Config/student_transport_collection";
 import { transport_fees_structure } from "../../Config/transport_fees_structure";
+import { students } from "../../Config/students";
+import { fees_structure_records } from "../../Config/fees_structure_records";
+import { student_fee_collection_records } from "../../Config/student_fee_collection_records";
+import { fee_payment_collection_records } from "../../Config/fee_payment_collection_records";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 
 // Create buttons with hover underline animation
 const AnimatedButton = ({
@@ -163,8 +163,6 @@ const FeeDetails: React.FC<any> = (props) => {
             fee_structure.fees_structure_id === record.fees_structure_id
         );
         // .sort((a, b) => b.academic_year.localeCompare(a.academic_year)); // Sort by academic_year in descending order
-        console.log("feeStructureRecord - Student");
-        console.log(feeStructureRecord);
 
         return {
           ...record,
@@ -180,8 +178,6 @@ const FeeDetails: React.FC<any> = (props) => {
             fee_structure.transport_structure_id ===
             record.transport_structure_id
         );
-        console.log("feeStructureRecord - Transport");
-        console.log(feeStructureRecord);
 
         return {
           ...record,
@@ -215,23 +211,33 @@ const FeeDetails: React.FC<any> = (props) => {
     console.log("merged_student_fee_transport_collection");
     console.log(merged_student_fee_transport_collection);
 
-    //Calculate total Fees Expected in current Month
+    //Calculate total Fees (meaning sum through each class) Expected in current Month
+    //Return array of below object
+    //   {
+    //     "fees_structure_id": "39e04b7b-ceb4-4148-a542-b12a542ac496",
+    //     "total_fees": 1250
+    // }
     const fee_strucrture_TotalFee = filterFeeStructureAndTotalFee(
       fees_structure_records,
       _currentAcademicYear,
       _currentMonth
     );
 
-    const expectedFeeThisMonth = getExpectedFees(
-      _currentAcademicYear,
-      fee_strucrture_TotalFee
+    console.log("fee_strucrture_TotalFee", fee_strucrture_TotalFee);
+
+    const expectedFeeThisMonth = fee_strucrture_TotalFee.reduce(
+      (sum: number, record: any) => sum + record.total_fees,
+      0
     );
 
-    //Calculate total Fees Collected in current Month
+    // getExpectedFees(
+    //   _currentAcademicYear,
+    //   fee_strucrture_TotalFee
+    // );
 
-    // const payment_date = "2025-01-29";
-    // const isCurrentMonth = moment(payment_date).isSame(moment(), "month");
-    // console.log(`isCurrentMonth: ${isCurrentMonth}`);
+    // console.log("expectedFeeThisMonth", expectedFeeThisMonth);
+
+    //Calculate total Fees Collected in current Month
 
     const fee_records_academic_year = fee_payment_collection_records.filter(
       (record: any) =>
@@ -255,15 +261,18 @@ const FeeDetails: React.FC<any> = (props) => {
         (record: any) => record.academic_year === _currentAcademicYear
       );
 
+    console.log("student_fee_collection_records_AY");
+    console.log(student_fee_collection_records_AY);
+
     const _amountCollectedThisAY = student_fee_collection_records_AY.reduce(
       (sum, record) => record.paid_amount ?? 0 + sum,
       0
     );
 
     setAmountExpectedThisMonth(expectedFeeThisMonth);
-    setAmountCollectedThisAY(_amountCollectedThisAY);
     setCollectedThisMonth(total_paid_this_month);
-    // setApplicationData(merged_student_fee_collection);
+
+    setAmountCollectedThisAY(_amountCollectedThisAY);
     setApplicationData(merged_student_fee_transport_collection);
   }, []);
 
@@ -301,7 +310,7 @@ const FeeDetails: React.FC<any> = (props) => {
 
       return {
         fees_structure_id: record.fees_structure_id,
-        total_fees: monthData[0].total_fees,
+        total_fees: monthData[0]?.total_fees || 0,
       };
     });
 
@@ -346,13 +355,20 @@ const FeeDetails: React.FC<any> = (props) => {
 
   const HandleFeeDepositClick = (data: any) => {
     console.log("View Clicked");
+    console.log(data);
     //HARD CODED DATE FOR TESTING
-    let monthlist = CheckPendingPayment("17/09/2024", 10);
+    // let monthlist = CheckPendingPayment("17/09/2024", 10);
+
+    let monthlist = CheckPendingPayment(
+      data.fee_collection_data[0].last_payment_date,
+      10
+    );
 
     let monthlist_transport = CheckPendingPayment(
       data.fee_collection_data_transport[0].last_payment_date,
       10
     );
+
     let _monthListSorted = monthlist.sort((a: any, b: any) =>
       a.localeCompare(b)
     );
@@ -361,16 +377,22 @@ const FeeDetails: React.FC<any> = (props) => {
       (a: any, b: any) => a.localeCompare(b)
     );
 
-    console.log(data);
-    // console.log(_monthListSorted);
+    //Below will give data as
+    //[ "January - 2025","February - 2025",]
     const pending_month_array = GetFeeCardMonthHeading(_monthListSorted);
     const monthly_fee =
       data.fee_collection_data[0].fees_particulars.monthly_fees;
+
+    // console.log("pending_month_array");
+    // console.log(pending_month_array);
 
     const pending_particulars = ExtractPendingFeeParticularsWithMonth(
       pending_month_array,
       monthly_fee
     );
+
+    console.log("pending_particulars");
+    console.log(pending_particulars);
 
     const pending_month_array_transport = GetFeeCardMonthHeading(
       _monthListSorted_transport
@@ -420,14 +442,18 @@ const FeeDetails: React.FC<any> = (props) => {
     // };
 
     const _pendingMonthFee_trans = Array.from(mergedMap.values());
-    console.log("_pendingMonthFee_trans");
-    console.log(Array.from(mergedMap.values()));
+    // const processedRows = _pendingMonthFee_trans.map((row) => ({
+    //   ...row,
+    //   payment_status:
+    //     CheckPendingPayment(row.fee_collection_data[0]?.last_payment_date, 10)
+    //       .length === 0
+    //       ? "Paid"
+    //       : "Pending",
+    // }));
 
-    // setPendingMonths(pending_particulars);
     setPendingMonths(_pendingMonthFee_trans);
     setPendingMonthsTransport(pending_particulars_transport);
     setProfileDialogOpen(true);
-    // console.log(pending_particulars);
   };
 
   const ExtractPendingFeeParticularsWithMonth = (
@@ -465,9 +491,12 @@ const FeeDetails: React.FC<any> = (props) => {
   };
 
   const ChangeDateFormat = (date: string, format: string) => {
-    return moment(date, ["YYYY-MM-DD", "DD/MM/YYYY", "DD/MM/YY"], true).format(
-      format
-    );
+    // console.log("Date received: ", date);
+    return date
+      ? moment(date, ["YYYY-MM-DD", "DD/MM/YYYY", "DD/MM/YY"], true).format(
+          format
+        )
+      : "";
     // return moment(date).format(format);
   };
 
@@ -527,7 +556,7 @@ const FeeDetails: React.FC<any> = (props) => {
       //Since no record of last payment, meaning new student or paying for the first time
       // let _paymentDueMonth = moment().date(payment_cycle).format("MM");
       pendingDueDates.push(_payementDueDate.format("DD/MM/YYYY"));
-      console.log(pendingDueDates);
+      // console.log(pendingDueDates);
       return pendingDueDates;
     }
   };
@@ -570,44 +599,50 @@ const FeeDetails: React.FC<any> = (props) => {
       field: "parent_contact",
       headerName: "Contact",
       flex: 1,
-      valueGetter: (_, row) => row.guardian_details.contact,
+      valueGetter: (_, row) =>
+        row.father_details.contact ||
+        row.mother_details.contact ||
+        row.guardian_details.contact,
     },
     {
       field: "last_payment_date",
       headerName: "Last Paid",
       flex: 1,
       valueGetter: (_, row) =>
-        ChangeDateFormat(
-          row.fee_collection_data[0].last_payment_date,
-          "DD/MM/yyyy"
-        ),
+        row.fee_collection_data && row.fee_collection_data.length > 0
+          ? ChangeDateFormat(
+              row.fee_collection_data[0]?.last_payment_date,
+              "DD/MM/yyyy"
+            )
+          : "N/A",
     },
     {
       field: "payment_status",
       headerName: "Status",
       flex: 0.6,
-      renderCell: (params) => (
-        <>
+      // Since I need to use isPaid in multiple columns inside Material UI DataGrid.
+      // Ishould compute it once and store it inside params.row.
+      valueGetter: (_, row) => {
+        const lastPaymentDate = row.fee_collection_data[0]?.last_payment_date;
+        return CheckPendingPayment(lastPaymentDate, 10).length === 0
+          ? "Paid"
+          : "Pending";
+      },
+      renderCell: (params) => {
+        const isPaid = params.value === "Paid"; // Use precomputed value
+
+        return (
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexDirection: "row",
-              //   justifyContent: "center",
               gap: 1,
-              backgroundColor:
-                CheckPendingPayment(
-                  params.row.fee_collection_data[0].last_payment_date,
-                  10
-                ).length === 0
-                  ? "#00c9a6"
-                  : "lightgray",
-              // params.value === "Paid" ? "#00c9a6" : "lightgray",
+              backgroundColor: isPaid ? "#00c9a6" : "lightgray",
               borderRadius: 4,
               padding: "4px 8px",
               marginTop: 0.6,
-              //   marginTop: 1,
             }}
           >
             <Box
@@ -615,26 +650,15 @@ const FeeDetails: React.FC<any> = (props) => {
                 width: 10,
                 height: 10,
                 borderRadius: "50%",
-                backgroundColor:
-                  CheckPendingPayment(
-                    params.row.fee_collection_data[0].last_payment_date,
-                    10
-                  ).length === 0
-                    ? "green"
-                    : "gray",
+                backgroundColor: isPaid ? "green" : "gray",
               }}
             />
             <Typography variant="body2">
-              {CheckPendingPayment(
-                params.row.fee_collection_data[0].last_payment_date,
-                10
-              ).length === 0
-                ? "Paid"
-                : "Pending"}
+              {isPaid ? "Paid" : "Pending"}
             </Typography>
           </Box>
-        </>
-      ),
+        );
+      },
     },
     {
       field: "actions",
@@ -642,28 +666,31 @@ const FeeDetails: React.FC<any> = (props) => {
       flex: 2,
       headerAlign: "center",
       align: "center",
-      renderCell: (params) => (
-        <>
-          <AnimatedButton
-            label="Fee Deposit"
-            onClick={() => HandleFeeDepositClick(params.row)}
-            disabled={false}
-          />
+      renderCell: (params) => {
+        const isPaid = params.row.payment_status === "Paid"; // Use computed value
+        return (
+          <>
+            <AnimatedButton
+              label="Fee Deposit"
+              onClick={() => HandleFeeDepositClick(params.row)}
+              disabled={isPaid}
+            />
 
-          {"|"}
-          <AnimatedButton
-            label="Receipts"
-            onClick={() => console.log("Get TC Clicked")}
-            disabled={false}
-          />
-          {/* {"|"} */}
-          {/* <AnimatedButton
+            {"|"}
+            <AnimatedButton
+              label="Receipts"
+              onClick={() => console.log(params.row.payment_status)}
+              disabled={false}
+            />
+            {/* {"|"} */}
+            {/* <AnimatedButton
             label="History"
             onClick={() => console.log("Get TC Clicked")}
             disabled={false}
           /> */}
-        </>
-      ),
+          </>
+        );
+      },
     },
   ];
 
@@ -702,8 +729,9 @@ const FeeDetails: React.FC<any> = (props) => {
                 <Box
                   display={"flex"}
                   flexDirection={"row"}
-                  justifyContent={"space-between"}
+                  justifyContent={"flex-start"}
                   textAlign={"center"}
+                  gap={2}
                 >
                   <DateRangeIcon
                     style={{
@@ -716,7 +744,7 @@ const FeeDetails: React.FC<any> = (props) => {
                     variant="h5"
                     sx={{ color: "#2E186A", alignSelf: "center" }}
                   >
-                    Collected This Month
+                    {`School Fee - ${moment().format("MMM")}`}
                   </Typography>
                 </Box>
                 <Box display={"flex"} flexDirection={"column"}>
@@ -780,21 +808,154 @@ const FeeDetails: React.FC<any> = (props) => {
                 <Box
                   display={"flex"}
                   flexDirection={"row"}
-                  justifyContent={"center"}
+                  justifyContent={"flex-start"}
                   textAlign={"center"}
+                  gap={2}
                 >
-                  {/* <DateRangeIcon
+                  <DirectionsBusIcon
                     style={{
                       width: "50px",
                       height: "50px",
-                      color: "#324b4e",
+                      color: "#2E186A",
                     }}
-                  /> */}
+                  />
                   <Typography
-                    variant="h4"
+                    variant="h5"
                     sx={{ color: "#2E186A", alignSelf: "center" }}
                   >
-                    Overall Collection
+                    {`Transport Fee - ${moment().format("MMM")}`}
+                  </Typography>
+                </Box>
+                <Box display={"flex"} flexDirection={"column"}>
+                  <Box
+                    display={"flex"}
+                    flexDirection={"row"}
+                    justifyContent={"flex-start"}
+                    textAlign={"center"}
+                    gap={5}
+                  >
+                    <Typography
+                      variant="body1"
+                      sx={{ color: "rgb(99, 100, 101)", alignSelf: "center" }}
+                    >
+                      Amount Received
+                    </Typography>
+                    <Typography
+                      variant="h5"
+                      fontWeight={"bold"}
+                      sx={{ color: "rgb(99, 100, 101)", alignSelf: "center" }}
+                    >
+                      ₹ {collectedThisMonth}
+                    </Typography>
+                  </Box>
+                  <Box
+                    display={"flex"}
+                    flexDirection={"row"}
+                    justifyContent={"flex-start"}
+                    textAlign={"center"}
+                    gap={5}
+                  >
+                    <Typography
+                      variant="body1"
+                      sx={{ color: "rgb(99, 100, 101)", alignSelf: "center" }}
+                    >
+                      Amount Expected
+                    </Typography>
+                    <Typography
+                      variant="h5"
+                      fontWeight={"bold"}
+                      sx={{ color: "rgb(99, 100, 101)", alignSelf: "center" }}
+                    >
+                      ₹ {amountExpectedThisMonth}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+          <Grid container direction="column" gap={1} xs={2} spacing={1}>
+            <Grid item xs={3}>
+              <Box
+                display={"flex"}
+                flexDirection={"column"}
+                sx={{
+                  p: 2,
+                  backgroundColor: "transparent",
+                  border: "1.7px solid #FF825B",
+                  borderRadius: "8px",
+                  height: "7em",
+                }}
+              >
+                <Box
+                  display={"flex"}
+                  flexDirection={"row"}
+                  justifyContent={"center"}
+                  textAlign={"center"}
+                >
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      color: "#cb3d64",
+                      alignSelf: "center",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <strong>Total Expense</strong>
+                  </Typography>
+                </Box>
+                <Box
+                  display={"flex"}
+                  flexDirection={"column"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  gap={1}
+                >
+                  <Typography
+                    variant="body1"
+                    fontWeight={"bold"}
+                    sx={{
+                      color: "rgb(255, 255, 255)",
+                      alignSelf: "center",
+                      background: "#FF825B",
+                      padding: 0.2,
+                      borderRadius: 2,
+                    }}
+                  >
+                    {_currentAcademicYear}
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight={"bold"}
+                    sx={{ color: "rgb(99, 100, 101)", alignSelf: "center" }}
+                  >
+                    {/* ₹ {amountCollectedThisAY} */}₹ 1000
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+            <Grid item xs={3}>
+              <Box
+                display={"flex"}
+                flexDirection={"column"}
+                sx={{
+                  p: 2,
+                  backgroundColor: "transparent",
+                  border: "1.7px solid #FF825B",
+                  borderRadius: "8px",
+                  height: "7em",
+                }}
+              >
+                <Box
+                  display={"flex"}
+                  flexDirection={"row"}
+                  justifyContent={"center"}
+                  textAlign={"center"}
+                >
+                  <Typography
+                    variant="h5"
+                    sx={{ color: "#2E186A", alignSelf: "center" }}
+                  >
+                    <strong>Total Collection</strong>
                   </Typography>
                 </Box>
                 <Box
@@ -828,7 +989,7 @@ const FeeDetails: React.FC<any> = (props) => {
               </Box>
             </Grid>
           </Grid>
-          <Grid container direction="row" gap={1} xs={9}>
+          <Grid container direction="row" gap={1} xs={7}>
             <Box
               display={"flex"}
               flexDirection={"column"}
@@ -925,7 +1086,9 @@ const FeeDetails: React.FC<any> = (props) => {
                                     : "",
                               }}
                             >
-                              {`${fees_structure.class} - ${fees_structure.academic_year}`}
+                              {`${fees_structure.class} - ${moment().format(
+                                "MMMM"
+                              )} - ${fees_structure.academic_year}`}
                             </TableCell>
                             <TableCell
                               align="right"

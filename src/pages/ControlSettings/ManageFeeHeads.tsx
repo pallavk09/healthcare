@@ -38,6 +38,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { classes_records } from "../../Config/classes_records";
+import { classes } from "../../Config/classes";
 
 import moment from "moment";
 import { useForm } from "react-hook-form";
@@ -426,8 +427,8 @@ const ManageFeeHeads = () => {
         : [];
 
       return {
-        id: "",
-        fees_structure_id: "",
+        id: uuid().slice(0, 5),
+        fees_structure_id: uuid().slice(0, 5),
         academic_year: "",
         class: cls.name,
         fee_collection_cycle: 10,
@@ -490,8 +491,28 @@ const ManageFeeHeads = () => {
     console.log("HandleFeeStructureCreation");
     console.log(data);
     const mappedData = generateFeeStructure(applications, classList, data);
-    console.log("mappedData");
-    console.log(mappedData);
+
+    // console.log("mappedData");
+    // console.log(mappedData);
+
+    // Here records will be created and added to fees_structure_records, where each record will have its fees_structure_id:
+
+    // under classes, for any given class and all sections fees_structure_id should be added
+    const mappedData_withFee = classes.map((classObj: any) => {
+      const feeItem = mappedData.find(
+        (feeStructureItem: any) => classObj.title === feeStructureItem.class
+      );
+
+      if (feeItem) {
+        // Update the fees_structure_id with the feeItem's id or fees_structure_id as needed
+        classObj.fees_structure_id = feeItem.fees_structure_id;
+      }
+
+      return classObj;
+    });
+
+    console.log("mappedData_withFee");
+    console.log(mappedData_withFee);
   };
 
   return (
@@ -578,10 +599,18 @@ const ManageFeeHeads = () => {
                 required
               />
 
-              <MyCustomButton variant="contained" type="submit">
+              <MyCustomButton
+                variant="contained"
+                type="submit"
+                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+              >
                 {!edit ? "Add" : "Save"}
               </MyCustomButton>
-              <MyCustomButton variant="contained" type="reset">
+              <MyCustomButton
+                variant="contained"
+                type="reset"
+                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+              >
                 Clear
               </MyCustomButton>
             </Box>

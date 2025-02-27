@@ -145,7 +145,7 @@ const StudentManagementHome: React.FC = () => {
           width={"80%"}
         >
           <PaperCard
-            title={"Master Data"}
+            title={"Add/View Students"}
             caption={"Students master details. Fetch certificates."}
             onClick={() => navigate("all-student-data")}
           />
@@ -169,7 +169,7 @@ const StudentManagementHome: React.FC = () => {
           width={"80%"}
         >
           <PaperCard
-            title={"Attendance"}
+            title={"Exam Attendance"}
             caption={"Fill attendance every month and Exams"}
             onClick={() => navigate("manage-attendance")}
           />

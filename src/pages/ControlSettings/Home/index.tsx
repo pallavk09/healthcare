@@ -150,11 +150,7 @@ const ControlSettingsHome: React.FC = () => {
             caption={"Create and Manage Subjects."}
             onClick={() => navigate("manage-subjects")}
           />
-          <PaperCard
-            title={"Manage Transport"}
-            caption={"Create Manage Transport Fee"}
-            onClick={() => navigate("manage-transport")}
-          />
+
           {/* <PaperCard
               title={"Credentials Manager"}
               caption={"View Fees Record. Collect Fees."}
@@ -170,16 +166,10 @@ const ControlSettingsHome: React.FC = () => {
           height={"90%"}
         >
           <PaperCard
-            title={"Manage Examinations"}
-            caption={"Create and Manage Exams."}
-            onClick={() => navigate("manage-examinations")}
+            title={"Manage Transport"}
+            caption={"Create Manage Transport Fee"}
+            onClick={() => navigate("manage-transport")}
           />
-
-          {/* <PaperCard
-              title={"Report Center"}
-              caption={"Fetch all kind of report"}
-              onClick={() => console.log("View Report Clicked")}
-            /> */}
         </Box>
         <Box
           display={"flex"}

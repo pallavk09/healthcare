@@ -26,6 +26,7 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import Switch from "@mui/material/Switch";
+import { v4 as uuidv4 } from "uuid"; // Import UUID for unique IDs
 
 interface ProfileDialogProps {
   isOpen: boolean;
@@ -37,6 +38,12 @@ interface ProfileDialogProps {
   onEdit?: () => void;
   addSibling?: boolean;
 }
+
+type FilterType = {
+  both: boolean;
+  fee: boolean;
+  transport: boolean;
+};
 
 const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
   isOpen,
@@ -65,7 +72,7 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
   );
   const [selectedFeeObj, setSelectedFeeObj] = useState<any>();
   const [rebateType, setRebateType] = React.useState<"%age" | "Amount" | "">(
-    ""
+    "Amount"
   );
 
   const [rebateFigure, setRebateFigure] = useState<string>();
@@ -77,99 +84,17 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
     fee: true,
     transport: true,
   });
+  const [selectedFees, setSelectedFees] = useState<{
+    [key: string]: { [key: string]: boolean };
+  }>({});
 
-  useEffect(() => {
-    console.log("Fee Selection changed: ", checked);
-    const filteredData = filterFees(profileData, checked); // Change "fee" to "transport" or "both" as needed
-    console.log(filteredData);
-    _SetProfileData(filteredData);
-  }, [checked]);
+  // useEffect(() => {
+  //   console.log("Fee Selection changed: ", checked);
+  //   // const filteredData = filterFees(profileData, checked); // Change "fee" to "transport" or "both" as needed
+  //   // console.log(filteredData);
 
-  type FilterType = {
-    both: boolean;
-    fee: boolean;
-    transport: boolean;
-  };
-
-  const filterFees = (data: any[], filterType: FilterType) => {
-    return data
-      .map(({ school_fee, transport_fee, ...rest }) => {
-        if (filterType.both) {
-          return { ...rest, school_fee, transport_fee };
-        }
-        if (filterType.fee && !filterType.transport) {
-          return { ...rest, school_fee };
-        }
-        if (filterType.transport && !filterType.fee) {
-          return transport_fee ? { ...rest, transport_fee } : null;
-        }
-        return null; // If none are selected, return null
-      })
-      .filter(Boolean); // Remove null values
-  };
-
-  // const filterFees = (data: any[], filterType: {}) => {
-  //   return data
-  //     .map(({ school_fee, transport_fee, ...rest }) => {
-  //       if (filterType === "fee") {
-  //         return { ...rest, school_fee };
-  //       } else if (filterType === "transport") {
-  //         return transport_fee ? { ...rest, transport_fee } : null;
-  //       } else {
-  //         return { ...rest, school_fee, transport_fee };
-  //       }
-  //     })
-  //     .filter(Boolean);
-  // };
-
-  const HandleFeeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = event.target;
-    console.log(name, checked);
-    if (name === "both") {
-      setChecked({
-        both: checked,
-        fee: checked,
-        transport: checked,
-      });
-    } else {
-      setChecked((prev) => {
-        const newState = { ...prev, [name]: checked };
-        newState.both = newState.fee && newState.transport;
-        return newState;
-      });
-    }
-  };
-
-  const handleSelect = (date: any) => {
-    console.log(date);
-    setSelectedMonths((prev: any) =>
-      prev.includes(date.month)
-        ? prev.filter((m: any) => m !== date.month)
-        : [...prev, date.month]
-    );
-  };
-
-  const handleSelectTransport = (date: any) => {
-    console.log(date);
-    setSelectedMonthsTransport((prev: any) =>
-      prev.includes(date.month)
-        ? prev.filter((m: any) => m !== date.month)
-        : [...prev, date.month]
-    );
-  };
-
-  const handleChange = (event: any) => {
-    console.log(event.target.value);
-    setRebateType(event.target.value);
-    setRebateFigure("");
-    setRebateValue(0);
-  };
-
-  const handleSwitchChange = () => {
-    setSwitchChecked((prev: Boolean) => !prev);
-
-    console.log("switchChecked: ", switchChecked);
-  };
+  //   _SetProfileData(filteredData);
+  // }, [checked]);
 
   useEffect(() => {
     if (profileData && profileData.length > 0) {
@@ -191,16 +116,233 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
     }
   }, [resetFormRef, reset, profileData]);
 
-  const handleFormSubmit = async () => {
-    console.log("Payment Amount to be submitted: ", GetPaymentAmount());
-    // console.log(_profileData);
-    // console.log(selectedMonths);
-
-    // const selectedFeeObject = selectedMonths.map((month: string) => {
+  useEffect(() => {
+    console.log("useEffect: Month, Rebate or Switch Change");
+    console.log("selectedFees");
+    console.log(selectedFees);
+    let totalAmount = 0;
+    // selectedMonths.map((month: string) => {
     //   const feeObj = _profileData.find((m: any) => m.month === month);
-    //   if (feeObj) return feeObj;
+    //   if (feeObj) {
+    //     totalAmount += feeObj.school_fee?.total_fees;
+    //   }
     // });
-    // console.log(selectedFeeObject);
+
+    Object.entries(selectedFees).forEach(([monthYear, feeHeads]) => {
+      const [month, year] = monthYear.split("-"); // Extract month and year
+      const feeObj = _profileData.find(
+        (m) => m.month === month && m.year === year
+      );
+
+      if (feeObj) {
+        // Sum selected school fee heads
+        if (feeObj.school_fee) {
+          Object.keys(feeHeads).forEach((head) => {
+            if (feeHeads[head] && feeObj.school_fee.fees_particulars[head]) {
+              totalAmount += feeObj.school_fee.fees_particulars[head];
+            }
+          });
+        }
+
+        // Sum selected transport fee heads (if applicable)
+        if (feeObj.transport_fee) {
+          Object.keys(feeHeads).forEach((head) => {
+            if (feeHeads[head] && feeObj.transport_fee.fees_particulars[head]) {
+              totalAmount += feeObj.transport_fee.fees_particulars[head];
+            }
+          });
+        }
+      }
+    });
+
+    let totalAmount_transport = 0;
+    selectedMonthsTransport.map((month: string) => {
+      const feeObj = _profileData.find((m: any) => m.month === month);
+      if (feeObj) {
+        totalAmount_transport += feeObj.transport_fee?.total_fees;
+      }
+    });
+
+    totalAmount += totalAmount_transport;
+
+    //This SwitchChecked logic will put rebate to zero once switch is toggelled
+    setTotalDue(totalAmount - (switchChecked ? rebateValue : 0));
+  }, [selectedFees, selectedMonthsTransport, rebateValue, switchChecked]);
+
+  const filterFees = (data: any[], filterType: FilterType) => {
+    return data
+      .map(({ school_fee, transport_fee, ...rest }) => {
+        if (filterType.both) {
+          return { ...rest, school_fee, transport_fee };
+        }
+        if (filterType.fee && !filterType.transport) {
+          return { ...rest, school_fee };
+        }
+        if (filterType.transport && !filterType.fee) {
+          return transport_fee ? { ...rest, transport_fee } : null;
+        }
+        return null; // If none are selected, return null
+      })
+      .filter(Boolean); // Remove null values
+  };
+
+  const resetRebateControl = () => {
+    setRebateType("Amount");
+    setRebateFigure("");
+    setRebateValue(0);
+  };
+
+  // const filterFees = (data: any[], filterType: {}) => {
+  //   return data
+  //     .map(({ school_fee, transport_fee, ...rest }) => {
+  //       if (filterType === "fee") {
+  //         return { ...rest, school_fee };
+  //       } else if (filterType === "transport") {
+  //         return transport_fee ? { ...rest, transport_fee } : null;
+  //       } else {
+  //         return { ...rest, school_fee, transport_fee };
+  //       }
+  //     })
+  //     .filter(Boolean);
+  // };
+
+  // const HandleFeeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, checked } = event.target;
+  //   console.log(name, checked);
+  //   if (name === "both") {
+  //     setChecked({
+  //       both: checked,
+  //       fee: checked,
+  //       transport: checked,
+  //     });
+  //   } else {
+  //     setChecked((prev) => {
+  //       const newState = { ...prev, [name]: checked };
+  //       newState.both = newState.fee && newState.transport;
+  //       return newState;
+  //     });
+  //   }
+  // };
+
+  // const handleSelect = (school_fee_obj: any) => {
+  //   console.log(school_fee_obj);
+  //   setSelectedMonths((prev: any) =>
+  //     prev.includes(school_fee_obj.month)
+  //       ? prev.filter((m: any) => m !== school_fee_obj.month)
+  //       : [...prev, school_fee_obj.month]
+  //   );
+  // };
+
+  // const handleSelect = (month: string, feeHead: string) => {
+  //   setSelectedFees((prev) => ({
+  //     ...prev,
+  //     [month]: {
+  //       ...prev[month],
+  //       [feeHead]: !prev[month]?.[feeHead] || false,
+  //     },
+  //   }));
+  // };
+
+  const handleSelect = (month: string, year: string, feeHead: string) => {
+    const key = `${month}-${year}`; // Unique key with month and year
+    setSelectedFees((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [feeHead]: !prev[key]?.[feeHead] || false,
+      },
+    }));
+  };
+
+  // const handleSelectTransport = (date: any) => {
+  //   console.log(date);
+  //   setSelectedMonthsTransport((prev: any) =>
+  //     prev.includes(date.month)
+  //       ? prev.filter((m: any) => m !== date.month)
+  //       : [...prev, date.month]
+  //   );
+  // };
+
+  const handleChange = (event: any) => {
+    console.log(event.target.value);
+    setRebateType(event.target.value);
+    setRebateFigure("");
+    setRebateValue(0);
+  };
+
+  const handleSwitchChange = () => {
+    setSwitchChecked((prev: Boolean) => !prev);
+    resetRebateControl();
+
+    console.log("switchChecked: ", switchChecked);
+  };
+
+  const handlePayment = async () => {
+    console.log("Payment Amount to be submitted: ", GetPaymentAmount());
+    const paymentId = uuidv4(); // Generate a single payment_id for this transaction
+    const records: any[] = [];
+
+    Object.entries(selectedFees).forEach(([monthYear, feeHeads]) => {
+      const [month, year] = monthYear.split("-");
+      const feeObj = _profileData.find(
+        (m) => m.month === month && m.year === year
+      );
+
+      if (feeObj) {
+        let amountDue = 0;
+        let amountPaid = 0;
+        let rebateAmount = 0; // Assuming rebate handling separately
+        let paymentStatus = "Paid"; // Default is Paid
+
+        // Get all fee heads from both school_fee and transport_fee
+        const allFeeHeads = {
+          ...feeObj.school_fee.fees_particulars,
+          ...feeObj.transport_fee.fees_particulars,
+        };
+
+        // Selected and Not selected fee heads
+        const selectedFeeHeads: any = {};
+        const notSelectedFeeHeads: any = {};
+
+        Object.keys(allFeeHeads).forEach((head) => {
+          amountDue += allFeeHeads[head];
+
+          if (feeHeads[head]) {
+            selectedFeeHeads[head] = allFeeHeads[head];
+            amountPaid += allFeeHeads[head];
+          } else {
+            notSelectedFeeHeads[head] = allFeeHeads[head];
+          }
+        });
+
+        // If some fee heads were NOT selected, mark status as "Fee Head Pending"
+        if (Object.keys(notSelectedFeeHeads).length > 0) {
+          paymentStatus = "Fee Head Pending";
+        }
+
+        // Create a record for this month-year
+        records.push({
+          id: uuidv4(), // Unique ID for each record
+          payment_id: paymentId, // Same payment_id for all records
+          month,
+          year,
+          transaction_id: uuidv4(), // Unique transaction ID
+          payment_date: new Date().toISOString().split("T")[0], // Current date
+          amount_due: amountDue,
+          amount_paid: totalDue, //amountPaid,
+          rebate_amount: rebateValue,
+          payment_status: paymentStatus,
+          selected_fees: selectedFeeHeads, // Show selected fee heads
+          pending_fees: notSelectedFeeHeads, // Show pending fee heads
+          remark:
+            paymentStatus === "Fee Head Pending"
+              ? "Some fee heads are pending"
+              : "Paid in full",
+        });
+      }
+    });
+
+    console.log("Payment Records:", records);
   };
 
   const GetRebateAndDueAmount = (RebateValue: string) => {
@@ -228,38 +370,14 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
     console.log("totalAmountPayable: ", Math.round(totalAmountPayable));
   };
 
-  useEffect(() => {
-    console.log("useEffect: Month, Rebate or Switch Change");
-    let totalAmount = 0;
-    selectedMonths.map((month: string) => {
-      const feeObj = _profileData.find((m: any) => m.month === month);
-      if (feeObj) {
-        totalAmount += feeObj.school_fee?.total_fees;
-      }
-    });
-
-    let totalAmount_transport = 0;
-    selectedMonthsTransport.map((month: string) => {
-      const feeObj = _profileData.find((m: any) => m.month === month);
-      if (feeObj) {
-        totalAmount_transport += feeObj.transport_fee?.total_fees;
-      }
-    });
-
-    totalAmount += totalAmount_transport;
-
-    //This SwitchChecked logic will put rebate to zero once switch is toggelled
-    setTotalDue(totalAmount - (switchChecked ? rebateValue : 0));
-  }, [selectedMonths, selectedMonthsTransport, rebateValue, switchChecked]);
-
-  const GetYear = (month: string) => {
-    const feeObj = _profileData.find((m: any) => m.month === month);
-    return feeObj?.year;
-  };
-  const GetTotalFee = (month: string) => {
-    const feeObj = _profileData.find((m: any) => m.month === month);
-    return feeObj?.total_fees;
-  };
+  // const GetYear = (month: string) => {
+  //   const feeObj = _profileData.find((m: any) => m.month === month);
+  //   return feeObj?.year;
+  // };
+  // const GetTotalFee = (month: string) => {
+  //   const feeObj = _profileData.find((m: any) => m.month === month);
+  //   return feeObj?.total_fees;
+  // };
   const GetPaymentAmount = () => {
     let totalAmount = 0;
     selectedMonths.map((month: string) => {
@@ -282,8 +400,18 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
     return totalAmount;
   };
 
+  // Create a custom onClose handler for the Dialog component.
+  const handleDialogClose = (event: object, reason: string) => {
+    if (reason === "backdropClick" || reason === "escapeKeyDown") {
+      // Prevent closing when clicking outside or pressing escape.
+      return;
+    }
+    // Otherwise, call the parent's onClose function.
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={isOpen} onClose={handleDialogClose} maxWidth="md" fullWidth>
       <DialogTitle>
         <Typography variant="h5">
           <strong>Fee Submission</strong>
@@ -298,7 +426,7 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <FormGroup sx={{ alignSelf: "center" }}>
+      {/* <FormGroup sx={{ alignSelf: "center" }}>
         <Box display={"flex"} flexDirection={"row"}>
           <FormControlLabel
             control={
@@ -310,7 +438,7 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
               />
             }
             label={
-              <Typography variant="body2" fontSize={15} color="#9d3124">
+              <Typography variant="body2" fontSize={15} color="#2E186A">
                 <strong>Combined</strong>
               </Typography>
             }
@@ -326,7 +454,7 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
               />
             }
             label={
-              <Typography variant="body2" fontSize={15} color="#9d3124">
+              <Typography variant="body2" fontSize={15} color="#2E186A">
                 <strong>Fee</strong>
               </Typography>
             }
@@ -342,14 +470,14 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
               />
             }
             label={
-              <Typography variant="body2" fontSize={15} color="#9d3124">
+              <Typography variant="body2" fontSize={15} color="#2E186A">
                 <strong>Transport</strong>
               </Typography>
             }
             labelPlacement="end"
           />
         </Box>
-      </FormGroup>
+      </FormGroup> */}
 
       {_profileData?.length > 0 ? (
         <DialogContent
@@ -500,36 +628,39 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
                               </Box>
 
                               {/* Pallav: Test Code: School Fees selection*/}
-                              {feePendingObj?.school_fee && (
-                                <Box
-                                  display={"flex"}
-                                  flexDirection={"row"}
-                                  alignSelf={"normal"}
-                                >
-                                  <Checkbox
-                                    checked={selectedMonths.includes(
-                                      feePendingObj.month
-                                    )}
-                                    onChange={() =>
-                                      handleSelect(feePendingObj?.school_fee)
-                                    }
-                                  />
+                              {/* {feePendingObj?.school_fee?.fees_particulars &&
+                                Object.keys(
+                                  feePendingObj?.school_fee?.fees_particulars
+                                ).length > 0 && (
                                   <Box
                                     display={"flex"}
-                                    flexDirection="row"
-                                    justifyContent={"center"}
-                                    alignItems={"center"}
+                                    flexDirection={"row"}
+                                    alignSelf={"normal"}
                                   >
-                                    <Typography
-                                      variant="body2"
-                                      fontSize={18}
-                                      color="#FF825B"
+                                    <Checkbox
+                                      checked={selectedMonths.includes(
+                                        feePendingObj.month
+                                      )}
+                                      onChange={() =>
+                                        handleSelect(feePendingObj?.school_fee)
+                                      }
+                                    />
+                                    <Box
+                                      display={"flex"}
+                                      flexDirection="row"
+                                      justifyContent={"center"}
+                                      alignItems={"center"}
                                     >
-                                      <strong>School Fee</strong>
-                                    </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        fontSize={18}
+                                        color="#FF825B"
+                                      >
+                                        <strong>School Fee</strong>
+                                      </Typography>
+                                    </Box>
                                   </Box>
-                                </Box>
-                              )}
+                                )} */}
                               {/* Pallav: Test Code:School Fees selection. END */}
                               {feePendingObj?.school_fee &&
                                 Object.entries(
@@ -539,16 +670,45 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
                                     <Box
                                       display={"flex"}
                                       flexDirection="column"
-                                      gap={0}
                                     >
                                       <Box
                                         display={"flex"}
                                         flexDirection="row"
                                         justifyContent={"space-between"}
+                                        alignItems={"center"}
                                       >
-                                        <Typography variant="body2">
-                                          <strong>{Key.toUpperCase()}</strong>
-                                        </Typography>
+                                        <Box
+                                          display={"flex"}
+                                          flexDirection="row"
+                                          justifyContent={"flex-start"}
+                                          alignItems={"center"}
+                                        >
+                                          <Checkbox
+                                            checked={
+                                              selectedFees[
+                                                `${feePendingObj.month}-${feePendingObj.year}`
+                                              ]?.[Key] || false
+                                            }
+                                            onChange={() =>
+                                              handleSelect(
+                                                feePendingObj.month,
+                                                feePendingObj.year,
+                                                Key
+                                              )
+                                            }
+                                            // checked={selectedMonths.includes(
+                                            //   feePendingObj.month
+                                            // )}
+                                            // onChange={() =>
+                                            //   handleSelect(
+                                            //     feePendingObj?.school_fee
+                                            //   )
+                                            // }
+                                          />
+                                          <Typography variant="body2">
+                                            <strong>{Key.toUpperCase()}</strong>
+                                          </Typography>
+                                        </Box>
                                         <Typography variant="body2">
                                           <strong>₹{value as string}</strong>
                                         </Typography>
@@ -559,7 +719,7 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
                                 })}
 
                               {/* Pallav: Test Code. Transport Fees selection */}
-                              {feePendingObj?.transport_fee && (
+                              {/* {feePendingObj?.transport_fee && (
                                 <Box
                                   display={"flex"}
                                   flexDirection={"row"}
@@ -588,7 +748,7 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
                                     </Typography>
                                   </Box>
                                 </Box>
-                              )}
+                              )} */}
                               {/* Pallav: Test Code: Transport Fees selection. END */}
                               {feePendingObj?.transport_fee &&
                                 Object.entries(
@@ -604,10 +764,40 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
                                         display={"flex"}
                                         flexDirection="row"
                                         justifyContent={"space-between"}
+                                        alignItems={"center"}
                                       >
-                                        <Typography variant="body2">
-                                          <strong>{Key.toUpperCase()}</strong>
-                                        </Typography>
+                                        <Box
+                                          display={"flex"}
+                                          flexDirection="row"
+                                          justifyContent={"flex-start"}
+                                          alignItems={"center"}
+                                        >
+                                          <Checkbox
+                                            checked={
+                                              selectedFees[
+                                                `${feePendingObj.month}-${feePendingObj.year}`
+                                              ]?.[Key] || false
+                                            }
+                                            onChange={() =>
+                                              handleSelect(
+                                                feePendingObj.month,
+                                                feePendingObj.year,
+                                                Key
+                                              )
+                                            }
+                                            // checked={selectedMonthsTransport.includes(
+                                            //   feePendingObj.month
+                                            // )}
+                                            // onChange={() =>
+                                            //   handleSelectTransport(
+                                            //     feePendingObj
+                                            //   )
+                                            // }
+                                          />
+                                          <Typography variant="body2">
+                                            <strong>{Key.toUpperCase()}</strong>
+                                          </Typography>
+                                        </Box>
                                         <Typography variant="body2">
                                           <strong>₹{value as string}</strong>
                                         </Typography>
@@ -705,9 +895,9 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
                           label="Rebate"
                           onChange={handleChange}
                         >
-                          <MenuItem value="">
+                          {/* <MenuItem value="">
                             <em>None</em>
-                          </MenuItem>
+                          </MenuItem> */}
                           <MenuItem value={"%age"}>%age</MenuItem>
                           <MenuItem value={"Amount"}>Amount</MenuItem>
                         </Select>
@@ -782,7 +972,7 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
                       variant="contained"
                       color="primary"
                       startIcon={<LockIcon />}
-                      onClick={handleFormSubmit}
+                      onClick={handlePayment}
                       sx={{
                         fontSize: "1rem",
                       }}

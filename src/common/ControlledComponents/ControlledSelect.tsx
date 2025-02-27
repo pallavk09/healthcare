@@ -64,6 +64,10 @@ const ControlledSelect: React.FC<ControlledSelectProps> = ({
             {...selectProps}
             // // value={value}
             disabled={disabled}
+            onChange={(e, child) => {
+              field.onChange(e); // Update react-hook-form state
+              selectProps?.onChange?.(e, child); // Call external handler with both args
+            }}
           >
             {options.map((option, index) => (
               <MenuItem key={index} value={option.value}>

@@ -22,6 +22,8 @@ import { students, students_empty } from "../../Config/students";
 import { academic_records } from "../../Config/academic_records";
 import ProfileDialogStudentPerformance from "../../components/ProfileDialogStudentPerformance";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
+import { classes_records } from "../../Config/classes_records";
+import { sections } from "../../Config/sections_records";
 
 const rows = students;
 
@@ -123,6 +125,9 @@ const StudentAdminData = () => {
   const [selectedRow, setSelectedRow] = useState<any>({});
   const [addNewStudent, setAddNewStudent] = useState<boolean>(false);
 
+  const [classList, setClassList] = useState<any>([]);
+  const [sectionList, setSectionList] = useState<any>([]);
+
   const [paginationModel, setPaginationModel] =
     React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
 
@@ -153,6 +158,18 @@ const StudentAdminData = () => {
 
     setApplications(mergedStudents);
   }, []);
+
+  useEffect(() => {
+    if (
+      classes_records &&
+      classes_records.length > 0 &&
+      sections &&
+      sections.length > 0
+    ) {
+      setClassList(classes_records);
+      setSectionList(sections);
+    }
+  }, [classes_records, sections]);
 
   const updateData = (data: any, updatedRecord: any) => {
     return data.map((record: any) => {
@@ -209,7 +226,7 @@ const StudentAdminData = () => {
   // Define columns with DataGrid
   const columns: GridColDef[] = [
     // { field: "student_id", headerName: "Student ID", flex: 1 },
-    { field: "admission_id", headerName: "Admission ID", flex: 1 },
+    // { field: "admission_id", headerName: "Admission ID", flex: 1 },
     {
       field: "personal_details",
       headerName: "Student Name",
@@ -220,7 +237,25 @@ const StudentAdminData = () => {
       field: "class",
       headerName: "Class",
       flex: 0.5,
-      valueGetter: (_, row) => row.academic_records[0]?.class,
+      valueGetter: (_, row) => {
+        const classItem = classList.find(
+          (item: any) => item.class_id === row.academic_records[0]?.class_id
+        );
+
+        if (classItem) return classItem.name;
+      },
+    },
+    {
+      field: "Section",
+      headerName: "Section",
+      flex: 0.5,
+      valueGetter: (_, row) => {
+        const sectionItem = sectionList.find(
+          (item: any) => item.section_id === row.academic_records[0]?.section_id
+        );
+
+        if (sectionItem) return sectionItem.name;
+      },
     },
     {
       field: "roll_number",
@@ -232,7 +267,10 @@ const StudentAdminData = () => {
       field: "parent_contact",
       headerName: "Contact",
       flex: 1,
-      valueGetter: (_, row) => row.guardian_details.contact,
+      valueGetter: (_, row) =>
+        row.father_details.contact ||
+        row.mother_details.contact ||
+        row.guardian_details.contact,
     },
     {
       field: "is_active",
@@ -305,12 +343,12 @@ const StudentAdminData = () => {
             onClick={() => console.log("Get TC Clicked")}
             disabled={false}
           />
-          {"|"}
+          {/* {"|"}
           <AnimatedButton
             label="DeActivate"
             onClick={() => console.log("Disabled Clicked")}
             disabled={false}
-          />
+          /> */}
         </>
       ),
     },
@@ -449,19 +487,6 @@ const StudentAdminData = () => {
           onClose={onClose}
           onSubmit={handleSaveProfile}
           profileData={addNewStudent ? students_empty[0] : selectedRow}
-          resetFormRef={resetFormRef}
-          isEditing={addNewStudent ? true : isEditing}
-          onEdit={() => setIsEditing(true)}
-          addSibling={addNewStudent}
-        />
-      )}
-
-      {isPerformanceDialogOpen && (
-        <ProfileDialogStudentPerformance
-          isOpen={isPerformanceDialogOpen}
-          onClose={onClosePerformanceDialog}
-          onSubmit={handleSaveProfile}
-          profileData={[]}
           resetFormRef={resetFormRef}
           isEditing={addNewStudent ? true : isEditing}
           onEdit={() => setIsEditing(true)}

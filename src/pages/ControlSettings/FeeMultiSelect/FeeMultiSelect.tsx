@@ -79,6 +79,13 @@ const FeeMultiSelect: React.FC<MultiSelectProps> = ({
                 .join(", ")
             }
             {...selectProps}
+            sx={{
+              borderRadius: 1,
+              padding: 1,
+              paddingRight: 2,
+              textAlign: "left",
+              width: "80%",
+            }}
           >
             {options.map((option) => (
               <MenuItem key={option.id} value={option.id}>

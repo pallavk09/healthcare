@@ -16,19 +16,25 @@ import FeesOverView from "../pages/StudentFees/FeesOverView";
 import StudentDashboardHome from "../pages/StudentDashboardHome";
 import Payment from "../pages/StudentFees/Payment";
 import FeesPaymentCart from "../pages/PaymentCart/FeesPaymentCart";
-import StudentAdminData from "../pages/StudentAdminData/StudentAdminData";
+import StudentAdminData from "../pages/StudentsManagement/StudentAdminData";
 import RootLayoutAdmin from "../pages/RootLayoutAdmin";
-import TeachersAdminData from "../pages/TeachersAdminData/TeachersAdminData";
+import TeachersAdminData from "../pages/StaffManagement/Teachers/TeachersAdminData";
 import ControlSettingsHome from "../pages/ControlSettings/Home";
 import Root from "../pages/ControlSettings/root";
 import ManageSubjects from "../pages/ControlSettings/ManageSubjects";
-import ManageExaminations from "../pages/ControlSettings/ManageExaminations";
 import ManageFeeHeads from "../pages/ControlSettings/ManageFeeHeads";
 import ManageTransport from "../pages/ControlSettings/ManageTransport";
 import StudentManagementHome from "../pages/StudentsManagement/Home";
 import StudentManagementRoot from "../pages/StudentsManagement/Root";
 import ManageAttendance from "../pages/StudentsManagement/ManageAttendance";
 import ManageMarks from "../pages/StudentsManagement/ManageMarks";
+import ExamsManagementRoot from "../pages/ExamsManagement/Root";
+import ExamsManagementHome from "../pages/ExamsManagement/Home";
+import AddExams from "../pages/ExamsManagement/AddExams";
+import ScheduleExam from "../pages/ExamsManagement/ScheduleExam";
+import StaffManagementRoot from "../pages/StaffManagement/Root";
+import StaffManagementHome from "../pages/StaffManagement/Home";
+import TeacherSubjectAssignment from "../pages/StaffManagement/Teachers/TeacherSubjectAssignment";
 
 const RootLayout = lazy(() => import("../pages/RootLayout"));
 const StudentRootLayout = lazy(() => import("../pages/StudentRootLayout"));
@@ -159,9 +165,40 @@ const myRouter = createBrowserRouter([
         ],
       },
       {
-        path: "all-teacher-data",
-        element: <TeachersAdminData />,
+        path: "exams-management",
+        element: <ExamsManagementRoot />,
+        children: [
+          { index: true, element: <ExamsManagementHome /> },
+          {
+            path: "add-exams",
+            element: <AddExams />,
+          },
+          {
+            path: "schedule-exam",
+            element: <ScheduleExam />,
+          },
+          {
+            path: "get-admit-card",
+            element: <ScheduleExam />,
+          },
+        ],
       },
+      {
+        path: "staff-management",
+        element: <StaffManagementRoot />,
+        children: [
+          { index: true, element: <StaffManagementHome /> },
+          {
+            path: "all-teacher-data",
+            element: <TeachersAdminData />,
+          },
+          {
+            path: "teacher-class-assignment",
+            element: <TeacherSubjectAssignment />,
+          },
+        ],
+      },
+
       {
         path: "fees-details",
         element: <FeePaymentsScreen />,
@@ -175,10 +212,7 @@ const myRouter = createBrowserRouter([
             path: "manage-subjects",
             element: <ManageSubjects />,
           },
-          {
-            path: "manage-examinations",
-            element: <ManageExaminations />,
-          },
+
           {
             path: "manage-fee-heads",
             element: <ManageFeeHeads />,

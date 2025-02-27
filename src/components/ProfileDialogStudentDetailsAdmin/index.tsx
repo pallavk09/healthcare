@@ -27,6 +27,11 @@ import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import { GeneratePrevieUrl } from "../../common/utils/generatePreviewUrl";
 import moment from "moment";
 import { v4 as uuid } from "uuid";
+import { sections } from "../../Config/sections_records";
+import { classes_records } from "../../Config/classes_records";
+import { vehicles_records } from "../../Config/vehicles_records";
+import { stops_records } from "../../Config/stops_records";
+import { AddBoxSharp } from "@mui/icons-material";
 
 interface ProfileDialogProps {
   isOpen: boolean;
@@ -39,6 +44,8 @@ interface ProfileDialogProps {
   addSibling?: boolean;
   isLoading?: boolean;
 }
+
+const SESSIONS = ["term1", "term2"];
 
 const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
   isOpen,
@@ -66,13 +73,58 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
   const [_profileData, _SetProfileData] = useState(profileData);
   const [isFormReady, setIsFormReady] = useState(false);
 
+  const [classList, setClassList] = useState<any>([]);
+  const [sectionsList, setSectionsList] = useState<any>([]);
+  const [vehicle_Stops, setVehicle_stops] = useState<any>([]);
+  const [stopNames, setStopNames] = useState<any>([]);
+  const [transportMode, setTransportMode] = useState("");
+
   useEffect(() => {
-    if (profileData && Object.keys(profileData).length > 0) {
+    if (
+      profileData &&
+      vehicles_records &&
+      stops_records &&
+      Object.keys(profileData).length > 0 &&
+      Object.keys(vehicles_records).length > 0 &&
+      Object.keys(stops_records).length > 0
+    ) {
       console.log("Pop up opened");
       console.log(profileData);
+      const _vehicle_stops = vehicles_records.map((vehicle) => ({
+        vehicle_no: vehicle.vehicle_no,
+        vehicle_id: vehicle.vehicle_id,
+        name: stops_records
+          .filter((stop) => stop.vehicle_id === vehicle.vehicle_id)
+          .map((stop) => stop.name),
+      }));
+
+      const stopList = _vehicle_stops.filter(
+        (stop: any) =>
+          stop.vehicle_id === profileData.transport_details.vehicle_id
+      );
+
+      console.log("stopList");
+      console.log(stopList);
+
+      stopList[0]?.name && setStopNames(stopList[0]?.name || []);
+
+      setVehicle_stops(_vehicle_stops);
+      setTransportMode(profileData.transport_details.mode);
       _SetProfileData(profileData); // Update state correctly
     }
-  }, [profileData]); // Re-run when `profileData` updates
+  }, [profileData, vehicles_records, stops_records]); // Re-run when `profileData` updates
+
+  useEffect(() => {
+    if (
+      sections &&
+      sections.length > 0 &&
+      classes_records &&
+      classes_records.length > 0
+    ) {
+      setClassList(classes_records);
+      setSectionsList(sections);
+    }
+  }, [classes_records, sections]);
 
   useEffect(() => {
     if (isOpen && profileData && Object.keys(profileData).length > 0) {
@@ -101,36 +153,15 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
     }
   }, [profileData, reset]); // Ensure it runs only when `profileData` is valid
 
-  // useEffect(() => {
-  //   if (profileData) {
-  //     console.log("Pop up opened");
-  //     console.log(profileData);
-  //     _SetProfileData(profileData);
-  //   }
-  // }, []);
-
-  // useEffect(() => {
-  //   if (isOpen) {
-  //     setIsFormReady(false); // Reset form rendering state
-  //     setTimeout(() => {
-  //       setIsFormReady(true); // Render form after small delay
-  //     }, 2000);
-  //   }
-  // }, [isOpen, _profileData]); // Trigger re-render when profileData updates
-
-  // useEffect(() => {
-  //   if (profileData) {
-  //     console.log("Under useEffect of View Student Data");
-  //     console.log(profileData);
-  //     reset(profileData); // Reset form with new profileData
-  //     const getPhotoUrl = profileData?.photoUrl
-  //       ? GeneratePrevieUrl(profileData.photoUrl)
-  //       : "";
-  //     profileData.photoUrl && setPhotoFile(undefined);
-
-  //     setPhoto(getPhotoUrl);
-  //   }
-  // }, [profileData, reset]);
+  // Create a custom onClose handler for the Dialog component.
+  const handleDialogClose = (event: object, reason: string) => {
+    if (reason === "backdropClick" || reason === "escapeKeyDown") {
+      // Prevent closing when clicking outside or pressing escape.
+      return;
+    }
+    // Otherwise, call the parent's onClose function.
+    onClose();
+  };
 
   useEffect(() => {
     if (resetFormRef) {
@@ -183,13 +214,30 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
     }
   };
 
+  const HandleVehicleNoChange = (event: any) => {
+    console.log("HandleVehicleNoChange");
+    console.log(event.target.value);
+    const stopList = vehicle_Stops.filter(
+      (stop: any) => stop.vehicle_id === event.target.value
+    );
+
+    console.log("stopList");
+    console.log(stopList);
+
+    setStopNames(stopList[0].name);
+  };
+
+  const HandleTransportModeChange = (event: any) => {
+    setTransportMode(event.target.value);
+  };
+
   const GetCurrentAcademciSession = () => {
     const academic_session = `${moment().year()}-${moment().year() + 1}`;
     return academic_session;
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={isOpen} onClose={handleDialogClose} maxWidth="md" fullWidth>
       <DialogTitle>
         <Typography variant="h5">
           <strong>
@@ -241,7 +289,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
           <>
             <form onSubmit={handleSubmit(handleFormSubmit)}>
               {/* Admission Details */}
-              <Accordion>
+              <Accordion sx={{ mt: 2, borderRadius: 1 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="h6">
                     <strong>Admission Details</strong>
@@ -308,11 +356,66 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                       <CustomDatePicker
                         format="YYYY-MM-DD"
                         name="admission_date"
-                        label="Date of Admission"
+                        label="Admission Date"
                         control={control}
                         errors={errors}
                         selectedDate={_profileData?.admission_date}
                         disabled={!isEditing}
+                      />
+
+                      <ControlledSelect
+                        name="admission_catagory"
+                        control={control}
+                        errors={errors}
+                        label="Admission Catagory"
+                        // rules={{ required: "Required" }}
+                        options={[
+                          { value: "general", label: "General" },
+                          { value: "staff_ward", label: "Staff Ward" },
+                          { value: "bpl", label: "BPL" },
+                        ]}
+                        sx={{ width: "31%", mt: 2, ml: 3 }}
+                        disabled={!addSibling}
+                      />
+
+                      <ControlledSelect
+                        name="admission_scheme"
+                        control={control}
+                        errors={errors}
+                        label="Scheme"
+                        // rules={{ required: "Required" }}
+                        options={[
+                          { value: "rte", label: "RTE" },
+                          { value: "non-rte", label: "Non RTE" },
+                        ]}
+                        sx={{ width: "31%", mt: 2, ml: 3 }}
+                        disabled={!addSibling}
+                      />
+                    </Grid>
+
+                    <Grid
+                      item
+                      xs={12}
+                      display={"flex"}
+                      flexDirection={"row"}
+                      justifyContent={"normal"}
+                      sx={{ mt: -1 }}
+                    >
+                      <ControlledSelect
+                        name="cast"
+                        control={control}
+                        errors={errors}
+                        label="Cast"
+                        // rules={{ required: "Required" }}
+                        options={[
+                          { value: "gen", label: "GEN" },
+                          { value: "obc1", label: "OBC1" },
+                          { value: "obc2", label: "OBC2" },
+                          { value: "st", label: "ST" },
+                          { value: "sc", label: "SC" },
+                        ]}
+                        sx={{ width: "31%", mt: 2 }}
+                        disabled={!addSibling}
                       />
 
                       {/* Is Active */}
@@ -329,51 +432,6 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                         ]}
                         sx={{ width: "31%", mt: 2, ml: 3 }}
                         disabled={addSibling ? false : !isEditing}
-                      />
-
-                      <ControlledSelect
-                        name="admission_catagory"
-                        control={control}
-                        errors={errors}
-                        label="Admission Catagory"
-                        // rules={{ required: "Required" }}
-                        options={[
-                          { value: "general", label: "General" },
-                          { value: "staff_ward", label: "Staff Ward" },
-                          { value: "bpl", label: "BPL" },
-                        ]}
-                        sx={{ width: "31%", mt: 2, ml: 3 }}
-                        disabled={true}
-                      />
-                      <ControlledSelect
-                        name="cast"
-                        control={control}
-                        errors={errors}
-                        label="Cast"
-                        // rules={{ required: "Required" }}
-                        options={[
-                          { value: "gen", label: "GEN" },
-                          { value: "obc1", label: "OBC1" },
-                          { value: "obc2", label: "OBC2" },
-                          { value: "st", label: "ST" },
-                          { value: "sc", label: "SC" },
-                        ]}
-                        sx={{ width: "31%", mt: 2, ml: 3 }}
-                        disabled={true}
-                      />
-
-                      <ControlledSelect
-                        name="admission_scheme"
-                        control={control}
-                        errors={errors}
-                        label="Scheme"
-                        // rules={{ required: "Required" }}
-                        options={[
-                          { value: "rte", label: "RTE" },
-                          { value: "non-rte", label: "Non RTE" },
-                        ]}
-                        sx={{ width: "31%", mt: 2, ml: 3 }}
-                        disabled={true}
                       />
                     </Grid>
                     <Typography variant="body2" pl={2} pt={2} ml={2}>
@@ -488,64 +546,8 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                 </AccordionDetails>
               </Accordion>
 
-              {/* Transport Details */}
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="h6">
-                    <strong>Transport Details</strong>
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={4} sx={{ mt: -3 }}>
-                    <Grid
-                      item
-                      xs={12}
-                      display={"flex"}
-                      flexDirection={"row"}
-                      justifyContent={"normal"}
-                      sx={{ mt: -1 }}
-                      gap={2}
-                    >
-                      <ControlledTextField
-                        name="transport_details.mode"
-                        control={control}
-                        errors={errors}
-                        label="Mode"
-                        disabled={!addSibling}
-                        sx={{
-                          width: "30%",
-                        }}
-                      />
-
-                      {/* </Grid> */}
-                      <ControlledTextField
-                        name="transport_details.stop_name"
-                        control={control}
-                        errors={errors}
-                        label="Stop"
-                        disabled={!isEditing}
-                        sx={{
-                          width: "30%",
-                        }}
-                      />
-
-                      <ControlledTextField
-                        name="transport_details.vehicle_no"
-                        control={control}
-                        errors={errors}
-                        label="Vehicle No"
-                        sx={{
-                          width: "30%",
-                        }}
-                        disabled={!isEditing}
-                      />
-                    </Grid>
-                  </Grid>
-                </AccordionDetails>
-              </Accordion>
-
               {/* Personal Details */}
-              <Accordion>
+              <Accordion sx={{ mt: 1, borderRadius: 1 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="h6">
                     <strong>Personal Details</strong>
@@ -749,14 +751,13 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                       justifyContent={"normal"}
                       sx={{ mt: -1 }}
                     >
-                      <CustomDatePicker
-                        format="YYYY-MM-DD"
+                      <ControlledTextField
                         name="personal_details.height"
-                        label="Height (CM)"
                         control={control}
                         errors={errors}
-                        // rules={{ required: "required" }}
-                        selectedDate={_profileData?.personal_details?.dob}
+                        label="Height (CM)"
+                        type="number"
+                        sx={{ width: "65%" }}
                         disabled={addSibling ? false : !isEditing}
                       />
 
@@ -961,8 +962,449 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                 </AccordionDetails>
               </Accordion>
 
+              {/* Academics Details */}
+              <Accordion sx={{ mt: 1, borderRadius: 1 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="h6">
+                    <strong>Academics</strong>
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {_profileData.academic_records &&
+                  _profileData.academic_records.length > 0 ? (
+                    _profileData.academic_records.map(
+                      (record: any, index: number) => {
+                        return (
+                          <Accordion>
+                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                              <Typography variant="h6">
+                                <strong>{record.academic_year}</strong>
+                              </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                              <Grid container spacing={2} sx={{ mt: 0 }}>
+                                {/**Class, Section and Roll Number*/}
+                                <Grid
+                                  item
+                                  xs={12}
+                                  display={"flex"}
+                                  flexDirection={"row"}
+                                  justifyContent={"normal"}
+                                  gap={2}
+                                >
+                                  <ControlledSelect
+                                    name={`academic_records[${index}].class_id`}
+                                    control={control}
+                                    errors={errors}
+                                    label="Class"
+                                    rules={{ required: "Required" }}
+                                    options={classList.map((item: any) => ({
+                                      value: item.class_id,
+                                      label: item.name,
+                                    }))}
+                                    sx={{ width: "30%", mt: 0 }}
+                                    disabled={addSibling ? false : !isEditing}
+                                  />
+
+                                  <ControlledSelect
+                                    name={`academic_records[${index}].section_id`}
+                                    control={control}
+                                    errors={errors}
+                                    label="Section"
+                                    rules={{ required: "Required" }}
+                                    options={sectionsList.map((item: any) => ({
+                                      value: item.section_id,
+                                      label: item.name,
+                                    }))}
+                                    sx={{ width: "30%", mt: 0 }}
+                                    disabled={addSibling ? false : !isEditing}
+                                  />
+
+                                  <ControlledTextField
+                                    name={`academic_records[${index}].roll_number`}
+                                    control={control}
+                                    errors={errors}
+                                    label="Roll Number"
+                                    type="number"
+                                    rules={{
+                                      required: "Required",
+                                    }}
+                                    sx={{ width: "30%", mt: 0 }}
+                                    required
+                                    disabled={addSibling ? false : !isEditing}
+                                  />
+                                </Grid>
+
+                                <Box
+                                  display={"flex"}
+                                  flexDirection={"row"}
+                                  justifyContent={"space-evenly"}
+                                >
+                                  {SESSIONS.map((session: string) => {
+                                    const sessionData =
+                                      record?.performance?.[session];
+                                    return (
+                                      <Box
+                                        key={session}
+                                        display={"flex"}
+                                        flexDirection={"column"}
+                                      >
+                                        <Typography
+                                          variant="h6"
+                                          ml={2}
+                                          mt={2}
+                                          sx={{ color: "#FF825B" }}
+                                        >
+                                          <strong>
+                                            {session.toUpperCase()}
+                                          </strong>
+                                        </Typography>
+
+                                        {sessionData &&
+                                        Object.keys(sessionData.exams).length >
+                                          0 ? (
+                                          Object.entries(sessionData.exams).map(
+                                            ([examId, exam]: [string, any]) => (
+                                              <Box
+                                                key={examId}
+                                                display={"flex"}
+                                                flexDirection={"column"}
+                                              >
+                                                <Typography
+                                                  variant="subtitle1"
+                                                  ml={2}
+                                                  mt={1}
+                                                >
+                                                  <strong>
+                                                    Exam: {exam.exam_name}
+                                                  </strong>
+                                                </Typography>
+                                                <Typography
+                                                  variant="body2"
+                                                  ml={2}
+                                                >
+                                                  Total Marks:{" "}
+                                                  <strong>
+                                                    {exam.max_marks}{" "}
+                                                  </strong>
+                                                  {/* Pass Marks: {exam.pass_marks}, */}
+                                                  Obtained:{" "}
+                                                  <strong>
+                                                    {exam.total_marks_obtained}{" "}
+                                                  </strong>
+                                                </Typography>
+                                                <Typography
+                                                  variant="body2"
+                                                  ml={2}
+                                                >
+                                                  Report (%):{" "}
+                                                  <strong>
+                                                    {exam.max_marks &&
+                                                    exam.total_marks_obtained
+                                                      ? (
+                                                          (Number(
+                                                            exam.total_marks_obtained
+                                                          ) /
+                                                            Number(
+                                                              exam.max_marks
+                                                            )) *
+                                                          100
+                                                        ).toFixed(2)
+                                                      : "N/A"}
+                                                  </strong>
+                                                </Typography>
+
+                                                {/* <Typography
+                                                variant="body2"
+                                                ml={6}
+                                                mt={1}
+                                              >
+                                                Subjects:
+                                              </Typography> */}
+                                                <Box ml={-3}>
+                                                  <ul>
+                                                    {exam.marks_details.map(
+                                                      (subject: any) => (
+                                                        <li
+                                                          key={
+                                                            subject.subject_name
+                                                          }
+                                                          style={{
+                                                            marginLeft: "20px",
+                                                          }}
+                                                        >
+                                                          {subject.subject_name}
+                                                          :{" "}
+                                                          {
+                                                            subject.marks_obtained
+                                                          }{" "}
+                                                          /
+                                                          {
+                                                            subject.subject_max_marks
+                                                          }{" "}
+                                                          (Pass:
+                                                          {
+                                                            subject.subject_pass_marks
+                                                          }
+                                                          )
+                                                        </li>
+                                                      )
+                                                    )}
+                                                  </ul>
+                                                </Box>
+                                              </Box>
+                                            )
+                                          )
+                                        ) : (
+                                          <Typography
+                                            variant="body2"
+                                            ml={2}
+                                            mt={1}
+                                            sx={{ color: "gray" }}
+                                          >
+                                            No exams available.
+                                          </Typography>
+                                        )}
+                                      </Box>
+                                    );
+                                  })}
+                                </Box>
+
+                                {/* <Grid
+                                  item
+                                  xs={12}
+                                  display={"flex"}
+                                  flexDirection={"row"}
+                                  justifyContent={"normal"}
+                                  gap={2}
+                                >
+                                  <ControlledTextField
+                                    name={`academic_records[${index}].marks.English`}
+                                    control={control}
+                                    errors={errors}
+                                    label="Marks English"
+                                    type="number"
+                                    rules={{
+                                      required: "Required",
+                                    }}
+                                    sx={{ width: "30%", mt: 0 }}
+                                    required
+                                    disabled={addSibling ? false : !isEditing}
+                                  />
+
+                                  <ControlledTextField
+                                    name={`academic_records[${index}].marks.Math`}
+                                    control={control}
+                                    errors={errors}
+                                    label="Marks Maths"
+                                    type="number"
+                                    rules={{
+                                      required: "Required",
+                                    }}
+                                    sx={{ width: "30%", mt: 0 }}
+                                    required
+                                    disabled={addSibling ? false : !isEditing}
+                                  />
+
+                                  <ControlledTextField
+                                    name={`academic_records[${index}].marks.Science`}
+                                    control={control}
+                                    errors={errors}
+                                    label="Marks Science"
+                                    type="number"
+                                    rules={{
+                                      required: "Required",
+                                    }}
+                                    sx={{ width: "30%", mt: 0 }}
+                                    required
+                                    disabled={addSibling ? false : !isEditing}
+                                  />
+                                </Grid>
+
+                                <Grid
+                                  item
+                                  xs={12}
+                                  display={"flex"}
+                                  flexDirection={"row"}
+                                  justifyContent={"normal"}
+                                  gap={2}
+                                >
+                                  <ControlledTextField
+                                    name={`academic_records[${index}].attendance.total`}
+                                    control={control}
+                                    errors={errors}
+                                    label="Total Working Days"
+                                    type="number"
+                                    rules={{
+                                      required: "Required",
+                                    }}
+                                    sx={{ width: "30%", mt: 0 }}
+                                    required
+                                    disabled={addSibling ? false : !isEditing}
+                                  />
+                                  <ControlledTextField
+                                    name={`academic_records[${index}].attendance.present`}
+                                    control={control}
+                                    errors={errors}
+                                    label="Days Present"
+                                    type="number"
+                                    rules={{
+                                      required: "Required",
+                                    }}
+                                    sx={{ width: "30%", mt: 0 }}
+                                    required
+                                    disabled={addSibling ? false : !isEditing}
+                                  />
+                                </Grid> */}
+                              </Grid>
+                            </AccordionDetails>
+                          </Accordion>
+                        );
+                      }
+                    )
+                  ) : (
+                    //THIS ESLE SCENARIO IS WHEN ADDING NEW STUDENT. NO RECORD IS PRESENT
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography variant="h6">
+                          <strong>{GetCurrentAcademciSession()}</strong>
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Grid container spacing={2} sx={{ mt: 0 }}>
+                          {/**Class, Section and Roll Number*/}
+                          <Grid
+                            item
+                            xs={12}
+                            display={"flex"}
+                            flexDirection={"row"}
+                            justifyContent={"space-between"}
+                          >
+                            <ControlledSelect
+                              name={`academic_records[${0}].class_id`}
+                              control={control}
+                              errors={errors}
+                              label="Class"
+                              rules={{ required: "Required" }}
+                              options={classList.map((item: any) => ({
+                                value: item.class_id,
+                                label: item.name,
+                              }))}
+                              sx={{ width: "30%", mt: 0 }}
+                              disabled={addSibling ? false : !isEditing}
+                            />
+
+                            <ControlledSelect
+                              name={`academic_records[${0}].section_id`}
+                              control={control}
+                              errors={errors}
+                              label="Section"
+                              rules={{ required: "Required" }}
+                              options={sectionsList.map((item: any) => ({
+                                value: item.section_id,
+                                label: item.name,
+                              }))}
+                              sx={{ width: "30%", mt: 0 }}
+                              disabled={addSibling ? false : !isEditing}
+                            />
+
+                            <ControlledTextField
+                              name={`academic_records[${0}].roll_number`}
+                              control={control}
+                              errors={errors}
+                              label="Roll Number"
+                              type="number"
+                              rules={{
+                                required: "Required",
+                              }}
+                              sx={{ width: "30%", mt: 0 }}
+                              required
+                              disabled={addSibling ? false : !isEditing}
+                            />
+                          </Grid>
+                        </Grid>
+                      </AccordionDetails>
+                    </Accordion>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+
+              {/* Transport Details */}
+              <Accordion sx={{ mt: 1, borderRadius: 1 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="h6">
+                    <strong>Transport Details</strong>
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={4} sx={{ mt: -3 }}>
+                    <Grid
+                      item
+                      xs={12}
+                      display={"flex"}
+                      flexDirection={"row"}
+                      justifyContent={"normal"}
+                      sx={{ mt: -1 }}
+                      gap={2}
+                    >
+                      <ControlledSelect
+                        name="transport_details.mode"
+                        control={control}
+                        errors={errors}
+                        label="Mode"
+                        options={[
+                          {
+                            value: "School-Transport",
+                            label: "School Transport",
+                          },
+                          {
+                            value: "Personal-vehicle",
+                            label: "Personal Vehicle",
+                          },
+                          { value: "On-Foot", label: "On Foot" },
+                        ]}
+                        sx={{ width: "40%", mt: 0 }}
+                        disabled={!isEditing}
+                        selectProps={{ onChange: HandleTransportModeChange }}
+                      />
+
+                      {transportMode === "School-Transport" && (
+                        <ControlledSelect
+                          name="transport_details.vehicle_id"
+                          control={control}
+                          errors={errors}
+                          label="Vehicle No"
+                          options={vehicle_Stops.map((data: any) => ({
+                            value: data.vehicle_id,
+                            label: data.vehicle_no,
+                          }))}
+                          sx={{ width: "40%", mt: 0 }}
+                          disabled={!isEditing}
+                          selectProps={{ onChange: HandleVehicleNoChange }}
+                        />
+                      )}
+
+                      {transportMode === "School-Transport" && (
+                        <ControlledSelect
+                          name="transport_details.stop_name"
+                          control={control}
+                          errors={errors}
+                          label="Stop"
+                          options={stopNames.map((name: any) => ({
+                            value: name,
+                            label: name,
+                          }))}
+                          sx={{ width: "40%", mt: 0 }}
+                          disabled={!isEditing}
+                        />
+                      )}
+                    </Grid>
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+
               {/* Parents Details */}
-              <Accordion>
+              <Accordion sx={{ mt: 1, borderRadius: 1 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="h6">
                     <strong>Parents Details</strong>
@@ -1007,6 +1449,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           { value: "Graduate", label: "Graduate" },
                           { value: "PG", label: "PG" },
                           { value: "Masters", label: "Masters" },
+                          { value: "Others", label: "Others" },
                         ]}
                         sx={{ width: "40%", mt: 0 }}
                         disabled={!isEditing}
@@ -1178,7 +1621,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
               </Accordion>
 
               {/* Guardian Details */}
-              <Accordion>
+              <Accordion sx={{ mt: 1, borderRadius: 1 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="h6">
                     <strong>Guardian Details</strong>
@@ -1193,12 +1636,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                         control={control}
                         errors={errors}
                         label="Name"
-                        // value={formData?.studentObj.guardianDetails.guardianname}
-                        // rules={{
-                        //   required: "Required",
-                        // }}
                         fullWidth
-                        // required
                         sx={{ width: "65%" }}
                         disabled={!isEditing}
                       />
@@ -1223,6 +1661,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           { value: "Graduate", label: "Graduate" },
                           { value: "PG", label: "PG" },
                           { value: "Masters", label: "Masters" },
+                          { value: "Others", label: "Others" },
                         ]}
                         sx={{ width: "40%", mt: 0 }}
                         disabled={!isEditing}
@@ -1240,6 +1679,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           { value: "", label: "Select" },
                           { value: "Father", label: "Father" },
                           { value: "Mother", label: "Mother" },
+                          { value: "Grand-Children", label: "Grand-Children" },
                         ]}
                         sx={{ width: "40%", mt: 0 }}
                         disabled={!isEditing}
@@ -1304,340 +1744,6 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                       />
                     </Grid>
                   </Grid>
-                </AccordionDetails>
-              </Accordion>
-
-              {/* Academics Details */}
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="h6">
-                    <strong>Academics</strong>
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {_profileData.academic_records &&
-                  _profileData.academic_records.length > 0 ? (
-                    _profileData.academic_records.map(
-                      (record: any, index: number) => {
-                        return (
-                          <Accordion>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                              <Typography variant="h6">
-                                <strong>{record.academic_year}</strong>
-                              </Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>
-                              <Grid container spacing={2} sx={{ mt: 0 }}>
-                                {/**Class, Section and Roll Number*/}
-                                <Grid
-                                  item
-                                  xs={12}
-                                  display={"flex"}
-                                  flexDirection={"row"}
-                                  justifyContent={"normal"}
-                                  gap={2}
-                                >
-                                  <ControlledSelect
-                                    name={`academic_records[${index}].class`}
-                                    control={control}
-                                    errors={errors}
-                                    label="Class"
-                                    rules={{ required: "Required" }}
-                                    options={[
-                                      { value: "", label: "Select" },
-                                      { value: "LKG", label: "LKG" },
-                                      { value: "UKG", label: "UKG" },
-                                      { value: "Class 1", label: "Class 1" },
-                                      { value: "Class 2", label: "Class 2" },
-                                      { value: "Class 3", label: "Class 3" },
-                                      { value: "Class 4", label: "Class 4" },
-                                      { value: "Class 5", label: "Class 5" },
-                                      { value: "Class 6", label: "Class 6" },
-                                    ]}
-                                    sx={{ width: "30%", mt: 0 }}
-                                    disabled={addSibling ? false : !isEditing}
-                                  />
-
-                                  <ControlledSelect
-                                    name={`academic_records[${index}].section`}
-                                    control={control}
-                                    errors={errors}
-                                    label="Section"
-                                    rules={{ required: "Required" }}
-                                    options={[
-                                      { value: "", label: "Select" },
-                                      { value: "A", label: "A" },
-                                      { value: "B", label: "B" },
-                                      { value: "C", label: "C" },
-                                    ]}
-                                    sx={{ width: "30%", mt: 0 }}
-                                    disabled={addSibling ? false : !isEditing}
-                                  />
-
-                                  <ControlledTextField
-                                    name={`academic_records[${index}].roll_number`}
-                                    control={control}
-                                    errors={errors}
-                                    label="Roll Number"
-                                    type="number"
-                                    rules={{
-                                      required: "Required",
-                                    }}
-                                    sx={{ width: "30%", mt: 0 }}
-                                    required
-                                    disabled={addSibling ? false : !isEditing}
-                                  />
-                                </Grid>
-
-                                <Grid
-                                  item
-                                  xs={12}
-                                  display={"flex"}
-                                  flexDirection={"row"}
-                                  justifyContent={"normal"}
-                                  gap={2}
-                                >
-                                  <ControlledTextField
-                                    name={`academic_records[${index}].marks.English`}
-                                    control={control}
-                                    errors={errors}
-                                    label="Marks English"
-                                    type="number"
-                                    rules={{
-                                      required: "Required",
-                                    }}
-                                    sx={{ width: "30%", mt: 0 }}
-                                    required
-                                    disabled={addSibling ? false : !isEditing}
-                                  />
-
-                                  <ControlledTextField
-                                    name={`academic_records[${index}].marks.Math`}
-                                    control={control}
-                                    errors={errors}
-                                    label="Marks Maths"
-                                    type="number"
-                                    rules={{
-                                      required: "Required",
-                                    }}
-                                    sx={{ width: "30%", mt: 0 }}
-                                    required
-                                    disabled={addSibling ? false : !isEditing}
-                                  />
-
-                                  <ControlledTextField
-                                    name={`academic_records[${index}].marks.Science`}
-                                    control={control}
-                                    errors={errors}
-                                    label="Marks Science"
-                                    type="number"
-                                    rules={{
-                                      required: "Required",
-                                    }}
-                                    sx={{ width: "30%", mt: 0 }}
-                                    required
-                                    disabled={addSibling ? false : !isEditing}
-                                  />
-                                </Grid>
-
-                                <Grid
-                                  item
-                                  xs={12}
-                                  display={"flex"}
-                                  flexDirection={"row"}
-                                  justifyContent={"normal"}
-                                  gap={2}
-                                >
-                                  <ControlledTextField
-                                    name={`academic_records[${index}].attendance.total`}
-                                    control={control}
-                                    errors={errors}
-                                    label="Total Working Days"
-                                    type="number"
-                                    rules={{
-                                      required: "Required",
-                                    }}
-                                    sx={{ width: "30%", mt: 0 }}
-                                    required
-                                    disabled={addSibling ? false : !isEditing}
-                                  />
-                                  <ControlledTextField
-                                    name={`academic_records[${index}].attendance.present`}
-                                    control={control}
-                                    errors={errors}
-                                    label="Days Present"
-                                    type="number"
-                                    rules={{
-                                      required: "Required",
-                                    }}
-                                    sx={{ width: "30%", mt: 0 }}
-                                    required
-                                    disabled={addSibling ? false : !isEditing}
-                                  />
-                                </Grid>
-                              </Grid>
-                            </AccordionDetails>
-                          </Accordion>
-                        );
-                      }
-                    )
-                  ) : (
-                    <Accordion>
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography variant="h6">
-                          <strong>{GetCurrentAcademciSession()}</strong>
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <Grid container spacing={2} sx={{ mt: 0 }}>
-                          {/**Class, Section and Roll Number*/}
-                          <Grid
-                            item
-                            xs={12}
-                            display={"flex"}
-                            flexDirection={"row"}
-                            justifyContent={"space-between"}
-                          >
-                            <ControlledSelect
-                              name={`academic_records[${0}].class`}
-                              control={control}
-                              errors={errors}
-                              label="Class"
-                              rules={{ required: "Required" }}
-                              options={[
-                                { value: "", label: "Select" },
-                                { value: "LKG", label: "LKG" },
-                                { value: "UKG", label: "UKG" },
-                                { value: "Class 1", label: "Class 1" },
-                                { value: "Class 2", label: "Class 2" },
-                                { value: "Class 3", label: "Class 3" },
-                                { value: "Class 4", label: "Class 4" },
-                                { value: "Class 5", label: "Class 5" },
-                                { value: "Class 6", label: "Class 6" },
-                              ]}
-                              sx={{ width: "30%", mt: 0 }}
-                              disabled={addSibling ? false : !isEditing}
-                            />
-
-                            <ControlledSelect
-                              name={`academic_records[${0}].section`}
-                              control={control}
-                              errors={errors}
-                              label="Section"
-                              rules={{ required: "Required" }}
-                              options={[
-                                { value: "", label: "Select" },
-                                { value: "A", label: "A" },
-                                { value: "B", label: "B" },
-                                { value: "C", label: "C" },
-                              ]}
-                              sx={{ width: "30%", mt: 0 }}
-                              disabled={addSibling ? false : !isEditing}
-                            />
-
-                            <ControlledTextField
-                              name={`academic_records[${0}].roll_number`}
-                              control={control}
-                              errors={errors}
-                              label="Roll Number"
-                              type="number"
-                              rules={{
-                                required: "Required",
-                              }}
-                              sx={{ width: "30%", mt: 0 }}
-                              required
-                              disabled={addSibling ? false : !isEditing}
-                            />
-                          </Grid>
-
-                          <Grid
-                            item
-                            xs={12}
-                            display={"flex"}
-                            flexDirection={"row"}
-                            justifyContent={"space-between"}
-                          >
-                            <ControlledTextField
-                              name={`academic_records[${0}].marks.English`}
-                              control={control}
-                              errors={errors}
-                              label="Marks English"
-                              type="number"
-                              rules={{
-                                required: "Required",
-                              }}
-                              sx={{ width: "30%", mt: 0 }}
-                              required
-                              disabled={addSibling ? false : !isEditing}
-                            />
-
-                            <ControlledTextField
-                              name={`academic_records[${0}].marks.Math`}
-                              control={control}
-                              errors={errors}
-                              label="Marks Maths"
-                              type="number"
-                              rules={{
-                                required: "Required",
-                              }}
-                              sx={{ width: "30%", mt: 0 }}
-                              required
-                              disabled={addSibling ? false : !isEditing}
-                            />
-
-                            <ControlledTextField
-                              name={`academic_records[${0}].marks.Science`}
-                              control={control}
-                              errors={errors}
-                              label="Marks Science"
-                              type="number"
-                              rules={{
-                                required: "Required",
-                              }}
-                              sx={{ width: "30%", mt: 0 }}
-                              required
-                              disabled={addSibling ? false : !isEditing}
-                            />
-                          </Grid>
-
-                          <Grid
-                            item
-                            xs={12}
-                            display={"flex"}
-                            flexDirection={"row"}
-                            justifyContent={"space-between"}
-                          >
-                            <ControlledTextField
-                              name={`academic_records[${0}].attendance.total`}
-                              control={control}
-                              errors={errors}
-                              label="Total Working Days"
-                              type="number"
-                              rules={{
-                                required: "Required",
-                              }}
-                              sx={{ width: "30%", mt: 0 }}
-                              required
-                              disabled={addSibling ? false : !isEditing}
-                            />
-                            <ControlledTextField
-                              name={`academic_records[${0}].attendance.present`}
-                              control={control}
-                              errors={errors}
-                              label="Days Present"
-                              type="number"
-                              rules={{
-                                required: "Required",
-                              }}
-                              sx={{ width: "30%", mt: 0 }}
-                              required
-                              disabled={addSibling ? false : !isEditing}
-                            />
-                          </Grid>
-                        </Grid>
-                      </AccordionDetails>
-                    </Accordion>
-                  )}
                 </AccordionDetails>
               </Accordion>
 

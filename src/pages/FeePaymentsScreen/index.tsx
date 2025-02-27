@@ -51,7 +51,7 @@ const FeePaymentsScreen: React.FC = () => {
       <Box>
         <FeeDetails filters={filters} feesdata={feesData} />{" "}
         {/* Pass filters to your DataGrid */}
-        <Fab
+        {/* <Fab
           color="primary"
           aria-label="filter"
           sx={{ position: "fixed", bottom: 16, right: 16 }}
@@ -63,7 +63,7 @@ const FeePaymentsScreen: React.FC = () => {
           open={filterPanelOpen}
           onClose={() => setFilterPanelOpen(false)}
           onApply={handleFilterApply}
-        />
+        /> */}
       </Box>
     </>
   );

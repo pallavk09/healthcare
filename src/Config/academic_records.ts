@@ -1,55 +1,160 @@
 export const academic_records = [
   {
-    id: "01761f0b-b6a0-48e6-9626-de1c10d243de",
-    student_id: "7f2ef334-62e7-4cc7-93f3-988813e24497",
-    academic_year: "2023-2024",
-    class: "Class 3",
-    section: "A",
-    roll_number: 11,
-    marks: {
-      Math: 99,
-      English: 58,
-      Science: 56,
-    },
-    attendance: {
-      total: 210,
-      present: 180,
-    },
-    remarks: "Vulnus convoco tabesco quisquam.",
-  },
-  {
-    id: "1c84da4f-03d1-412a-a486-6af822647d6a",
-    student_id: "7f2ef334-62e7-4cc7-93f3-988813e24497",
-    academic_year: "2024-2025",
-    class: "Nursery",
-    section: "B",
-    roll_number: 45,
-    marks: {
-      Math: 72,
-      English: 85,
-      Science: 76,
-    },
-    attendance: {
-      total: 215,
-      present: 172,
-    },
-    remarks: "Tertius antepono adfectus volup speciosus infit.",
-  },
-  {
-    id: "3dd5eb92-73c7-435b-a564-c8d4c1f89aa1",
-    student_id: "7f2ef334-62e7-4cc7-93f3-988813e24497",
+    id: "3dd5eb92",
+    student_id: "2d154321",
+    name: "Diane Lowe 1",
     academic_year: "2025-2026",
-    class: "Class 3",
-    section: "B",
+    class_id: "2d154378",
+    section_id: "2d154374",
     roll_number: 24,
-    marks: {
-      Math: 72,
-      English: 100,
-      Science: 54,
+    performance: {
+      term1: {
+        exams: {
+          "2d154374": {
+            exam_name: "Periodic Test",
+            max_marks: 30,
+            pass_marks: 15,
+            total_marks_obtained: 23,
+            total_working_days: 0,
+            total_days_present: 0,
+            marks_details: [
+              {
+                subject_name: "Maths",
+                marks_obtained: 9,
+                subject_max_marks: 10,
+                subject_pass_marks: 5,
+              },
+              {
+                subject_name: "English",
+                marks_obtained: 8,
+                subject_max_marks: 10,
+                subject_pass_marks: 5,
+              },
+              {
+                subject_name: "Hindi",
+                marks_obtained: 6,
+                subject_max_marks: 10,
+                subject_pass_marks: 5,
+              },
+            ],
+          },
+        },
+      },
+      term2: {
+        exams: {},
+      },
     },
-    attendance: {
-      total: 183,
-      present: 184,
+    remarks: "Aut tripudio vilis.",
+  },
+  {
+    id: "3dd5eb93",
+    student_id: "2d154322",
+    name: "Diane Lowe 2",
+    academic_year: "2025-2026",
+    class_id: "2d154378",
+    section_id: "2d154374",
+    roll_number: 25,
+    performance: {
+      term1: {
+        exams: {
+          "2d154374": {
+            exam_name: "Periodic Test",
+            max_marks: 30,
+            pass_marks: 15,
+            total_marks_obtained: 0,
+            total_working_days: 0,
+            total_days_present: 0,
+            marks_details: [
+              {
+                subject_name: "Maths",
+                marks_obtained: 0,
+                subject_max_marks: 10,
+                subject_pass_marks: 5,
+              },
+              {
+                subject_name: "English",
+                marks_obtained: 0,
+                subject_max_marks: 10,
+                subject_pass_marks: 5,
+              },
+              {
+                subject_name: "Hindi",
+                marks_obtained: 0,
+                subject_max_marks: 10,
+                subject_pass_marks: 5,
+              },
+            ],
+          },
+        },
+      },
+      term2: {
+        exams: {},
+      },
+    },
+    remarks: "Aut tripudio vilis.",
+  },
+  {
+    id: "3dd5eb94",
+    student_id: "2d154323",
+    name: "Diane Lowe 3",
+    academic_year: "2025-2026",
+    class_id: "2d154378",
+    section_id: "2d154374",
+    roll_number: 26,
+    performance: {
+      term1: {
+        exams: {
+          "2d154374": {
+            exam_name: "Periodic Test",
+            max_marks: 30,
+            pass_marks: 15,
+            total_marks_obtained: 0,
+            total_working_days: 0,
+            total_days_present: 0,
+            marks_details: [
+              {
+                subject_name: "Maths",
+                marks_obtained: 0,
+                subject_max_marks: 10,
+                subject_pass_marks: 5,
+              },
+              {
+                subject_name: "English",
+                marks_obtained: 0,
+                subject_max_marks: 10,
+                subject_pass_marks: 5,
+              },
+              {
+                subject_name: "Hindi",
+                marks_obtained: 0,
+                subject_max_marks: 10,
+                subject_pass_marks: 5,
+              },
+            ],
+          },
+        },
+      },
+      term2: {
+        exams: {},
+      },
+    },
+    remarks: "Aut tripudio vilis.",
+  },
+  {
+    id: "3dd5eb95",
+    student_id: "2d154324",
+    name: "Diane Lowe 4",
+    academic_year: "2025-2026",
+    class_id: "2d154378",
+    section_id: "2d154374",
+    roll_number: 27,
+    performance: {
+      term1: {
+        exams: {},
+      },
+      term2: {
+        exams: {},
+      },
     },
     remarks: "Aut tripudio vilis.",
   },

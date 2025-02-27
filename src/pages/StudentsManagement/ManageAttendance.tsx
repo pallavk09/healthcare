@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   DataGrid,
   GridColDef,
@@ -9,29 +9,21 @@ import {
   GridToolbarFilterButton,
   GridOverlay,
   GridToolbarQuickFilter,
-  GridValueGetter,
 } from "@mui/x-data-grid";
-import {
-  Button,
-  Typography,
-  Box,
-  Grid,
-  styled,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-} from "@mui/material";
-import { tableCellClasses } from "@mui/material/TableCell";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
+import { Button, Typography, Box, styled, TextField } from "@mui/material";
+
 import { useNavigate } from "react-router-dom";
 
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import HomeIcon from "@mui/icons-material/Home";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
-import { classes } from "../../Config/classes";
+import { useForm } from "react-hook-form";
+import ControlledSelect from "../../common/ControlledComponents/ControlledSelect";
+import { classes_records } from "../../Config/classes_records";
+import { exam_records } from "../../Config/exams_records";
+import { sections } from "../../Config/sections_records";
+import { academic_records } from "../../Config/academic_records";
+import { attendance_records } from "../../Config/attendance_records";
 
 const CustomNoRowsOverlay = () => {
   return (
@@ -55,6 +47,19 @@ const CustomToolbar: React.FC = () => {
   );
 };
 
+type AttendanceRecord = {
+  [session: string]: {
+    exams: {
+      [exam_id: string]: {
+        code: string;
+        exam_name: string;
+        total_working_days: number;
+        total_days_present: number;
+      };
+    };
+  };
+};
+
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
   fontSize: "0.80rem",
@@ -72,101 +77,222 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
 }));
 
 const ManageAttendance = () => {
-  const rowData = [
-    { id: 1, name: "John Doe", daysPresent: 0 },
-    { id: 2, name: "Jane Smith", daysPresent: 0 },
-    { id: 3, name: "Alice Brown", daysPresent: 0 },
-  ];
   const navigate = useNavigate();
-  const [applications, setApplications] = useState<any>([]);
-  const [attendanceRecord, setAttendanceRecord] = useState({
-    exam: false,
-    month: false,
+  const [sectionList, setSectionList] = useState<any>([]);
+  const [classRecords, setClassRecords] = useState<any>([]);
+  const [exams, setExams] = useState<any>([]);
+  const [examSession, setExamSession] = useState(undefined);
+  const [searchState, setSearchState] = useState<any>({
+    session: "",
+    exam_id: "",
+    class_id: "",
+    section_id: "",
   });
-
-  const [classList, setClassList] = useState<{}[]>([]);
+  const [rows, setRows] = useState<any>([]);
+  const [edit, setEdit] = useState<boolean>(false);
   const [paginationModel, setPaginationModel] =
-    React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
-
-  // const [editRowsModel, setEditRowsModel] = useState({});
-
-  // const [rows, setRows] = useState([
-  //   { id: 1, name: "John Doe", daysPresent: 0 },
-  //   { id: 2, name: "Jane Smith", daysPresent: 0 },
-  //   { id: 3, name: "Alice Brown", daysPresent: 0 },
-  // ]);
+    React.useState<GridPaginationModel>({ page: 0, pageSize: 10 });
 
   useEffect(() => {
-    setClassList(classes);
+    setClassRecords(classes_records);
+    setSectionList(sections);
   }, []);
 
-  // useEffect(() => {
-  //   const initialEditModel = rows.reduce((acc: any, row) => {
-  //     acc[row.id] = { daysPresent: { mode: "edit" } };
-  //     return acc;
-  //   }, {});
-  //   setEditRowsModel(initialEditModel);
-  // }, [rows]); // Recalculate if rows change
+  useEffect(() => {
+    console.log(examSession);
+    const filteredExamList = exam_records.filter(
+      (examItem) => examItem.session === examSession
+    );
 
-  // Handle row updates
-  const handleProcessRowUpdate = (newRow: any) => {
-    setApplications((prevRows: any) =>
-      prevRows.map((row: any) => (row.id === newRow.id ? newRow : row))
+    console.log("filteredExamList");
+    console.log(filteredExamList);
+    setExams(filteredExamList);
+  }, [examSession]);
+
+  const {
+    handleSubmit,
+    reset,
+    formState: { errors },
+    control,
+  } = useForm({
+    defaultValues: {
+      session: "",
+      exam_id: "",
+      class_id: "",
+      section_id: "",
+    },
+    mode: "onTouched",
+  });
+
+  // Handle value changes for a cell
+  const handleValueChange = (id: string, field: string, value: string) => {
+    setRows((prevRows: any) =>
+      prevRows.map((row: any) =>
+        row.id === id ? { ...row, [field]: value } : row
+      )
     );
   };
 
-  const RecordAttendanceChangeHandler = (event: SelectChangeEvent) => {
-    console.log(event.target.value);
-    if (event.target.value === "exam") {
-      setAttendanceRecord({
-        exam: true,
-        month: false,
-      });
-    }
-    if (event.target.value === "month") {
-      setAttendanceRecord({
-        exam: false,
-        month: true,
-      });
-    }
-  };
-
-  const ShowStudentsHandler = async () => {
-    console.log("Inside Save Data");
-    setApplications(rowData);
-  };
-
-  // Function to save all attendance data
-  const handleSave = () => {
-    console.log("Saving attendance:", applications);
-    // Make API call here to save data
-  };
-
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 80, type: "number" },
-    { field: "name", headerName: "Student Name", width: 200, type: "string" },
+    { field: "name", headerName: "Student Name", flex: 1, type: "string" },
     {
-      field: "daysPresent",
-      headerName: "Days Present",
-      width: 150,
-      editable: true, // Only this column is editable
-      type: "number",
+      field: "total_working_days",
+      headerName: "Total Working Days",
+      flex: 1,
+      renderCell: (params) => (
+        <TextField
+          type="number"
+          variant="standard"
+          value={params.value || ""}
+          onChange={(e) =>
+            handleValueChange(params.id as string, params.field, e.target.value)
+          }
+          disabled={true}
+          sx={{
+            borderRadius: 1,
+            padding: 1,
+            paddingRight: 2,
+            textAlign: "center",
+            width: "100%",
+          }}
+        />
+      ),
+    },
+    {
+      field: "total_days_present",
+      headerName: "No. Of Days Present",
+      flex: 1,
+      renderCell: (params) => (
+        <TextField
+          type="number"
+          variant="standard"
+          value={params.value || ""}
+          onChange={(e) =>
+            handleValueChange(params.id as string, params.field, e.target.value)
+          }
+          sx={{
+            borderRadius: 1,
+            padding: 1,
+            paddingRight: 2,
+            textAlign: "center",
+            width: "100%",
+          }}
+        />
+      ),
     },
   ];
 
-  // const initialState = {
-  //   columns: {
-  //     columnVisibilityModel: {}, // Ensures all columns are visible
-  //   },
-  //   editing: {
-  //     editRowsModel: {
-  //       // ✅ Enables edit mode for all rows in "Days Present" by default
-  //       1: { daysPresent: { mode: "edit" } },
-  //       2: { daysPresent: { mode: "edit" } },
-  //       3: { daysPresent: { mode: "edit" } },
-  //     },
-  //   },
-  // };
+  const HandleShowSubjects = (data: any) => {
+    console.log("Go Clicked for Class");
+    console.log(data);
+
+    const student_list = academic_records.filter(
+      (item: any) =>
+        item.class_id === data.class_id && item.section_id === data.section_id
+    );
+
+    const examsDetails = exam_records.find(
+      (item: any) =>
+        item.session === data.session && item.exam_id === data.exam_id
+    );
+
+    const attendanceRecords = student_list.map((student: any) => {
+      const attendanceRecord = attendance_records.find(
+        (item: any) => item.student_id === student.student_id
+      );
+
+      //attendanceRecord.attendance is an object with explicitly defined keys (term1, term2, etc.)
+      //TypeScript does not allow dynamic string indexing on an object unless an index signature is explicitly defined.
+      //Hence we need to define type AttendanceRecord for this
+
+      const studentAttendance = attendanceRecord?.attendance as
+        | AttendanceRecord
+        | undefined;
+      const examAttendance =
+        studentAttendance?.[data.session]?.exams?.[data.exam_id];
+
+      return {
+        id: `${student.id}`,
+        student_id: student.student_id,
+        name: student.name,
+        exam_id: examsDetails?.exam_id || "", // ✅ Default to empty string if undefined
+        session: examsDetails?.session || "",
+        code: examsDetails?.code || "",
+        exam_name: examsDetails?.name || "",
+        total_working_days: examsDetails?.total_working_days || "",
+        total_days_present: examAttendance?.total_days_present ?? 0, // ✅ Default to 0 if not found
+      };
+    });
+
+    setRows(attendanceRecords);
+    setSearchState(data);
+  };
+
+  const ResetScreen = () => {};
+
+  const HandleSessionChange = (event: any) => {
+    console.log("Session Change Event");
+    console.log(event.target.value);
+    setExamSession(event.target.value);
+    ResetScreen();
+  };
+
+  const updateAttendanceRecords = (
+    attendanceRecords: any,
+    studentsAttendance: any
+  ) => {
+    studentsAttendance.forEach((record: any) => {
+      const {
+        id,
+        student_id,
+        name,
+        exam_id,
+        session,
+        code,
+        exam_name,
+        total_working_days,
+        total_days_present,
+      } = record;
+
+      const { class_id, section_id } = searchState;
+
+      if (!attendanceRecords[student_id]) {
+        attendanceRecords[student_id] = {
+          id: student_id,
+          student_id,
+          name,
+          academic_year: "2025-2026",
+          class_id: class_id,
+          section_id: section_id,
+          attendance: {},
+          remarks: "Aut tripudio vilis.",
+        };
+      }
+
+      if (!attendanceRecords[student_id].attendance[session]) {
+        attendanceRecords[student_id].attendance[session] = { exams: {} };
+      }
+
+      if (!attendanceRecords[student_id].attendance[session].exams[exam_id]) {
+        attendanceRecords[student_id].attendance[session].exams[exam_id] = {
+          code,
+          exam_name,
+          total_working_days: total_working_days,
+          total_days_present: total_days_present,
+        };
+      }
+    });
+
+    return Object.values(attendanceRecords);
+  };
+
+  const handleSave = () => {
+    console.log("Saved data:", rows);
+    // const attendance_records = {};
+    const updatedAcademicRecords = updateAttendanceRecords([], rows);
+    console.log("updatedAcademicRecords");
+    console.log(updatedAcademicRecords);
+  };
 
   return (
     <>
@@ -211,207 +337,159 @@ const ManageAttendance = () => {
           alignItems={"center"}
           width={"90vw"}
         >
-          <FormControl
-            sx={{ minWidth: 180, ml: 0 }}
-            size="small"
-            disabled={false}
+          <Typography variant="h6" alignSelf={"center"}>
+            <strong>Update Students Attendance</strong>
+          </Typography>
+          <Box
+            display={"flex"}
+            flexDirection={"column"}
+            p={2}
+            pt={0}
+            height="auto"
+            justifyContent={"center"}
+            alignItems={"center"}
+            mt={1}
           >
-            <InputLabel id="select-attendance-label">
-              Record Attendance
-            </InputLabel>
-            <Select
-              labelId="select-attendance-label"
-              id="select-attendance"
-              label="Record Attendance"
-              onChange={RecordAttendanceChangeHandler}
-              variant="standard"
-            >
-              <MenuItem value={"exam"}>Exam Wise</MenuItem>
-              <MenuItem value={"month"}>Month Wise</MenuItem>
-            </Select>
-          </FormControl>
-
-          {(attendanceRecord.month || attendanceRecord.exam) && (
-            <Box
-              display={"flex"}
-              flexDirection={"row"}
-              justifyContent={"space-evenly"}
-              gap={3}
-              width="auto"
-              mt={3}
-              mb={3}
-            >
-              <FormControl
-                sx={{ minWidth: 130, ml: 0 }}
-                size="small"
-                disabled={false}
+            <form onSubmit={handleSubmit(HandleShowSubjects)}>
+              <Box
+                display={"flex"}
+                flexDirection={"row"}
+                justifyContent={"space-evenly"}
+                gap={3}
+                width="70vw"
               >
-                <InputLabel id="select-class-label">Class</InputLabel>
-                <Select
-                  labelId="select-class-label"
-                  id="select-class"
+                <ControlledSelect
+                  name={`class_id`}
+                  control={control}
+                  errors={errors}
                   label="Class"
-                  // onChange={(event) => handleClassSelect(index, event)}
-                  variant="standard"
-                >
-                  {classList &&
-                    classList?.length > 0 &&
-                    classList.map((item: any, index) => (
-                      <MenuItem value={item.name} key={index}>
-                        {item.name}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-
-              <FormControl
-                sx={{ minWidth: 130, ml: 0 }}
-                size="small"
-                disabled={false}
-              >
-                <InputLabel id="select-section-label">Section</InputLabel>
-                <Select
-                  labelId="select-section-label"
-                  id="select-section"
+                  rules={{ required: "Required" }}
+                  options={classRecords.map((item: any) => ({
+                    value: item.class_id,
+                    label: item.name,
+                  }))}
+                  sx={{ width: "30%" }}
+                  // selectProps={{ onChange: HandleClassChange }}
+                />
+                <ControlledSelect
+                  name={`section_id`}
+                  control={control}
+                  errors={errors}
                   label="Section"
-                  // onChange={(event) => handleClassSelect(index, event)}
-                  variant="standard"
-                >
-                  <MenuItem value="a">A</MenuItem>
-                  <MenuItem value="b">B</MenuItem>
-                  <MenuItem value="c">C</MenuItem>
-                  <MenuItem value="d">D</MenuItem>
-                </Select>
-              </FormControl>
+                  rules={{ required: "Required" }}
+                  options={sectionList.map((item: any) => ({
+                    value: item.section_id,
+                    label: item.name,
+                  }))}
+                  sx={{ width: "30%" }}
+                  // selectProps={{ onChange: HandleClassChange }}
+                />
 
-              {attendanceRecord.exam ? (
-                <FormControl
-                  sx={{ minWidth: 130, ml: 0 }}
-                  size="small"
-                  disabled={false}
-                >
-                  <InputLabel id="select-exam-label">Exam</InputLabel>
-                  <Select
-                    labelId="select-exam-label"
-                    id="select-exam"
-                    label="Select Exam"
-                    // onChange={(event) => handleClassSelect(index, event)}
-                    variant="standard"
-                  >
-                    <MenuItem value="pt1">Term 1: PT</MenuItem>
-                    <MenuItem value="sea1">Term 1: SEA</MenuItem>
-                    <MenuItem value="sa1">Term 1: SA</MenuItem>
-                    <MenuItem value="pt2">Term 2: PT</MenuItem>
-                    <MenuItem value="sea2">Term 2: SEA</MenuItem>
-                    <MenuItem value="sa2">Term 2: SA</MenuItem>
-                  </Select>
-                </FormControl>
-              ) : attendanceRecord.month ? (
-                <FormControl
-                  sx={{ minWidth: 130, ml: 0 }}
-                  size="small"
-                  disabled={false}
-                >
-                  <InputLabel id="select-exam-label">Month</InputLabel>
-                  <Select
-                    labelId="select-exam-label"
-                    id="select-exam"
-                    label="Select Exam"
-                    // onChange={(event) => handleClassSelect(index, event)}
-                    variant="standard"
-                  >
-                    <MenuItem value="april24">April24</MenuItem>
-                    <MenuItem value="may24">May24</MenuItem>
-                  </Select>
-                </FormControl>
-              ) : (
-                ""
-              )}
+                <ControlledSelect
+                  name={`session`}
+                  control={control}
+                  errors={errors}
+                  label="Session"
+                  rules={{ required: "Required" }}
+                  options={[
+                    { value: "", label: "Select" },
+                    { value: "term1", label: "Term 1" },
+                    { value: "term2", label: "Term 2" },
+                  ]}
+                  sx={{ width: "30%" }}
+                  selectProps={{ onChange: HandleSessionChange }}
+                />
 
+                <ControlledSelect
+                  name={`exam_id`}
+                  control={control}
+                  errors={errors}
+                  label="Exam"
+                  rules={{ required: "Required" }}
+                  options={exams.map((item: any) => ({
+                    value: item.exam_id,
+                    label: item.name,
+                  }))}
+                  sx={{ width: "30%" }}
+                  disabled={examSession == null || examSession == undefined}
+                  // selectProps={{ onChange: HandleExamChange }}
+                />
+
+                <MyCustomButton
+                  variant="contained"
+                  type="submit"
+                  sx={{
+                    width: "10%",
+                    height: "70%",
+                    alignSelf: "center",
+                  }}
+                >
+                  {"Go"}
+                </MyCustomButton>
+              </Box>
+            </form>
+            {rows && rows.length > 0 && (
+              <>
+                <DataGrid
+                  rows={rows}
+                  columns={columns}
+                  rowHeight={50}
+                  paginationModel={paginationModel}
+                  onPaginationModelChange={setPaginationModel}
+                  pageSizeOptions={[10, 20, 30]}
+                  checkboxSelection={false}
+                  disableRowSelectionOnClick
+                  slots={{
+                    toolbar: GridToolbar,
+                    noRowsOverlay: CustomNoRowsOverlay,
+                  }}
+                  slotProps={{ toolbar: { showQuickFilter: true } }}
+                  sx={{
+                    width: "80vw",
+                    maxWidth: "90vw",
+                    height: "65vh",
+                    marginTop: "15px",
+
+                    "& .MuiDataGrid-row:hover": {
+                      transform: "scale(1)",
+                      backgroundColor: "#f5f5f5",
+                      "& .MuiDataGrid-cell": {
+                        color: "#2E186A",
+                        fontWeight: "bold",
+                      },
+                    },
+                    "& .MuiDataGrid-row.Mui-selected": {
+                      backgroundColor: "#f0f0f0",
+                    },
+                    "& .MuiDataGrid-columnHeaders": {
+                      backgroundColor: "#1e88e5",
+                      // fontFamily: "Motiva Sans Bold",
+                      color: "#2e186a",
+                      fontSize: "1rem",
+                      borderBottom: "2px solid #fff",
+                    },
+                    "& .MuiDataGrid-columnHeaderTitle": {
+                      textOverflow: "clip",
+                      whiteSpace: "normal",
+                      lineHeight: "1",
+                    },
+                    "& .MuiDataGrid-columnHeader": {
+                      padding: "0px 10px",
+                    },
+                  }}
+                />
+              </>
+            )}
+            {rows && rows.length > 0 && (
               <MyCustomButton
-                onClick={ShowStudentsHandler}
                 variant="contained"
-                disabled={false}
-                type="button"
+                onClick={handleSave}
+                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
               >
-                Show Students
+                {!edit ? "Save" : "Update"}
               </MyCustomButton>
-            </Box>
-          )}
-
-          <DataGrid
-            rows={applications}
-            columns={columns}
-            rowHeight={40}
-            // initialState={initialState}
-            processRowUpdate={handleProcessRowUpdate}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[50, 100, 150]}
-            checkboxSelection={false}
-            disableRowSelectionOnClick
-            slots={{
-              toolbar: GridToolbar,
-              noRowsOverlay: CustomNoRowsOverlay,
-            }}
-            slotProps={{ toolbar: { showQuickFilter: true } }}
-            sx={{
-              width: "80vw",
-              maxWidth: "90vw",
-              minHeight: "40vh",
-              height: "65vh",
-              marginTop: "15px",
-              "& .MuiDataGrid-cell--editable": {
-                backgroundColor: "white", // White background for editable fields
-                border: "1px solid #2E186A", // Gray border for a subtle look
-                paddingTop: "2px",
-                paddingBottom: "2px",
-              },
-              "& .MuiDataGrid-cell--editing": {
-                backgroundColor: "#fff", // Ensure background remains white while editing
-                border: "2px solid #35821d", // Blue border when focused
-                boxShadow: "1px 1px 5px #35821d", // Optional shadow effect
-                paddingTop: "2px",
-                paddingBottom: "2px",
-              },
-
-              "& .MuiDataGrid-row:hover": {
-                transform: "scale(1)",
-                backgroundColor: "#f5f5f5",
-                "& .MuiDataGrid-cell": {
-                  color: "#2E186A",
-                  fontWeight: "bold",
-                },
-              },
-              "& .MuiDataGrid-row.Mui-selected": {
-                backgroundColor: "#f0f0f0",
-              },
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#1e88e5",
-                // fontFamily: "Motiva Sans Bold",
-                color: "#2e186a",
-                fontSize: "1rem",
-                borderBottom: "2px solid #fff",
-              },
-              "& .MuiDataGrid-columnHeaderTitle": {
-                textOverflow: "clip",
-                whiteSpace: "normal",
-                lineHeight: "1",
-              },
-              "& .MuiDataGrid-columnHeader": {
-                padding: "0px 10px",
-              },
-            }}
-          />
-
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSave}
-            style={{ marginTop: 20 }}
-          >
-            Save Attendance
-          </Button>
+            )}
+          </Box>
         </Box>
       </Box>
     </>

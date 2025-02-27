@@ -16,7 +16,7 @@ export const sections = [
   },
   {
     id: "2d154377",
-    section_id: "2d154374",
+    section_id: "2d154377",
     name: "D",
   },
 ];

@@ -38,6 +38,7 @@ import { subjects } from "../../Config/subjects";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { classes } from "../../Config/classes";
 import { classes_records } from "../../Config/classes_records";
+import { sections } from "../../Config/sections_records";
 import { useForm } from "react-hook-form";
 import ControlledTextField from "../../common/ControlledComponents/ControlledTextField";
 import { v4 as uuid } from "uuid";
@@ -306,19 +307,32 @@ const ManageSubjects = () => {
     //@ts-ignore
     const subject_class = classList.map(({ id, class_id, name }) => ({
       id,
+
       class_id,
       title: name,
       class_teacher_id: "", // Placeholder
       students: [], // Placeholder
       subjects: (data.subjects[class_id] || []).map((subject_id: string) => ({
+        id: subject_id,
         subject_id,
         teacher_id: "",
+        class_teacher: "No", //Yes or No
       })),
-      fee_structure: [], // Placeholder
+      fees_structure_id: "", // Placeholder
     }));
 
-    console.log("subject_teachers");
-    console.log(subject_class);
+    const subject_class_sections = subject_class.map(
+      (subject_class_item: any) =>
+        sections.map((sectionItem: any) => ({
+          ...subject_class_item,
+          class_section_id: uuid().slice(0, 5),
+          section: sectionItem.name,
+          section_id: sectionItem.section_id,
+        }))
+    );
+
+    console.log("subject_class_sections");
+    console.log(subject_class_sections.flat());
 
     snackbarRef.current?.showSnackbar(`Subjects assigned.`, "success");
   };

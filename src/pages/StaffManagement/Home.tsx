@@ -4,11 +4,8 @@ import { Typography, Grid, Button, styled, Box } from "@mui/material";
 import { Divider, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-import FooterLogin from "../../components/FooterLogin";
 import ArrowCircleRightIcon from "@mui/icons-material/ArrowCircleRight";
-import moment from "moment";
-
-// const Container = lazy(() => import("../../common/Container"));
+import HomeIcon from "@mui/icons-material/Home";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -16,7 +13,7 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
   fontWeight: "700",
   border: "1px solid #edf3f5",
   borderRadius: "4px",
-  background: "#09829d",
+  background: "#2E186A",
   boxShadow: "0 16px 30px rgb(23 31 114 / 20%)",
   marginTop: "1rem",
   "&:hover": {
@@ -72,15 +69,6 @@ const PaperCard = (props: any) => {
         </Grid>
 
         <Divider style={{ color: "#FF825B", border: "1px solid" }} />
-        {/* <Box
-          width={"100%"}
-          height={"5px"}
-          // ml={-3}
-          mt={1}
-          sx={{
-            background: "linear-gradient(to right, #ff825b, white)",
-          }}
-        /> */}
 
         <Grid
           container
@@ -106,119 +94,114 @@ const PaperCard = (props: any) => {
   );
 };
 
-const SchoolAdmin: React.FC = () => {
+const StaffManagementHome: React.FC = () => {
   const navigate = useNavigate();
-  // const [quote, setQuote] = useState("");
 
-  // useEffect(() => {
-  //   fetch("https://zenquotes.io/api/random")
-  //     .then((res) => res.json())
-  //     .then((data) => {
-  //       setQuote(data[0].q + " - " + data[0].a);
-  //     });
-  // }, []);
-
-  const handleCardClick = (path: string) => {
-    navigate(path);
-  };
-
-  const onMyPatymentsClick = () => {
-    //props.onClick();
-  };
-  const getGreeting = () => {
-    const hour = moment().hour(); // Get current hour (0-23)
-
-    if (hour >= 5 && hour < 12) {
-      return "GOOD MORNING";
-    } else if (hour >= 12 && hour < 17) {
-      return "GOOD AFTERNOON";
-    } else if (hour >= 17 && hour < 21) {
-      return "GOOD EVENING";
-    } else {
-      return "GOOD NIGHT";
-    }
-  };
   return (
-    <>
-      <Box display={"flex"} flexDirection={"column"} width={"100%"}>
-        <Typography
-          variant="h3"
-          sx={{
-            color: "#2E186A",
-          }}
-          alignSelf={"center"}
-          mt={2}
+    <Box
+      display={"flex"}
+      flexDirection={"column"}
+      width={"100%"}
+      justifyContent="center"
+    >
+      <Typography
+        variant="h3"
+        sx={{
+          color: "#2E186A",
+        }}
+        alignSelf={"center"}
+        mt={2}
+      >
+        <strong>Teachers Management Home</strong>
+      </Typography>
+      <Box
+        display={"flex"}
+        flexDirection={"row"}
+        justifyContent={"normal"}
+        p={2}
+        pb={0}
+      >
+        <MyCustomButton
+          variant="contained"
+          startIcon={<HomeIcon />}
+          onClick={() => navigate("/schooladmin")}
         >
-          <strong>WELCOME ADMIN AND {getGreeting()}</strong>
-        </Typography>
+          Home
+        </MyCustomButton>
+      </Box>
+      <Box
+        display={"flex"}
+        flexDirection={"row"}
+        alignItems={"center"}
+        justifyContent={"center"}
+        width={"auto"}
+      >
         <Box
           display={"flex"}
-          flexDirection={"row"}
+          flexDirection={"column"}
           alignItems={"center"}
-          justifyContent={"space-between"}
-          width={"auto"}
+          justifyContent={"center"}
+          // justifyContent={"flex-end"}
+          width={"80%"}
         >
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            alignItems={"flex-end"}
-            justifyContent={"flex-end"}
-            width={"80%"}
-          >
-            <PaperCard
-              title={"Fees Collection"}
+          <PaperCard
+            title={"Add/View Teachers"}
+            caption={"Add New or View Existing Teacher"}
+            onClick={() => navigate("all-teacher-data")}
+          />
+          {/* <PaperCard
+            title={"Manage Transport"}
+            caption={"Create Manage Transport Fee"}
+            onClick={() => navigate("manage-transport")}
+          /> */}
+          {/* <PaperCard
+              title={"Credentials Manager"}
               caption={"View Fees Record. Collect Fees."}
               onClick={() => navigate("fees-details")}
-            />
-            <PaperCard
-              title={"Teachers Management"}
-              caption={"View Staff Details here."}
-              onClick={() => navigate("staff-management")}
-            />
-          </Box>
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            alignItems={"center"}
-            justifyContent={"center"}
-            width={"80%"}
-          >
-            <PaperCard
-              title={"Students Management"}
-              caption={"View, Edit and Add Students here"}
-              onClick={() => navigate("students-management")}
-              // onClick={() => navigate("all-student-data")}
-            />
+            /> */}
+        </Box>
+        <Box
+          display={"flex"}
+          flexDirection={"column"}
+          alignItems={"center"}
+          justifyContent={"center"}
+          // justifyContent={"normal"}
+          width={"80%"}
+        >
+          <PaperCard
+            title={"Assign Subjects & Class"}
+            caption={"Class and Subjects to be taught by Teacher"}
+            onClick={() => navigate("teacher-class-assignment")}
+          />
 
-            <PaperCard
+          {/* <PaperCard
               title={"Report Center"}
               caption={"Fetch all kind of report"}
               onClick={() => console.log("View Report Clicked")}
-            />
-          </Box>
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            alignItems={"flex-start"}
-            justifyContent={"flex-start"}
-            width={"80%"}
-          >
-            <PaperCard
-              title={"Exams Management"}
-              caption={"View Fees Record. Collect Fees."}
-              onClick={() => navigate("exams-management")}
-            />
-
-            <PaperCard
+            /> */}
+        </Box>
+        <Box
+          display={"flex"}
+          flexDirection={"column"}
+          alignItems={"center"}
+          justifyContent={"center"}
+          // justifyContent={"flex-start"}
+          width={"80%"}
+        >
+          {/* <PaperCard
+            title={"Admit Cards"}
+            caption={"Fill attendance every month and Exams"}
+            onClick={() => navigate("get-admit-card")}
+          /> */}
+          {/* <PaperCard
               title={"Control and Settings"}
               caption={"Fetch all kind of report"}
               onClick={() => navigate("controls-settings")}
-            />
-          </Box>
+            /> */}
         </Box>
       </Box>
-    </>
+    </Box>
   );
 };
 
-export default SchoolAdmin;
+export default StaffManagementHome;
