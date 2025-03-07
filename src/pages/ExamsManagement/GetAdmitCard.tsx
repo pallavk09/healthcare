@@ -23,6 +23,8 @@ import { classes_records } from "../../Config/classes_records";
 import { exam_records } from "../../Config/exams_records";
 import { sections } from "../../Config/sections_records";
 import { academic_records } from "../../Config/academic_records";
+import { students } from "../../Config/students";
+import { exam_schedules } from "../../Config/exams_schedules";
 
 const CustomNoRowsOverlay = () => {
   return (
@@ -33,16 +35,6 @@ const CustomNoRowsOverlay = () => {
         </Typography>
       </Box>
     </GridOverlay>
-  );
-};
-
-const CustomToolbar: React.FC = () => {
-  return (
-    <GridToolbarContainer>
-      <GridToolbarFilterButton />
-      <GridToolbarExport />
-      <GridToolbarQuickFilter />
-    </GridToolbarContainer>
   );
 };
 
@@ -62,7 +54,7 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const ManageMarks = () => {
+const GetAdmitCard = () => {
   const navigate = useNavigate();
   const [sectionList, setSectionList] = useState<any>([]);
   const [classRecords, setClassRecords] = useState<any>([]);
@@ -194,90 +186,53 @@ const ManageMarks = () => {
     },
   ];
 
-  const flattenAcademicRecords = (academicRecords: any) => {
-    const flatData = [] as any;
-
-    academicRecords.forEach((student: any) => {
-      const { id, student_id, name, performance } = student;
-
-      Object.entries(performance).forEach(([session, termData]: [any, any]) => {
-        Object.entries(termData.exams).forEach(
-          ([exam_id, exam]: [any, any]) => {
-            exam.marks_details.forEach((subject: any) => {
-              flatData.push({
-                id: `${id}-${exam_id}-${subject.subject_name}`, // Unique row ID
-                student_id,
-                name,
-                subject_name: subject.subject_name,
-                exam_id,
-                session,
-                code: exam.exam_code || "", // Ensure code is available
-                exam_name: exam.exam_name,
-                max_marks: subject.subject_max_marks.toString(),
-                pass_marks: subject.subject_pass_marks.toString(),
-                marks_obtained: subject.marks_obtained.toString(),
-              });
-            });
-          }
-        );
-      });
-    });
-
-    return flatData;
-  };
-
-  const HandleShowSubjects = (data: any) => {
-    console.log("Go Clicked for Class");
+  const HandleFetchStudents = (data: any) => {
+    console.log("Fetch Students Clicked");
     console.log(data);
-    // //As soon as class is assingned to any students, its entry will be made in academic_Records
-    // //For given class_id and section_id fetch all students
-    // const student_list = academic_records.filter(
-    //   (item: any) =>
-    //     item.class_id === data.class_id && item.section_id === data.section_id
-    // );
+    const exam_schedule_obj = exam_schedules.find(
+      (exam: any) =>
+        exam.class_id === data.class_id &&
+        exam.session === data.session &&
+        exam.exam_id === data.exam_id
+    );
+    const studentList = academic_records
+      .filter(
+        (student: any) =>
+          student.class_id === data.class_id &&
+          student.section_id === data.section_id
+      )
+      .map((student: any) => ({
+        student_id: student.student_id,
+        roll_number: student.roll_number,
+        class: student.class,
+        section: student.section,
+      }));
 
-    // //For given session and exam_id fetch max_marks and pass_marks
-    // const marksDetails = exam_records.find(
-    //   (item: any) =>
-    //     item.session === data.session && item.exam_id === data.exam_id
-    // );
+    console.log("studentList");
+    console.log(studentList);
 
-    // const _max_marks = marksDetails?.max_marks;
-    // const _pass_marks = marksDetails?.pass_marks;
+    const studentDetailsList = studentList
+      .map((obj: any) => {
+        const matchedStudents = students.filter(
+          (student: any) => student.student_id === obj.student_id
+        );
 
-    // const exam_schedule_details = exam_schedules.find(
-    //   (item: any) =>
-    //     item.class_id === data.class_id &&
-    //     item.session === data.session &&
-    //     item.exam_id === data.exam_id
-    // );
+        return matchedStudents.map((student: any) => ({
+          admission_no: student.admission_id,
+          student_name: student.personal_details.name,
+          photo: student.photoUrl,
+          father_name: student.father_details.name,
+          roll_no: obj.roll_number,
+          student_class: `${obj.class}(${obj.section})`,
+          exam_schedules: JSON.parse(exam_schedule_obj?.exam_schedule || "[]"),
+        }));
+      })
+      .flat();
 
-    // const exam_schedule_array = exam_schedule_details?.exam_schedule;
+    console.log("studentDetailsList");
+    console.log(studentDetailsList);
 
-    // const student_subject_marks = student_list.flatMap((student: any) =>
-    //   exam_schedule_array?.map((subjectObj) => ({
-    //     id: `${student.id}-${subjectObj.id}`,
-    //     student_id: student.student_id,
-    //     name: student.name,
-    //     subject_name: subjectObj.subject,
-    //     exam_id: marksDetails?.exam_id,
-    //     session: marksDetails?.session,
-    //     exam_code: marksDetails?.code,
-    //     exam_name: marksDetails?.name,
-    //     max_marks: marksDetails?.max_marks,
-    //     pass_marks: marksDetails?.pass_marks,
-    //     marks_obtained: 0,
-    //   }))
-    // );
-
-    // console.log("student_subject_marks");
-    // console.log(student_subject_marks);
-
-    const flatMappedExamData = flattenAcademicRecords(academic_records);
-    console.log("flatMappedExamData");
-    console.log(flatMappedExamData);
-
-    setRows(flatMappedExamData);
+    // setRows(flatMappedExamData);
   };
 
   const ResetScreen = () => {};
@@ -303,194 +258,8 @@ const ManageMarks = () => {
   //   ResetScreen();
   // };
 
-  const updateAcademicRecords = (academicRecords: any, examResults: any) => {
-    examResults.forEach((record: any) => {
-      const {
-        student_id,
-        session,
-        exam_id,
-        code: exam_code,
-        exam_name,
-        subject_name,
-        max_marks,
-        pass_marks,
-        marks_obtained,
-        total_working_days = 0, // Default value
-        total_days_present = 0, // Default value
-      } = record;
-
-      // Find student record
-      const studentRecord = academicRecords.find(
-        (s: any) => s.student_id === student_id
-      );
-      if (!studentRecord) return; // Skip if student not found
-
-      // Ensure performance[session] exists
-      if (!studentRecord.performance[session]) {
-        studentRecord.performance[session] = { exams: {} };
-      }
-
-      // Check if the exam exists
-      if (!studentRecord.performance[session].exams[exam_id]) {
-        studentRecord.performance[session].exams[exam_id] = {
-          exam_code,
-          exam_name,
-          max_marks: 0,
-          pass_marks: 0,
-          total_marks_obtained: 0,
-          total_working_days,
-          total_days_present,
-          marks_details: [],
-        };
-      }
-
-      const examRef = studentRecord.performance[session].exams[exam_id];
-
-      // Check if subject already exists in marks_details
-      const subjectIndex = examRef.marks_details.findIndex(
-        (m: any) => m.subject_name === subject_name
-      );
-
-      if (subjectIndex > -1) {
-        // If subject exists, update marks_obtained
-        examRef.marks_details[subjectIndex].marks_obtained =
-          Number(marks_obtained);
-      } else {
-        // If subject does not exist, add it
-        examRef.marks_details.push({
-          subject_name,
-          marks_obtained: Number(marks_obtained),
-          subject_max_marks: Number(max_marks),
-          subject_pass_marks: Number(pass_marks),
-        });
-      }
-
-      // Recalculate total max_marks, pass_marks, and total_marks_obtained
-      examRef.max_marks = examRef.marks_details.reduce(
-        (sum: any, s: any) => sum + Number(s.subject_max_marks),
-        0
-      );
-      examRef.pass_marks = examRef.marks_details.reduce(
-        (sum: any, s: any) => sum + Number(s.subject_pass_marks),
-        0
-      );
-      examRef.total_marks_obtained = examRef.marks_details.reduce(
-        (sum: any, s: any) => sum + Number(s.marks_obtained),
-        0
-      );
-    });
-
-    return academicRecords;
-  };
-
   const handleSave = () => {
-    // Replace this with your save logic, such as an API call
     console.log("Saved data:", rows);
-    const updatedAcademicRecords = updateAcademicRecords(
-      academic_records,
-      rows
-    );
-    console.log(updatedAcademicRecords);
-
-    // const academic_Records = [
-    //   {
-    //     id: "3dd5eb92",
-    //     student_id: "2d154321",
-    //     name: "Diane Lowe 1",
-    //     academic_year: "2025-2026",
-    //     class_id: "2d154378",
-    //     section_id: "2d154374",
-    //     roll_number: 24,
-    //     performance: {
-    //       term1: {
-    //         exams: {
-    //           "2d154374": {
-    //             exam_code: "PT",
-    //             exam_name: "Periodic Test",
-    //             max_marks: 10,
-    //             pass_marks: 5,
-    //             total_working_days: 183,
-    //             total_days_present: 180,
-    //             marks_details: [
-    //               {
-    //                 subject_name: "Maths",
-    //                 marks_obtained: 7,
-    //               },
-    //               {
-    //                 subject_name: "English",
-    //                 marks_obtained: 4,
-    //               },
-    //               {
-    //                 subject_name: "Hindi",
-    //                 marks_obtained: 8,
-    //               },
-    //             ],
-    //           },
-    //         },
-    //       },
-    //       term2: {
-    //         exams: {},
-    //       },
-    //     },
-    //     remarks: "Aut tripudio vilis.",
-    //   },
-    // ];
-
-    // const academic_Records = [
-    //   {
-    //     id: "3dd5eb92",
-    //     student_id: "2d154321",
-    //     name: "Diane Lowe 1",
-    //     academic_year: "2025-2026",
-    //     class_id: "2d154378",
-    //     section_id: "2d154374",
-    //     roll_number: 24,
-    //     performance: [
-    //       {
-    //         session: "term1",
-    //         exam_performance: [
-    //           {
-    //             exam_id: "",
-    //             exam_code: "",
-    //             exam_name: "",
-    //             max_marks: "",
-    //             pass_marks: "",
-    //             total_working_days: "",
-    //             total_days_present: "",
-    //             marks_details: [
-    //               {
-    //                 subject_name: "",
-    //                 marks_obtained: "",
-    //               },
-    //             ],
-    //           },
-    //         ],
-    //       },
-    //       {
-    //         session: "term2",
-    //         exam_performance: [
-    //           {
-    //             exam_id: "",
-    //             exam_code: "",
-    //             exam_name: "",
-    //             max_marks: "",
-    //             pass_marks: "",
-    //             total_working_days: "",
-    //             total_days_present: "",
-    //             marks_details: [
-    //               {
-    //                 subject_name: "",
-    //                 marks_obtained: "",
-    //               },
-    //             ],
-    //           },
-    //         ],
-    //       },
-    //     ],
-
-    //     remarks: "Aut tripudio vilis.",
-    //   },
-    // ];
   };
 
   return (
@@ -536,9 +305,9 @@ const ManageMarks = () => {
           alignItems={"center"}
           width={"90vw"}
         >
-          <Typography variant="h6" alignSelf={"center"}>
+          {/* <Typography variant="h6" alignSelf={"center"}>
             <strong>Update Marks</strong>
-          </Typography>
+          </Typography> */}
           <Box
             display={"flex"}
             flexDirection={"column"}
@@ -549,7 +318,7 @@ const ManageMarks = () => {
             alignItems={"center"}
             mt={1}
           >
-            <form onSubmit={handleSubmit(HandleShowSubjects)}>
+            <form onSubmit={handleSubmit(HandleFetchStudents)}>
               <Box
                 display={"flex"}
                 flexDirection={"row"}
@@ -618,12 +387,12 @@ const ManageMarks = () => {
                   variant="contained"
                   type="submit"
                   sx={{
-                    width: "10%",
+                    width: "20%",
                     height: "70%",
                     alignSelf: "center",
                   }}
                 >
-                  {"Go"}
+                  Fetch Students
                 </MyCustomButton>
               </Box>
             </form>
@@ -685,7 +454,7 @@ const ManageMarks = () => {
                 onClick={handleSave}
                 sx={{ width: "10%", height: "70%", alignSelf: "center" }}
               >
-                {!edit ? "Save" : "Update"}
+                Get Admit Card
               </MyCustomButton>
             )}
           </Box>
@@ -695,4 +464,4 @@ const ManageMarks = () => {
   );
 };
 
-export default ManageMarks;
+export default GetAdmitCard;

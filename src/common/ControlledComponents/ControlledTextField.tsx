@@ -18,6 +18,7 @@ interface ControlledTextFieldProps {
   // value?: string;
   disabled?: boolean;
   slotProps?: any;
+  defaultValue?: any;
 }
 
 const ControlledTextField: React.FC<ControlledTextFieldProps> = ({
@@ -35,6 +36,7 @@ const ControlledTextField: React.FC<ControlledTextFieldProps> = ({
   slotProps,
   // value,
   disabled,
+  defaultValue,
 }) => {
   // console.log(errors?.[name.split(".")[0]]);
   // console.log(errors?.[name]?.message?.toString());
@@ -59,6 +61,7 @@ const ControlledTextField: React.FC<ControlledTextFieldProps> = ({
           // helperText={errors?.[name]?.message?.toString() || ""}
           fullWidth={fullWidth}
           required={required}
+          defaultValue={defaultValue}
           sx={sx}
           type={type}
           // value={value}

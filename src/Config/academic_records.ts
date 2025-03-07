@@ -5,7 +5,9 @@ export const academic_records = [
     name: "Diane Lowe 1",
     academic_year: "2025-2026",
     class_id: "2d154378",
+    class: "III",
     section_id: "2d154374",
+    section: "A",
     roll_number: 24,
     performance: {
       term1: {
@@ -52,7 +54,9 @@ export const academic_records = [
     name: "Diane Lowe 2",
     academic_year: "2025-2026",
     class_id: "2d154378",
+    class: "III",
     section_id: "2d154374",
+    section: "A",
     roll_number: 25,
     performance: {
       term1: {
@@ -99,7 +103,9 @@ export const academic_records = [
     name: "Diane Lowe 3",
     academic_year: "2025-2026",
     class_id: "2d154378",
+    class: "III",
     section_id: "2d154374",
+    section: "A",
     roll_number: 26,
     performance: {
       term1: {
@@ -146,7 +152,9 @@ export const academic_records = [
     name: "Diane Lowe 4",
     academic_year: "2025-2026",
     class_id: "2d154378",
+    class: "III",
     section_id: "2d154374",
+    section: "A",
     roll_number: 27,
     performance: {
       term1: {

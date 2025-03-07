@@ -379,7 +379,7 @@ const StudentAdminData = () => {
           {/* <MyCustomButton
             variant="contained"
             startIcon={<HomeIcon />}
-            onClick={() => navigate("/schooladmin")}
+            onClick={() => navigate("/home")}
           >
             Home
           </MyCustomButton> */}
@@ -401,7 +401,7 @@ const StudentAdminData = () => {
             <MyCustomButton
               variant="contained"
               startIcon={<HomeIcon />}
-              onClick={() => navigate("/schooladmin")}
+              onClick={() => navigate("/home")}
             >
               Home
             </MyCustomButton>

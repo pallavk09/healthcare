@@ -10,7 +10,13 @@ import {
   GridOverlay,
   GridToolbarQuickFilter,
 } from "@mui/x-data-grid";
-import { Button, Typography, Box, styled } from "@mui/material";
+import {
+  Button,
+  Typography,
+  Box,
+  styled,
+  CircularProgress,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
@@ -23,27 +29,38 @@ import { useForm } from "react-hook-form";
 import { v4 as uuid } from "uuid";
 import ControlledSelect from "../../common/ControlledComponents/ControlledSelect";
 import ControlledTextField from "../../common/ControlledComponents/ControlledTextField";
-import { exam_records } from "../../Config/exams_records";
+// import { exam_records } from "../../Config/exams_records";
+import {
+  AddExam,
+  GetExams,
+  UpdateExam,
+} from "../../api/Exams-Management/new_exam";
 
-const CustomNoRowsOverlay = () => {
+const CustomNoRowsOverlay = ({ loading }: { loading: boolean }) => {
   return (
-    <GridOverlay>
+    <GridOverlay
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
       <Box sx={{ textAlign: "center", padding: 2 }}>
-        <Typography variant="h5" color="textSecondary">
-          NO DATA AVAILABLE
-        </Typography>
+        {loading ? (
+          <>
+            <CircularProgress size={40} />
+            <Typography variant="h6" color="textSecondary" mt={2}>
+              Loading data...
+            </Typography>
+          </>
+        ) : (
+          <Typography variant="h5" color="textSecondary">
+            NO DATA AVAILABLE
+          </Typography>
+        )}
       </Box>
     </GridOverlay>
-  );
-};
-
-const CustomToolbar: React.FC = () => {
-  return (
-    <GridToolbarContainer>
-      <GridToolbarFilterButton />
-      <GridToolbarExport />
-      <GridToolbarQuickFilter />
-    </GridToolbarContainer>
   );
 };
 
@@ -122,7 +139,8 @@ const AddExams = () => {
   });
   const [paginationModel, setPaginationModel] =
     React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
-
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
   const {
     handleSubmit,
     reset,
@@ -140,7 +158,22 @@ const AddExams = () => {
     mode: "onTouched",
   });
   useEffect(() => {
-    setApplications(exam_records);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [exam_records] = await Promise.all([GetExams()]);
+
+        if (exam_records && exam_records.result.documents?.length > 0) {
+          setApplications(exam_records.result.documents);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -178,62 +211,106 @@ const AddExams = () => {
   const isDuplicate = (new_exam_item: any) => {
     return applications.some(
       (exam_item: any) =>
-        exam_item.code === new_exam_item.code ||
-        exam_item.name === new_exam_item.name
+        exam_item.session === new_exam_item.session &&
+        (exam_item.code === new_exam_item.code ||
+          exam_item.name === new_exam_item.name)
     );
   };
 
-  const updateExam = (new_exam_item: any) => {
-    setApplications((prevExamItem: any) =>
-      prevExamItem.map((prevExamItem: any) =>
-        prevExamItem.exam_id === new_exam_item.exam_id
-          ? { ...prevExamItem, ...new_exam_item }
-          : prevExamItem
-      )
-    );
+  const updateExam = async (updated_exam_item: any) => {
+    try {
+      const item = applications.find(
+        (subject: any) => subject.exam_id === updated_exam_item.exam_id
+      );
+      if (!item) return;
+
+      const updatedexam_item = {
+        ...updated_exam_item,
+        id: item.exam_id,
+        user: "pallav",
+      };
+
+      const updateItem = await UpdateExam(updatedexam_item);
+
+      if (updateItem && updateItem.result) {
+        setApplications((prevExamItem: any) =>
+          prevExamItem.map((exam: any) =>
+            exam.exam_id === updateItem.result.exam_id
+              ? { ...exam, ...updateItem.result }
+              : exam
+          )
+        );
+        snackbarRef.current?.showSnackbar(`Item Updated`, "success");
+      } else {
+        snackbarRef.current?.showSnackbar(`Item not updated`, "error");
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAdding(false);
+    }
   };
 
   const AddNewExamHandler = async (data: any) => {
-    console.log("Add New Exams Submit");
-    console.log(data);
-    if (edit) {
-      console.log("edit");
-      updateExam(data);
-      console.log("Updated ExamList");
-      console.log(data);
-      snackbarRef.current?.showSnackbar(
-        `Exam updated successfully.`,
-        "success"
-      );
-    } else {
-      if (isDuplicate(data)) {
-        snackbarRef.current?.showSnackbar(`Exam Already Present.`, "warning");
-        return;
-      }
-      console.log("New");
-      const _id = uuid().slice(0, 5);
-      const new_exam = {
-        ...data,
-        exam_id: _id,
-        id: _id,
-        total_working_days: 0,
-        created_on: moment().format("DD/MM/YYYY"),
-      };
+    try {
+      if (edit) {
+        setAdding(true);
+        updateExam(data);
+        setEdit(false);
+        reset({
+          session: "",
+          code: "",
+          name: "",
+          max_marks: "",
+          pass_marks: "",
+          total_working_days: "",
+        });
+      } else {
+        setAdding(true);
+        if (isDuplicate(data)) {
+          snackbarRef.current?.showSnackbar(`Exam Already Present.`, "warning");
+          return;
+        }
+        const _id = uuid().slice(0, 5);
+        //In JavaScript/TypeScript, using as number for type assertion (data.total_working_days as number)
+        //only tells TypeScript that you expect total_working_days to be a number—it does not actually convert it to a number.
+        //If data.total_working_days is a string, it will remain a string at runtime.
+        const new_exam = {
+          ...data,
+          total_working_days: parseInt(data.total_working_days),
+          exam_id: _id,
+          id: _id,
+          user: "Pallav",
+        };
 
-      const newExamList = [...applications, new_exam];
-      console.log("newExamList");
-      console.log(newExamList);
-      setApplications(newExamList);
-      setEdit(false);
-      reset({
-        session: "",
-        code: "",
-        name: "",
-        max_marks: "",
-        pass_marks: "",
-        total_working_days: "",
-      });
-      snackbarRef.current?.showSnackbar(`Exam added successfully.`, "success");
+        const addNewItem = await AddExam(new_exam);
+        if (addNewItem && addNewItem.result) {
+          const newExamList = [...applications, addNewItem.result];
+
+          setApplications(newExamList);
+          setEdit(false);
+          reset({
+            session: "",
+            code: "",
+            name: "",
+            max_marks: "",
+            pass_marks: "",
+            total_working_days: "",
+          });
+          snackbarRef.current?.showSnackbar(
+            `Exam added successfully.`,
+            "success"
+          );
+        } else {
+          snackbarRef.current?.showSnackbar(`Item not added`, "error");
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -256,7 +333,8 @@ const AddExams = () => {
     { field: "max_marks", headerName: "Max. Marks", flex: 1 },
     { field: "pass_marks", headerName: "Passing Marks", flex: 1 },
     { field: "total_working_days", headerName: "Working Days", flex: 1 },
-    { field: "created_on", headerName: "Created On", flex: 1 },
+    { field: "updated_on", headerName: "Updated On", flex: 1 },
+    { field: "updated_by", headerName: "Updated By", flex: 1 },
     {
       field: "actions",
       headerName: "Actions",
@@ -268,7 +346,6 @@ const AddExams = () => {
           <AnimatedButton
             label="Edit"
             onClick={() => {
-              console.log(params);
               setSelectedRow({
                 exam_id: params.row.exam_id,
                 session: params.row.session,
@@ -322,7 +399,7 @@ const AddExams = () => {
           <MyCustomButton
             variant="contained"
             startIcon={<HomeIcon />}
-            onClick={() => navigate("/schooladmin")}
+            onClick={() => navigate("/home")}
           >
             Home
           </MyCustomButton>
@@ -364,7 +441,7 @@ const AddExams = () => {
           width={"90vw"}
         >
           <Typography variant="h6" alignSelf={"center"}>
-            <strong>Create Exam</strong>
+            <strong>Create An Exam</strong>
           </Typography>
 
           <form
@@ -397,7 +474,7 @@ const AddExams = () => {
                 name="code"
                 control={control}
                 errors={errors}
-                label="Code"
+                label="Exam Code"
                 rules={{
                   required: "Required",
                 }}
@@ -410,7 +487,7 @@ const AddExams = () => {
                 name="name"
                 control={control}
                 errors={errors}
-                label="Name"
+                label="Exam Name"
                 rules={{
                   required: "Required",
                 }}
@@ -461,14 +538,24 @@ const AddExams = () => {
               <MyCustomButton
                 variant="contained"
                 type="submit"
-                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+                startIcon={adding ? <CircularProgress size={20} /> : null}
+                disabled={adding}
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "20%",
+                }}
               >
-                {!edit ? "Add" : "Save"}
+                {!edit ? (adding ? "" : "Add") : adding ? "" : "Save"}
               </MyCustomButton>
               <MyCustomButton
                 variant="contained"
                 type="reset"
-                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "20%",
+                }}
               >
                 Clear
               </MyCustomButton>
@@ -485,6 +572,7 @@ const AddExams = () => {
             rows={applications}
             columns={columns}
             rowHeight={40}
+            getRowId={(row) => row.exam_id}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[50, 100, 150]}
@@ -492,13 +580,14 @@ const AddExams = () => {
             disableRowSelectionOnClick
             slots={{
               toolbar: GridToolbar,
-              noRowsOverlay: CustomNoRowsOverlay,
+              noRowsOverlay: () => <CustomNoRowsOverlay loading={loading} />,
             }}
             slotProps={{ toolbar: { showQuickFilter: true } }}
             sx={{
               width: "80vw",
               maxWidth: "90vw",
-              height: "65vh",
+              height: "70vh", // Ensures sufficient height
+              minHeight: "350px", // Ensures the No Data message is always visible properly
               marginTop: "15px",
 
               "& .MuiDataGrid-row:hover": {

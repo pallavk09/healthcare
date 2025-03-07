@@ -7,23 +7,21 @@ import ProtectedRoute from "../common/ProtectedRoute";
 // import { Loader as StudentDashboardLoader } from "../pages/StudentDashboard";
 // import { Loader as RegistrationLoader } from "../components/RegistrationBlock";
 // import { Loader as AdmissionDashboardLoader } from "../pages/NewAdmissionForm/admissionDashboard";
-import SchoolAdmin from "../pages/SchoolAdmin";
-import NewAdmission from "../pages/NewAdmission";
+// import SchoolAdmin from "../pages/home";
+// import NewAdmission from "../pages/NewAdmission";
 // import NewAdmissionform from "../pages/NewAdmissionForm/container";
-import AdmissionDetails from "../pages/AdmissionDetails";
+// import AdmissionDetails from "../pages/AdmissionDetails";
 import FeePaymentsScreen from "../pages/FeePaymentsScreen";
-import FeesOverView from "../pages/StudentFees/FeesOverView";
-import StudentDashboardHome from "../pages/StudentDashboardHome";
-import Payment from "../pages/StudentFees/Payment";
-import FeesPaymentCart from "../pages/PaymentCart/FeesPaymentCart";
+// import FeesOverView from "../pages/StudentFees/FeesOverView";
+// import StudentDashboardHome from "../pages/StudentDashboardHome";
+// import Payment from "../pages/StudentFees/Payment";
+// import FeesPaymentCart from "../pages/PaymentCart/FeesPaymentCart";
 import StudentAdminData from "../pages/StudentsManagement/StudentAdminData";
 import RootLayoutAdmin from "../pages/RootLayoutAdmin";
 import TeachersAdminData from "../pages/StaffManagement/Teachers/TeachersAdminData";
 import ControlSettingsHome from "../pages/ControlSettings/Home";
 import Root from "../pages/ControlSettings/root";
-import ManageSubjects from "../pages/ControlSettings/ManageSubjects";
-import ManageFeeHeads from "../pages/ControlSettings/ManageFeeHeads";
-import ManageTransport from "../pages/ControlSettings/ManageTransport";
+
 import StudentManagementHome from "../pages/StudentsManagement/Home";
 import StudentManagementRoot from "../pages/StudentsManagement/Root";
 import ManageAttendance from "../pages/StudentsManagement/ManageAttendance";
@@ -35,19 +33,19 @@ import ScheduleExam from "../pages/ExamsManagement/ScheduleExam";
 import StaffManagementRoot from "../pages/StaffManagement/Root";
 import StaffManagementHome from "../pages/StaffManagement/Home";
 import TeacherSubjectAssignment from "../pages/StaffManagement/Teachers/TeacherSubjectAssignment";
+import SchoolAdmin from "../pages/SchoolAdmin";
+import GetAdmitCard from "../pages/ExamsManagement/GetAdmitCard";
 
-const RootLayout = lazy(() => import("../pages/RootLayout"));
-const StudentRootLayout = lazy(() => import("../pages/StudentRootLayout"));
-const NewAdmissionRootLayout = lazy(
-  () => import("../pages/NewAdmissionRootLayout")
-);
-const Home = lazy(() => import("../pages/Home"));
 const Login = lazy(() => import("../pages/Login"));
 const ErrorPage = lazy(() => import("../pages/ErrorPage"));
-const Studentregistration = lazy(() => import("../pages/StudentRegistration"));
-const StudentDashboard = lazy(() => import("../pages/StudentDashboard"));
-const AdmissionDashboard = lazy(
-  () => import("../pages/NewAdmissionForm/admissionDashboard")
+const ManageSubjects = lazy(
+  () => import("../pages/ControlSettings/ManageSubjects")
+);
+const ManageTransport = lazy(
+  () => import("../pages/ControlSettings/ManageTransport")
+);
+const ManageFeeHeads = lazy(
+  () => import("../pages/ControlSettings/ManageFeeHeads")
 );
 const myRouter = createBrowserRouter([
   {
@@ -140,11 +138,19 @@ const myRouter = createBrowserRouter([
   //   ],
   // },
   {
-    path: "schooladmin",
+    path: "home",
     element: <RootLayoutAdmin />,
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <SchoolAdmin /> },
+      {
+        index: true,
+        element: (
+          <SchoolAdmin />
+          // <ProtectedRoute allowedRoles={["admin", "teacher", "student"]}>
+          //   <SchoolAdmin />
+          // </ProtectedRoute>
+        ),
+      },
       {
         path: "students-management",
         element: <StudentManagementRoot />,
@@ -179,7 +185,7 @@ const myRouter = createBrowserRouter([
           },
           {
             path: "get-admit-card",
-            element: <ScheduleExam />,
+            element: <GetAdmitCard />,
           },
         ],
       },

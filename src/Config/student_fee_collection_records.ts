@@ -158,7 +158,7 @@ export const student_fee_collection_records = [
     total_fees: 3607,
     paid_amount: 3607,
     due_amount: null,
-    last_payment_date: "2025-02-15",
-    // last_payment_date: "2024-10-15",
+    // last_payment_date: "2025-02-15",
+    last_payment_date: "2024-10-15",
   },
 ];

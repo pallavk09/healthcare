@@ -124,7 +124,7 @@ const ExamsManagementHome: React.FC = () => {
         <MyCustomButton
           variant="contained"
           startIcon={<HomeIcon />}
-          onClick={() => navigate("/schooladmin")}
+          onClick={() => navigate("/home")}
         >
           Home
         </MyCustomButton>

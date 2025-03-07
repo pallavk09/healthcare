@@ -1,0 +1,31 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin123",
+      "role": "admin"
+    },
+    {
+      "username": "teacher",
+      "password": "teacher123",
+      "role": "teacher"
+    },
+    {
+      "username": "student",
+      "password": "student123",
+      "role": "student"
+    }
+  ],
+  "permissions": {
+    "admin": [
+      "Fees Collection",
+      "Teachers Management",
+      "Students Management",
+      "Exams Management",
+      "Report Center",
+      "Control and Settings"
+    ],
+    "teacher": ["dashboard", "viewStudents", "gradeAssignments"],
+    "student": ["dashboard", "viewCourses"]
+  }
+}

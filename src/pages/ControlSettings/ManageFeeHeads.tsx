@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import {
   DataGrid,
   GridColDef,
@@ -27,6 +27,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  CircularProgress,
 } from "@mui/material";
 
 import { tableCellClasses } from "@mui/material/TableCell";
@@ -36,17 +37,35 @@ import { useNavigate } from "react-router-dom";
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import HomeIcon from "@mui/icons-material/Home";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { classes_records } from "../../Config/classes_records";
-import { classes } from "../../Config/classes";
+// import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+// import { classes_records } from "../../Config/classes_records";
+// import { classes } from "../../Config/classes";
 
-import moment from "moment";
+// import moment from "moment";
 import { useForm } from "react-hook-form";
-import { fee_heads_records } from "../../Config/fee_heads_record";
-import { fees_structure_records } from "../../Config/fees_structure_records";
+// import { fee_heads_records } from "../../Config/fee_heads_record";
+// import { fees_structure_records } from "../../Config/fees_structure_records";
 import { v4 as uuid } from "uuid";
-import ControlledTextField from "../../common/ControlledComponents/ControlledTextField";
-import FeeMultiSelect from "./FeeMultiSelect/FeeMultiSelect";
+// import ControlledTextField from "../../common/ControlledComponents/ControlledTextField";
+import {
+  AddClassFeeStructure,
+  GetClassFeeStructure,
+  AddFeeHeads,
+  GetFeeHeads,
+  UpdateFeeHeads,
+  UpdateClassFeeStructure,
+} from "../../api/Control-Settings/manage-fee-heads";
+import { Get as GetClass } from "../../api/Control-Settings/manage-class";
+import { FixedSizeList } from "react-window";
+import ControlledSelect from "../../common/ControlledComponents/ControlledSelect";
+import {
+  GetSubjectsToClass,
+  UpdateSubjectsToClass,
+} from "../../api/Control-Settings/manage-subjects";
+// import FeeMultiSelect from "./FeeMultiSelect/FeeMultiSelect";
+const ControlledTextField = React.lazy(
+  () => import("../../common/ControlledComponents/ControlledTextField")
+);
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -69,25 +88,31 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const CustomNoRowsOverlay = () => {
+const CustomNoRowsOverlay = ({ loading }: { loading: boolean }) => {
   return (
-    <GridOverlay>
+    <GridOverlay
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
       <Box sx={{ textAlign: "center", padding: 2 }}>
-        <Typography variant="h5" color="textSecondary">
-          NO DATA AVAILABLE
-        </Typography>
+        {loading ? (
+          <>
+            <CircularProgress size={40} />
+            <Typography variant="h6" color="textSecondary" mt={2}>
+              Loading data...
+            </Typography>
+          </>
+        ) : (
+          <Typography variant="h5" color="textSecondary">
+            NO DATA AVAILABLE
+          </Typography>
+        )}
       </Box>
     </GridOverlay>
-  );
-};
-
-const CustomToolbar: React.FC = () => {
-  return (
-    <GridToolbarContainer>
-      <GridToolbarFilterButton />
-      <GridToolbarExport />
-      <GridToolbarQuickFilter />
-    </GridToolbarContainer>
   );
 };
 
@@ -176,15 +201,25 @@ const ManageFeeHeads = () => {
   const snackbarRef = React.useRef<SnackbarHandle>(null);
   const navigate = useNavigate();
   const [applications, setApplications] = useState<any>([]);
-  const [feeHeadsList, setFeeHeadsList] = useState<any>([]);
+  // const [feeHeadsList, setFeeHeadsList] = useState<any>([]);
   const [edit, setEdit] = useState<boolean>(false);
   const [selectedRow, setSelectedRow] = useState<any>();
   const [classList, setClassList] = useState<{}[]>([]);
-  const [classFeesDefault, setClassFeesDefault] = useState<any>();
+  // const [classFeesDefault, setClassFeesDefault] = useState<any>();
   const [paginationModel, setPaginationModel] =
     React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
 
   const [feesStructureRecords, setFeesStructureRecords] = useState<any>();
+
+  const [loading, setLoading] = useState(true);
+  const [loadingCost, setLoadingCost] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [school_fee_structure, setSchool_fee_structure] = useState<any>([]);
+  const [school_fee_structureDB, setSchool_fee_structureDB] = useState<any>([]);
+  const [addingCost, setAddingCost] = useState(false);
+  const [editCost, setEditCost] = useState<boolean>(false);
+  const [classId, setClassId] = useState<any>(undefined);
+  const [classes, setClasses] = useState<any>([]);
 
   const {
     handleSubmit,
@@ -194,9 +229,9 @@ const ManageFeeHeads = () => {
     reset,
   } = useForm({
     defaultValues: {
-      id: "",
+      feehead_id: "",
       title: "",
-      amount: "",
+      // amount: "",
     },
     mode: "onTouched",
   });
@@ -205,79 +240,67 @@ const ManageFeeHeads = () => {
     handleSubmit: handleSubmitForm2,
     control: controlForm2,
     formState: { errors: errorsForm2 },
-    reset: resetForm2,
+    reset: resetSchoolFeeCost,
   } = useForm({
     defaultValues: {
-      fees_particulars: {},
+      fees: {},
+    },
+    mode: "onTouched",
+  });
+
+  const {
+    handleSubmit: handleSubmitShowFee,
+    control: controlShowFee,
+    formState: { errors: errorsShowFee },
+    reset: resetShowFee,
+  } = useForm({
+    defaultValues: {
+      class_id: "",
     },
     mode: "onTouched",
   });
 
   useEffect(() => {
-    console.log("useEffect 2");
-    if (
-      feesStructureRecords?.length > 0 &&
-      classList?.length > 0 &&
-      applications?.length > 0
-    ) {
-      const _classFeesDefault = generateFeesParticulars(
-        feesStructureRecords,
-        classList,
-        applications
-      );
-      setClassFeesDefault(_classFeesDefault?.fees_particulars);
-    }
-  }, [feesStructureRecords, classList, applications]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [fee_heads_records, classes_records, classes] = await Promise.all(
+          [GetFeeHeads(), GetClass(), GetSubjectsToClass()]
+        );
 
-  useEffect(() => {
-    console.log("useEffect 3");
-    const feeHeadsListMultiSelect = applications.map((item: any) => ({
-      id: item.id,
-      title: item.title,
-    }));
-    setFeeHeadsList(feeHeadsListMultiSelect);
-  }, [applications]);
+        if (
+          fee_heads_records &&
+          fee_heads_records.result.documents?.length > 0
+        ) {
+          setApplications(fee_heads_records.result.documents);
+        }
+        if (classes_records && classes_records.result.documents?.length > 0) {
+          setClassList(classes_records.result.documents);
+        }
+        if (classes && classes.result.documents?.length > 0) {
+          setClasses(classes.result.documents);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    console.log("useEffect 1");
-    setFeesStructureRecords(fees_structure_records);
-    setClassList(classes_records);
-    setApplications(fee_heads_records);
-
-    // setClassFeesDefault({
-    //   "2d154374": {
-    //     January: [1, 2, 3],
-    //     February: [3, 4, 2],
-    //     March: [2, 3, 1],
-    //     April: [2, 3, 4],
-    //   },
-    //   "2d154375": {},
-    //   "2d154376": {},
-    //   "2d154377": {},
-    //   "2d154379": {},
-    // });
+    fetchData();
   }, []);
 
   useEffect(() => {
-    console.log("useEffect 4");
-    if (classFeesDefault && Object.keys(classFeesDefault).length > 0) {
-      resetForm2({ fees_particulars: classFeesDefault });
-      console.log("Form reset with:", classFeesDefault);
-    }
-  }, [classFeesDefault, resetForm2]);
-
-  useEffect(() => {
-    console.log("useEffect 5");
+    //This is for editing fee heads
     if (selectedRow) {
-      reset(selectedRow); // Reset form with selected row values
+      reset(selectedRow);
     }
   }, [selectedRow, reset]);
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 0.5 },
     { field: "title", headerName: "Fee Head ", flex: 1 },
-    { field: "amount", headerName: "Amount (₹)", flex: 1 },
-    { field: "created_on", headerName: "Created On", flex: 1 },
+    { field: "updated_on", headerName: "Updated On", flex: 1 },
+    { field: "updated_by", headerName: "Updated By", flex: 1 },
     {
       field: "actions",
       headerName: "Actions",
@@ -290,20 +313,13 @@ const ManageFeeHeads = () => {
             label="Edit"
             onClick={() => {
               setSelectedRow({
-                id: params.row.id,
-                amount: params.row.amount,
+                feehead_id: params.row.feehead_id,
                 title: params.row.title,
               });
               setEdit(true);
             }}
             disabled={false}
           />
-          {/* {"|"}
-          <AnimatedButton
-            label="Remove"
-            onClick={() => console.log("Get TC Clicked")}
-            disabled={false}
-          /> */}
         </>
       ),
     },
@@ -313,206 +329,366 @@ const ManageFeeHeads = () => {
     return applications.some((fee: any) => fee.title === title);
   };
 
-  const updateItem = (updatedfee: any) => {
-    setApplications((prevfee: any) =>
-      prevfee.map((fee: any) =>
-        fee.id === updatedfee.id ? { ...fee, ...updatedfee } : fee
-      )
-    );
+  const updateItem = async (updatedfee: any) => {
+    try {
+      console.log(updatedfee);
+      console.log(applications);
+
+      const item = applications.find(
+        (feehead: any) => feehead.feehead_id === updatedfee.feehead_id
+      );
+      if (!item) return;
+
+      const updatedFeehead_item = {
+        ...updatedfee,
+        id: item.feehead_id,
+        user: "pallav",
+      };
+
+      console.log(updatedFeehead_item);
+      const updateItem = await UpdateFeeHeads(updatedFeehead_item);
+
+      if (updateItem && updateItem.result) {
+        setApplications((prevFeeHead: any) =>
+          prevFeeHead.map((feehead: any) =>
+            feehead.feehead_id === updateItem.result.feehead_id
+              ? { ...feehead, ...updateItem.result }
+              : feehead
+          )
+        );
+        snackbarRef.current?.showSnackbar(`Item Updated`, "success");
+      } else {
+        snackbarRef.current?.showSnackbar(`Item not updated`, "error");
+      }
+
+      // setApplications((prevfee: any) =>
+      //   prevfee.map((fee: any) =>
+      //     fee.id === updatedfee.id ? { ...fee, ...updatedfee } : fee
+      //   )
+      // );
+      return;
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAdding(false);
+    }
   };
 
   const handleFormSubmit = async (data: any) => {
-    // console.log("Handle submit for Subject");
-    // console.log(data);
-    if (edit) {
-      updateItem(data);
-      setEdit(false);
-      reset({
-        id: "",
-        amount: "",
-        title: "",
-      });
-      snackbarRef.current?.showSnackbar(
-        `Entry updated successfully.`,
-        "success"
-      );
-    } else {
-      if (isDuplicate(data.title)) {
-        // console.log("Duplicate");
-        snackbarRef.current?.showSnackbar(
-          `Subject Already Present.`,
-          "warning"
-        );
-        return;
-      }
-      const _id = uuid().slice(0, 5);
-      const newFeeHead = {
-        ...data,
-        created_on: moment().format("DD/MM/YYYY"),
-        id: _id,
-      };
+    try {
+      setAdding(true);
+      if (edit) {
+        console.log("Entry To be updated");
+        updateItem(data);
+        setEdit(false);
+        reset({
+          feehead_id: "",
+          title: "",
+        });
+      } else {
+        if (isDuplicate(data.title)) {
+          // console.log("Duplicate");
+          snackbarRef.current?.showSnackbar(
+            `Subject Already Present.`,
+            "warning"
+          );
+          return;
+        }
+        const _id = uuid().slice(0, 5);
+        const newFeeHead = {
+          ...data,
+          feehead_id: _id,
+          id: _id,
+          user: "pallav",
+        };
 
-      const newApplicationList = [...applications, newFeeHead];
-      console.log(newApplicationList);
-      setApplications(newApplicationList);
-      setEdit(false);
-      reset({
-        id: "",
-        amount: "",
-        title: "",
-      });
-      snackbarRef.current?.showSnackbar(
-        `Subject added successfully.`,
-        "success"
-      );
+        const addNewItem = await AddFeeHeads(newFeeHead);
+        if (addNewItem && addNewItem.result) {
+          const newApplicationList = [...applications, addNewItem.result];
+
+          setApplications(newApplicationList);
+          setEdit(false);
+          reset({
+            feehead_id: "",
+            title: "",
+          });
+          snackbarRef.current?.showSnackbar(
+            `Subject added successfully.`,
+            "success"
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAdding(false);
     }
   };
 
   const onResetHandler = () => {
     reset({
-      id: "",
-      amount: "",
+      feehead_id: "",
       title: "",
     });
     setEdit(false);
   };
 
-  const generateFeeStructure = (
-    fee_heads_records: any,
-    classes_records: any,
-    outcome: any
-  ) => {
-    return classes_records.map((cls: any) => {
-      const class_id = cls.class_id;
-      const monthly_fees = outcome.fees_particulars[class_id]
-        ? Object.entries(outcome.fees_particulars[class_id]).map(
-            ([month, fee_ids]: [month: any, fee_ids: any]) => {
-              let fees_particulars: any = {};
-
-              // Map fee IDs to their corresponding amounts and titles
-              fee_ids &&
-                fee_ids.forEach((fee_id: any) => {
-                  const fee_item = fee_heads_records.find(
-                    (f: any) => f.id === fee_id
-                  );
-                  if (fee_item) {
-                    fees_particulars[fee_item.title.toLowerCase()] = parseInt(
-                      fee_item.amount,
-                      10
-                    );
-                  }
-                });
-              let total_fees = 0;
-              if (Object.keys(fees_particulars).length > 0) {
-                // Only sum up the mapped fees
-                //@ts-ignore
-                total_fees = Object.values(fees_particulars).reduce(
-                  //@ts-ignore
-                  (sum, value) => sum + value,
-                  0
-                );
-              } else {
-                // If no fees are mapped, set fees_particulars as an empty object
-                fees_particulars = {};
-                total_fees = 0; // No fees, so total should be 0
-              }
-
-              return {
-                month,
-                fees_particulars,
-                total_fees,
-              };
-            }
-          )
-        : [];
-
-      return {
-        id: uuid().slice(0, 5),
-        fees_structure_id: uuid().slice(0, 5),
-        academic_year: "",
-        class: cls.name,
-        fee_collection_cycle: 10,
-        monthly_fees,
-      };
+  const onResetHandlerShowFee = () => {
+    resetShowFee({
+      class_id: "",
     });
+    setClassId(undefined);
   };
 
-  function generateFeesParticulars(
-    feesStructureRecords: any,
-    classesRecords: any,
-    feeHeadsRecords: any
-  ) {
-    const feeHeadsMap = feeHeadsRecords.reduce((acc: any, head: any) => {
-      acc[head.title.toLowerCase()] = head.id;
-      return acc;
-    }, {});
+  //THIS FUNCTION IS TO GENERATE DATA TO BE STORED INTO DB fee_structure_records
+  function generateFeesStructure(classes: any, feesData: any) {
+    return classes.map((cls: any) => {
+      const _id = uuid().slice(0, 5);
+      const monthly_fees = Object.keys(feesData[cls.class_id] || {}).map(
+        (month) => {
+          const fees_particulars = Object.entries(
+            feesData[cls.class_id][month] || {}
+          ).reduce((acc, [key, value]) => {
+            //@ts-ignore
+            acc[key] = value ? parseInt(value, 10) : 0;
+            return acc;
+          }, {});
+          return {
+            month,
+            fees_particulars,
 
-    const result = { fees_particulars: {} };
-
-    // Initialize classes with empty objects
-    //@ts-ignore
-    classesRecords.forEach((cls) => {
-      //@ts-ignore
-      result.fees_particulars[cls.class_id] = {};
-    });
-
-    //@ts-ignore
-    feesStructureRecords.forEach((record) => {
-      //@ts-ignore
-      const classId = classesRecords.find(
-        (cls: any) => cls.name === record.class
-      )?.class_id;
-      if (!classId) return;
-
-      const classFees = {};
-      //@ts-ignore
-      record.monthly_fees.forEach((monthlyFee) => {
-        const month = monthlyFee.month;
-        const feeIds = Object.keys(monthlyFee.fees_particulars)
-          .map((fee) => feeHeadsMap[fee.toLowerCase()])
-          .filter((id) => id !== undefined); // Filter out undefined fee IDs
-
-        if (feeIds.length > 0) {
-          //@ts-ignore
-          classFees[month] = feeIds;
+            total_fees: Object.values(fees_particulars).reduce(
+              //@ts-ignore
+              (sum, fee) => sum + fee,
+              0
+            ),
+          };
         }
-      });
-
-      if (Object.keys(classFees).length > 0) {
-        //@ts-ignore
-        result.fees_particulars[classId] = classFees;
-      }
+      );
+      return {
+        id: _id, // Placeholder
+        fees_structure_id: _id, // Placeholder
+        academic_year: "", // Placeholder
+        class: cls.name,
+        fee_collection_cycle: 10,
+        monthly_fees: JSON.stringify(monthly_fees),
+      };
     });
+  }
 
-    return result;
+  function updateFeesStructure(classes: any, feesData: any) {
+    return classes.map((cls: any) => {
+      const _id = uuid().slice(0, 5);
+      const monthly_fees = Object.keys(feesData[cls.class_id] || {}).map(
+        (month) => {
+          const fees_particulars = Object.entries(
+            feesData[cls.class_id][month] || {}
+          ).reduce((acc, [key, value]) => {
+            //@ts-ignore
+            acc[key] = value ? parseInt(value, 10) : 0;
+            return acc;
+          }, {});
+          return {
+            month,
+            fees_particulars,
+
+            total_fees: Object.values(fees_particulars).reduce(
+              //@ts-ignore
+              (sum, fee) => sum + fee,
+              0
+            ),
+          };
+        }
+      );
+      return {
+        monthly_fees: JSON.stringify(monthly_fees),
+      };
+    });
   }
 
   const HandleFeeStructureCreation = async (data: any) => {
-    console.log("HandleFeeStructureCreation");
-    console.log(data);
-    const mappedData = generateFeeStructure(applications, classList, data);
-
-    // console.log("mappedData");
-    // console.log(mappedData);
-
-    // Here records will be created and added to fees_structure_records, where each record will have its fees_structure_id:
-
-    // under classes, for any given class and all sections fees_structure_id should be added
-    const mappedData_withFee = classes.map((classObj: any) => {
-      const feeItem = mappedData.find(
-        (feeStructureItem: any) => classObj.title === feeStructureItem.class
+    try {
+      setAddingCost(true);
+      const _classList = classList.filter(
+        (item: any) => item.class_id === classId
       );
+      console.log(data);
+      if (editCost) {
+        const updated_monthly_fee = updateFeesStructure(_classList, data?.fees);
 
-      if (feeItem) {
-        // Update the fees_structure_id with the feeItem's id or fees_structure_id as needed
-        classObj.fees_structure_id = feeItem.fees_structure_id;
+        const updated_monthly_fee_class = {
+          id: school_fee_structureDB.fees_structure_id,
+          fees_structure_id: school_fee_structureDB.fees_structure_id,
+          academic_year: school_fee_structureDB.academic_year,
+          class: school_fee_structureDB.class,
+          fee_collection_cycle: school_fee_structureDB.fee_collection_cycle,
+          monthly_fees: updated_monthly_fee[0].monthly_fees,
+        };
+
+        console.log(updated_monthly_fee_class);
+
+        const payload = {
+          user: "pallav",
+          arrayOfItems: [updated_monthly_fee_class],
+        };
+        const response = await UpdateClassFeeStructure(payload);
+        if (response.status === "SUCCESS") {
+          resetSchoolFeeCost({
+            fees: data?.fees,
+          });
+          setSchool_fee_structure(data?.fees);
+          setSchool_fee_structureDB(updated_monthly_fee_class);
+          setEditCost(false);
+
+          snackbarRef.current?.showSnackbar(`School Fees Updated.`, "success");
+        } else {
+          snackbarRef.current?.showSnackbar(
+            `Unable To Update School Fee`,
+            "error"
+          );
+        }
+        return;
       }
 
-      return classObj;
-    });
+      const class_fee_Structure = generateFeesStructure(_classList, data?.fees);
 
-    console.log("mappedData_withFee");
-    console.log(mappedData_withFee);
+      const payload = {
+        user: "pallav",
+        arrayOfItems: class_fee_Structure,
+      };
+      const response = await AddClassFeeStructure(payload);
+      if (response.status === "SUCCESS") {
+        resetSchoolFeeCost({
+          fees: data?.fees,
+        });
+        setSchool_fee_structure(data?.fees);
+        setSchool_fee_structureDB(class_fee_Structure);
+        console.log("School Fee Saved. Assign it to Class: ", classId);
+        try {
+          // under classes, for any given class and all sections fees_structure_id should be added
+          const classes_filtered_records = classes.filter(
+            (classObj: any) => classObj.class_id === classId
+          );
+          if (classes_filtered_records && classes_filtered_records.length > 0) {
+            const classes_filtered_records_withFeeId =
+              classes_filtered_records.map((record: any) => ({
+                id: record.class_section_id,
+                class_id: record.class_id,
+                class_section_id: record.class_section_id,
+                class_teacher_id: record.class_teacher_id,
+                fees_structure_id:
+                  class_fee_Structure[0].fees_structure_id || "",
+                section: record.section,
+                section_id: record.section_id,
+                subjects: record.subjects,
+                title: record.title,
+              }));
+
+            const payload = {
+              user: "pallav",
+              arrayOfItems: classes_filtered_records_withFeeId,
+            };
+
+            const response = await UpdateSubjectsToClass(payload);
+            if (response.status === "SUCCESS") {
+              snackbarRef.current?.showSnackbar(
+                `School Fees Saved. Assgined To Class`,
+                "success"
+              );
+            } else {
+              snackbarRef.current?.showSnackbar(
+                `School Fee Saved. Not Assigned To Class`,
+                "warning"
+              );
+            }
+          }
+        } catch (error) {
+          console.log("Exception Occured. Fee Assignment to Class");
+          console.log(error);
+          snackbarRef.current?.showSnackbar(
+            `Some Error Occured. Fees Not Assigned To Class`,
+            "error"
+          );
+        } finally {
+          setAddingCost(false);
+        }
+      } else {
+        snackbarRef.current?.showSnackbar(`Unable To Save School Fee`, "error");
+        setAddingCost(false);
+      }
+    } catch (error) {
+      console.log("Exception Occured");
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error Occured`, "error");
+      setAddingCost(false);
+    } finally {
+    }
+  };
+
+  const SubmitShowFee = async (data: any) => {
+    try {
+      setLoadingCost(true);
+      console.log("SubmitShowFee", data);
+      let transformedData = {};
+      const _class = classList.find(
+        (cls: any) => cls.class_id === data.class_id
+      );
+      //@ts-ignore
+      const CLASSNAME = _class.name;
+
+      //@ts-ignore
+      transformedData[data.class_id] = {};
+
+      const fee_structure = await GetClassFeeStructure();
+      const fee_structure_class = fee_structure.result.documents.find(
+        (structure: any) => structure.class === CLASSNAME
+      );
+      console.log(fee_structure_class);
+
+      if (
+        fee_structure_class &&
+        Object.entries(fee_structure_class).length > 0
+      ) {
+        const parsedFees = JSON.parse(fee_structure_class.monthly_fees);
+        //@ts-ignore
+        parsedFees.forEach(({ month, fees_particulars }) => {
+          //@ts-ignore
+          transformedData[data.class_id][month] = Object.fromEntries(
+            Object.entries(fees_particulars).map(([key, value]) => [
+              key,
+              String(value),
+            ])
+          );
+        });
+
+        console.log(transformedData);
+
+        resetSchoolFeeCost({
+          fees: transformedData,
+        });
+        setSchool_fee_structure(transformedData);
+        setSchool_fee_structureDB(fee_structure_class);
+      } else {
+        resetSchoolFeeCost({
+          fees: {},
+        });
+        setSchool_fee_structure([]);
+        setSchool_fee_structureDB([]);
+      }
+
+      setClassId(data.class_id);
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error Occured`, "error");
+    } finally {
+      setLoadingCost(false);
+    }
+  };
+
+  const HandleSelectClassChange = (event: any) => {
+    setClassId(undefined);
   };
 
   return (
@@ -536,7 +712,7 @@ const ManageFeeHeads = () => {
         <MyCustomButton
           variant="contained"
           startIcon={<HomeIcon />}
-          onClick={() => navigate("/schooladmin")}
+          onClick={() => navigate("/home")}
         >
           Home
         </MyCustomButton>
@@ -586,30 +762,28 @@ const ManageFeeHeads = () => {
                 }}
                 required
               />
-              <ControlledTextField
-                variant="standard"
-                name="amount"
-                type="number"
-                control={control}
-                errors={errors}
-                label="Amount (₹)"
-                rules={{
-                  required: "Required",
-                }}
-                required
-              />
 
               <MyCustomButton
                 variant="contained"
                 type="submit"
-                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+                startIcon={adding ? <CircularProgress size={20} /> : null}
+                disabled={adding}
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "30%",
+                }}
               >
-                {!edit ? "Add" : "Save"}
+                {!edit ? (adding ? "" : "Add") : adding ? "" : "Save"}
               </MyCustomButton>
               <MyCustomButton
                 variant="contained"
                 type="reset"
-                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "30%",
+                }}
               >
                 Clear
               </MyCustomButton>
@@ -620,6 +794,7 @@ const ManageFeeHeads = () => {
             rows={applications}
             columns={columns}
             rowHeight={40}
+            getRowId={(row) => row.feehead_id}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[50, 100, 150]}
@@ -627,13 +802,14 @@ const ManageFeeHeads = () => {
             disableRowSelectionOnClick
             slots={{
               toolbar: GridToolbar,
-              noRowsOverlay: CustomNoRowsOverlay,
+              noRowsOverlay: () => <CustomNoRowsOverlay loading={loading} />,
             }}
             slotProps={{ toolbar: { showQuickFilter: true } }}
             sx={{
-              width: "80vw",
-              maxWidth: "90vw",
-              height: "65vh",
+              width: "60vw",
+              maxWidth: "70vw",
+              height: "65vh", // Ensures sufficient height
+              minHeight: "300px", // Ensures the No Data message is always visible properly
               marginTop: "15px",
 
               "& .MuiDataGrid-row:hover": {
@@ -675,92 +851,217 @@ const ManageFeeHeads = () => {
           justifyContent={"center"}
           alignItems={"center"}
           mt={1}
+          width={"90vw"}
         >
           <Typography variant="h5" alignSelf={"center"} mt={2}>
             <strong>Create Fees Structure</strong>
           </Typography>
-          {classList.map((classItem: any, classIndex: number) => (
-            <Accordion
-              key={classItem.class_id}
-              sx={{
-                mt: 2,
-                width: "80vw",
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6">
-                  <strong>{`Class: ${classItem.name}`}</strong>
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <form onSubmit={handleSubmitForm2(HandleFeeStructureCreation)}>
-                  <Grid container spacing={2}>
-                    <Grid
-                      item
-                      xs={12}
-                      display={"flex"}
-                      flexDirection={"column"}
-                    >
-                      <>
-                        <Box
-                          display={"flex"}
-                          flexDirection={"row"}
-                          alignItems={"center"}
-                          justifyContent={"flex-end"}
-                          mb={2}
-                        >
-                          <AnimatedButton
-                            label="Edit"
-                            onClick={() => console.log("Get TC Clicked")}
-                            disabled={false}
-                          />
-                          {"|"}
-                          <AnimatedButton
-                            label="Save"
-                            disabled={false}
-                            type={"submit"}
-                          />
-                        </Box>
+          {applications?.length > 0 ? (
+            <>
+              <form
+                onSubmit={handleSubmitShowFee(SubmitShowFee)}
+                onReset={onResetHandlerShowFee}
+              >
+                <Box
+                  display={"flex"}
+                  flexDirection={"row"}
+                  justifyContent={"space-evenly"}
+                  gap={3}
+                  width={"30vw"}
+                >
+                  <ControlledSelect
+                    name="class_id"
+                    control={controlShowFee}
+                    errors={errorsShowFee}
+                    label="Select Class"
+                    rules={{ required: "Required" }}
+                    options={classList.map((classItem: any) => ({
+                      value: classItem.class_id,
+                      label: classItem.name,
+                    }))}
+                    sx={{ width: "100%" }}
+                    selectProps={{ onChange: HandleSelectClassChange }}
+                  />
 
-                        <TableContainer component={Paper}>
-                          <Table size="medium" aria-label="a dense table">
-                            <TableHead>
-                              <TableRow>
-                                <StyledTableCell>Month</StyledTableCell>
-                                <StyledTableCell align="center">
-                                  Fee Heads
-                                </StyledTableCell>
-                              </TableRow>
-                            </TableHead>
+                  <MyCustomButton
+                    variant="contained"
+                    type="submit"
+                    startIcon={
+                      loadingCost ? <CircularProgress size={20} /> : null
+                    }
+                    disabled={loadingCost}
+                    sx={{
+                      alignSelf: "center",
+                      height: "70%",
+                      width: "30%",
+                    }}
+                  >
+                    {loadingCost ? "" : "Show"}
+                  </MyCustomButton>
+                  <MyCustomButton
+                    variant="contained"
+                    type="reset"
+                    sx={{
+                      alignSelf: "center",
+                      height: "70%",
+                      width: "30%",
+                    }}
+                  >
+                    Clear
+                  </MyCustomButton>
+                </Box>
+              </form>
 
-                            <TableBody>
-                              {MONTHS.map((month: any, index: number) => (
-                                <StyledTableRow key={`${classIndex}-${index}`}>
-                                  <StyledTableCell component="th" scope="row">
-                                    {month}
-                                  </StyledTableCell>
-                                  <StyledTableCell align="right">
-                                    <FeeMultiSelect
-                                      name={`fees_particulars.${classItem.class_id}.${month}`}
-                                      control={controlForm2}
-                                      errors={errorsForm2}
-                                      label="Subjects"
-                                      options={feeHeadsList}
-                                      sx={{ width: 900 }}
-                                    />
-                                  </StyledTableCell>
-                                </StyledTableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </>
+              {classId && (
+                <>
+                  <form
+                    onSubmit={handleSubmitForm2(HandleFeeStructureCreation)}
+                  >
+                    <Grid container spacing={2}>
+                      <Grid
+                        item
+                        xs={12}
+                        display={"flex"}
+                        flexDirection={"column"}
+                      >
+                        <>
+                          <Box
+                            display={"flex"}
+                            flexDirection={"row"}
+                            alignItems={"center"}
+                            justifyContent={"flex-end"}
+                            mb={2}
+                          >
+                            {/* <Typography variant="h6">
+                              <strong>{`Class: ${classId}`}</strong>
+                            </Typography> */}
+                            {school_fee_structure &&
+                            Object.entries(school_fee_structure).length > 0 ? (
+                              !editCost ? (
+                                <MyCustomButton
+                                  variant="contained"
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault(); // Ensure it doesn't submit the form
+                                    setEditCost(true);
+                                  }}
+                                  sx={{
+                                    width: "auto",
+                                    height: "100%",
+                                    alignSelf: "center",
+                                  }}
+                                >
+                                  Edit
+                                </MyCustomButton>
+                              ) : (
+                                <MyCustomButton
+                                  variant="contained"
+                                  type="submit"
+                                  sx={{
+                                    width: "auto",
+                                    height: "100%",
+                                    alignSelf: "center",
+                                  }}
+                                  startIcon={
+                                    addingCost ? (
+                                      <CircularProgress size={20} />
+                                    ) : null
+                                  }
+                                  disabled={addingCost}
+                                >
+                                  {addingCost ? "" : "Save Changes"}
+                                </MyCustomButton>
+                              )
+                            ) : (
+                              <MyCustomButton
+                                variant="contained"
+                                type="submit"
+                                sx={{
+                                  width: "10%",
+                                  height: "100%",
+                                  alignSelf: "center",
+                                }}
+                                startIcon={
+                                  addingCost ? (
+                                    <CircularProgress size={20} />
+                                  ) : null
+                                }
+                                disabled={addingCost}
+                              >
+                                {addingCost ? "" : "Save"}
+                              </MyCustomButton>
+                            )}
+                          </Box>
+
+                          <TableContainer component={Paper}>
+                            <Table size="medium" aria-label="a dense table">
+                              <TableHead>
+                                <TableRow>
+                                  <StyledTableCell>Heads</StyledTableCell>
+                                  {MONTHS.map((month: string) => (
+                                    <StyledTableCell align="center" key={month}>
+                                      {month.slice(0, 3)}
+                                    </StyledTableCell>
+                                  ))}
+                                </TableRow>
+                              </TableHead>
+
+                              <TableBody>
+                                {applications.map(
+                                  (feeObj: any, feeIndex: number) => (
+                                    <StyledTableRow key={`${feeObj.title}`}>
+                                      <StyledTableCell
+                                        component="th"
+                                        scope="row"
+                                      >
+                                        {feeObj.title}
+                                      </StyledTableCell>
+
+                                      {MONTHS.map((key) => (
+                                        <StyledTableCell
+                                          align="right"
+                                          key={key}
+                                        >
+                                          <ControlledTextField
+                                            variant="standard"
+                                            name={`fees.${classId}.${key}.${feeObj.title}`}
+                                            control={controlForm2}
+                                            errors={errorsForm2}
+                                            label="₹0"
+                                            type="number"
+                                            disabled={
+                                              Object.entries(
+                                                school_fee_structure
+                                              ).length > 0
+                                                ? !editCost
+                                                : false
+                                            }
+                                          />
+                                        </StyledTableCell>
+                                      ))}
+                                    </StyledTableRow>
+                                  )
+                                )}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </>
+                      </Grid>
                     </Grid>
-                  </Grid>
-                </form>
-              </AccordionDetails>
-            </Accordion>
-          ))}
+                  </form>
+                </>
+              )}
+            </>
+          ) : (
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              height="100px"
+            >
+              No Feeheads Added Yet.
+            </Box>
+          )}
         </Box>
       </Box>
     </>

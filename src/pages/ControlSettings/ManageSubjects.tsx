@@ -27,6 +27,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  CircularProgress,
 } from "@mui/material";
 import { tableCellClasses } from "@mui/material/TableCell";
 import { useNavigate } from "react-router-dom";
@@ -34,15 +35,24 @@ import { useNavigate } from "react-router-dom";
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import HomeIcon from "@mui/icons-material/Home";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
-import { subjects } from "../../Config/subjects";
+// import { subjects } from "../../Config/subjects";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { classes } from "../../Config/classes";
-import { classes_records } from "../../Config/classes_records";
+// import { classes } from "../../Config/classes";
+// import { classes_records } from "../../Config/classes_records";
 import { sections } from "../../Config/sections_records";
 import { useForm } from "react-hook-form";
 import ControlledTextField from "../../common/ControlledComponents/ControlledTextField";
 import { v4 as uuid } from "uuid";
 import ControlledMultiSelect from "../../common/ControlledComponents/ControlledMultiSelect";
+import {
+  Get,
+  Add,
+  Update,
+  GetSubjectsToClass,
+  AddSubjectsToClass,
+  UpdateSubjectsToClass,
+} from "../../api/Control-Settings/manage-subjects";
+import { Get as GetClass } from "../../api/Control-Settings/manage-class";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -65,18 +75,33 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const CustomNoRowsOverlay = () => {
+const CustomNoRowsOverlay = ({ loading }: { loading: boolean }) => {
   return (
-    <GridOverlay>
+    <GridOverlay
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
       <Box sx={{ textAlign: "center", padding: 2 }}>
-        <Typography variant="h5" color="textSecondary">
-          NO DATA AVAILABLE
-        </Typography>
+        {loading ? (
+          <>
+            <CircularProgress size={40} />
+            <Typography variant="h6" color="textSecondary" mt={2}>
+              Loading data...
+            </Typography>
+          </>
+        ) : (
+          <Typography variant="h5" color="textSecondary">
+            NO DATA AVAILABLE
+          </Typography>
+        )}
       </Box>
     </GridOverlay>
   );
 };
-
 const CustomToolbar: React.FC = () => {
   return (
     <GridToolbarContainer>
@@ -163,8 +188,13 @@ const ManageSubjects = () => {
     React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
   const [selectedRow, setSelectedRow] = useState<any>();
   const [edit, setEdit] = useState<boolean>(false);
-  const [classSubjectDefault, setClassSubjectDefault] = useState<any>();
+  const [editAssignment, setEditAssignment] = useState<boolean>(false);
+  const [classSubjectDefault, setClassSubjectDefault] = useState<any>([]);
 
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [addingAssignment, setAddingAssignment] = useState(false);
+  const [assignmentMappedData, setAssignmentFlatMapped] = useState<any>([]);
   const {
     handleSubmit,
     control,
@@ -191,7 +221,7 @@ const ManageSubjects = () => {
     mode: "onTouched",
   });
 
-  // Update the form when classSubjectDefault is available
+  // Update the class to subject assignment when classSubjectDefault is available
   useEffect(() => {
     if (classSubjectDefault && Object.keys(classSubjectDefault).length > 0) {
       resetForm2({
@@ -201,29 +231,60 @@ const ManageSubjects = () => {
   }, [classSubjectDefault, resetForm2]); // Depend on `classSubjectDefault`
 
   useEffect(() => {
-    //@ts-ignore
-    const _classSubjectDefault = classes.reduce(
-      (acc, { class_id, subjects }) => {
-        if (subjects.length > 0) {
-          //@ts-ignore
-          acc[class_id] = subjects.map(({ subject_id }) => subject_id);
-        }
-        return acc;
-      },
-      {}
-    );
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [data, classes_records, classes] = await Promise.all([
+          Get(),
+          GetClass(),
+          GetSubjectsToClass(),
+        ]);
 
-    setClassSubjectDefault(_classSubjectDefault);
-    setClassList(classes_records);
-    setApplications(subjects);
+        if (data && data.result.documents?.length > 0) {
+          setApplications(data.result.documents);
+        }
+        if (classes_records && classes_records.result.documents?.length > 0) {
+          setClassList(classes_records.result.documents);
+        }
+        if (classes && classes.result.documents?.length > 0) {
+          console.log("classes");
+          console.log(classes);
+          const _classSubjectDefault = classes.result.documents.reduce(
+            //@ts-ignore
+            (acc, { class_id, subjects }) => {
+              const subjects_json = JSON.parse(subjects);
+              if (subjects_json && subjects_json?.length > 0) {
+                acc[class_id] = subjects_json.map(
+                  //@ts-ignore
+                  ({ subject_id }) => subject_id
+                );
+              }
+              return acc;
+            },
+            {}
+          );
+          console.log("_classSubjectDefault");
+          console.log(_classSubjectDefault);
+          setAssignmentFlatMapped(classes.result.documents);
+          setClassSubjectDefault(_classSubjectDefault);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
     if (selectedRow) {
-      reset(selectedRow); // Reset form with selected row values
+      reset(selectedRow);
     }
   }, [selectedRow, reset]);
 
+  //THIS WILL UPDATE SUBJECT ITEM UNDER ACCORDIAN IF NEW SUBJECT ADDED
   useEffect(() => {
     if (applications && applications.length > 0) {
       const subjectListMultiSelect = applications.map((item: any) => ({
@@ -250,97 +311,260 @@ const ManageSubjects = () => {
     );
   };
 
-  const updateItem = (updatedSubject: any) => {
-    setApplications((prevSubjects: any) =>
-      prevSubjects.map((subject: any) =>
-        subject.code === updatedSubject.code
-          ? { ...subject, ...updatedSubject }
-          : subject
-      )
-    );
+  const updateItem = async (updatedSubject: any) => {
+    try {
+      setAdding(true);
+      // console.log("updatedSubject");
+      // console.log(updatedSubject);
+      const item = applications.find(
+        (subject: any) => subject.code === updatedSubject.code
+      );
+      if (!item) return;
+
+      console.log(item);
+      const updatedsubject_item = {
+        ...updatedSubject,
+        subject_id: item.subject_id,
+        id: item.subject_id,
+        user: "pallav",
+      };
+
+      const updateItem = await Update(updatedsubject_item);
+
+      if (updateItem && updateItem.result) {
+        setApplications((prevSubjects: any) =>
+          prevSubjects.map((subject: any) =>
+            subject.code === updateItem.result.code
+              ? { ...subject, ...updateItem.result }
+              : subject
+          )
+        );
+        snackbarRef.current?.showSnackbar(`Item Updated`, "success");
+      } else {
+        snackbarRef.current?.showSnackbar(`Item not updated`, "error");
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAdding(false);
+    }
   };
 
   const handleFormSubmit = async (data: any) => {
-    console.log("Handle submit for Subject");
-    console.log(data);
-    if (edit) {
-      updateItem(data);
-      setEdit(false);
-      reset({
-        code: "",
-        title: "",
-      });
-      snackbarRef.current?.showSnackbar(
-        `Entry updated successfully.`,
-        "success"
-      );
-    } else {
-      if (isDuplicate(data.code, data.title)) {
-        console.log("Duplicate");
+    try {
+      console.log("Handle submit for Subject");
+      console.log(data);
+      setAdding(true);
+      if (edit) {
+        updateItem(data);
+        setEdit(false);
+        reset({
+          code: "",
+          title: "",
+        });
         snackbarRef.current?.showSnackbar(
-          `Subject Already Present.`,
-          "warning"
+          `Entry updated successfully.`,
+          "success"
         );
-        return;
-      }
-      const _id = uuid().slice(0, 5);
-      const subject_item = { ...data, subject_id: _id, id: _id };
+      } else {
+        if (isDuplicate(data.code, data.title)) {
+          console.log("Duplicate");
+          snackbarRef.current?.showSnackbar(
+            `Subject Already Present.`,
+            "warning"
+          );
+          return;
+        }
+        const _id = uuid().slice(0, 5);
+        const subject_item = {
+          ...data,
+          subject_id: _id,
+          id: _id,
+          user: "pallav",
+        };
 
-      const newApplicationList = [...applications, subject_item];
-      console.log(newApplicationList);
-      setApplications(newApplicationList);
-      setEdit(false);
-      reset({
-        code: "",
-        title: "",
-      });
-      snackbarRef.current?.showSnackbar(
-        `Subject added successfully.`,
-        "success"
-      );
+        const addNewItem = await Add(subject_item);
+        // console.log("addNewItem");
+        // console.log(addNewItem);
+        if (addNewItem && addNewItem.result) {
+          const newApplicationList = [...applications, addNewItem.result];
+          // console.log(newApplicationList);
+          setApplications(newApplicationList);
+          setEdit(false);
+          reset({
+            code: "",
+            title: "",
+          });
+          snackbarRef.current?.showSnackbar(
+            `Subject added successfully.`,
+            "success"
+          );
+        } else {
+          snackbarRef.current?.showSnackbar(`Item not added`, "error");
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAdding(false);
     }
   };
 
   const HandleSubjectClassAssignment = async (data: any) => {
-    console.log("Handle subject class assignment");
-    console.log(data);
-    //@ts-ignore
-    const subject_class = classList.map(({ id, class_id, name }) => ({
-      id,
+    try {
+      // console.log("Handle subject class assignment");
+      // console.log(data);
+      setAddingAssignment(true);
 
-      class_id,
-      title: name,
-      class_teacher_id: "", // Placeholder
-      students: [], // Placeholder
-      subjects: (data.subjects[class_id] || []).map((subject_id: string) => ({
-        id: subject_id,
-        subject_id,
-        teacher_id: "",
-        class_teacher: "No", //Yes or No
-      })),
-      fees_structure_id: "", // Placeholder
-    }));
+      if (editAssignment) {
+        console.log("assignmentMappedData");
+        console.log(assignmentMappedData);
 
-    const subject_class_sections = subject_class.map(
-      (subject_class_item: any) =>
-        sections.map((sectionItem: any) => ({
-          ...subject_class_item,
-          class_section_id: uuid().slice(0, 5),
-          section: sectionItem.name,
-          section_id: sectionItem.section_id,
-        }))
-    );
+        const re_mapped = assignmentMappedData.map((item: any) => {
+          let subjectsArray = JSON.parse(item.subjects);
+          // console.log(subjectsArray);
+          const allowedSubjects = data.subjects[item.class_id] || [];
+          // console.log(allowedSubjects);
 
-    console.log("subject_class_sections");
-    console.log(subject_class_sections.flat());
+          const itemsetMap = new Map(
+            subjectsArray.map((item: any) => [item.id, item])
+          );
 
-    snackbarRef.current?.showSnackbar(`Subjects assigned.`, "success");
+          const updatedItemset1 = allowedSubjects.map(
+            (id: any) =>
+              itemsetMap.get(id) || {
+                id,
+                subject_id: id,
+                teacher_id: "",
+                class_teacher: "No",
+              }
+          );
+
+          return {
+            class_id: item.class_id,
+            id: item.class_section_id,
+            title: item.title,
+            class_teacher_id: item.class_teacher_id,
+            fees_structure_id: item.fees_structure_id,
+            class_section_id: item.class_section_id,
+            section: item.section,
+            section_id: item.section_id,
+            subjects: JSON.stringify(updatedItemset1), // Convert back to string to match original format
+          };
+        });
+
+        console.log("re_mapped");
+        console.log(re_mapped);
+        const payload = {
+          user: "pallav",
+          arrayOfItems: re_mapped,
+        };
+        const response = await UpdateSubjectsToClass(payload);
+
+        const _classSubjectDefault = re_mapped.reduce(
+          //@ts-ignore
+          (acc, { class_id, subjects }) => {
+            const subjects_json = JSON.parse(subjects);
+            if (subjects_json && subjects_json?.length > 0) {
+              acc[class_id] = subjects_json.map(
+                //@ts-ignore
+                ({ subject_id }) => subject_id
+              );
+            }
+            return acc;
+          },
+          {}
+        );
+
+        setClassSubjectDefault(_classSubjectDefault);
+        setEditAssignment(false);
+
+        //TO BE ADDED INTO APPWRITE DATABASE
+        ///api/v1/subject/add-subject-to-class
+
+        snackbarRef.current?.showSnackbar(`Subjects assigned.`, "success");
+      }
+
+      //@ts-ignore
+      const subject_class = classList.map(({ id, class_id, name }) => ({
+        class_id,
+        title: name,
+        class_teacher_id: "", // Placeholder
+        //students: [], // Placeholder
+        subjects: JSON.stringify(
+          (data.subjects[class_id] || []).map((subject_id: string) => ({
+            id: subject_id,
+            subject_id,
+            teacher_id: "",
+            class_teacher: "No", //Yes or No
+          }))
+        ),
+        fees_structure_id: "", // Placeholder
+      }));
+
+      const subject_class_sections = subject_class.map(
+        (subject_class_item: any) =>
+          sections.map((sectionItem: any) => ({
+            section: sectionItem.name,
+            section_id: sectionItem.section_id,
+            ...subject_class_item,
+          }))
+      );
+
+      // console.log("subject_class_sections");
+      // console.log(subject_class_sections);
+
+      const mappedData = subject_class_sections.flat().map((item: any) => {
+        const _id = uuid().slice(0, 5);
+        return {
+          ...item,
+          id: _id,
+          class_section_id: _id,
+        };
+      });
+      const payload = {
+        user: "pallav",
+        arrayOfItems: mappedData,
+      };
+      const response = await AddSubjectsToClass(payload);
+
+      const _classSubjectDefault = mappedData.reduce(
+        //@ts-ignore
+        (acc, { class_id, subjects }) => {
+          const subjects_json = JSON.parse(subjects);
+          if (subjects_json && subjects_json?.length > 0) {
+            acc[class_id] = subjects_json.map(
+              //@ts-ignore
+              ({ subject_id }) => subject_id
+            );
+          }
+          return acc;
+        },
+        {}
+      );
+
+      setClassSubjectDefault(_classSubjectDefault);
+
+      //TO BE ADDED INTO APPWRITE DATABASE
+      ///api/v1/subject/add-subject-to-class
+
+      snackbarRef.current?.showSnackbar(`Subjects assigned.`, "success");
+    } catch (error) {
+      console.log("Exception Occured");
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error Occured`, "error");
+    } finally {
+      setAddingAssignment(false);
+    }
   };
 
   const columns: GridColDef[] = [
     { field: "code", headerName: "Subject Code", flex: 1 },
     { field: "title", headerName: "Subject Title", flex: 1 },
-    // { field: "marking", headerName: "Marking", flex: 1 },
+    { field: "updated_on", headerName: "Updated On", flex: 1 },
+    { field: "updated_by", headerName: "Updated By", flex: 1 },
     {
       field: "actions",
       headerName: "Actions",
@@ -454,10 +678,28 @@ const ManageSubjects = () => {
                 required
               />
 
-              <MyCustomButton variant="contained" type="submit">
-                {!edit ? "Add" : "Save"}
+              <MyCustomButton
+                variant="contained"
+                type="submit"
+                startIcon={adding ? <CircularProgress size={20} /> : null}
+                disabled={adding}
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "30%",
+                }}
+              >
+                {!edit ? (adding ? "" : "Add") : adding ? "" : "Save"}
               </MyCustomButton>
-              <MyCustomButton variant="contained" type="reset">
+              <MyCustomButton
+                variant="contained"
+                type="reset"
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "30%",
+                }}
+              >
                 Clear
               </MyCustomButton>
             </Box>
@@ -465,6 +707,7 @@ const ManageSubjects = () => {
 
           <DataGrid
             rows={applications}
+            getRowId={(row) => row.subject_id}
             columns={columns}
             rowHeight={40}
             paginationModel={paginationModel}
@@ -472,16 +715,22 @@ const ManageSubjects = () => {
             pageSizeOptions={[50, 100, 150]}
             checkboxSelection={false}
             disableRowSelectionOnClick
+            loading={loading}
             slots={{
               toolbar: GridToolbar,
-              noRowsOverlay: CustomNoRowsOverlay,
+              noRowsOverlay: () => <CustomNoRowsOverlay loading={loading} />,
             }}
             slotProps={{ toolbar: { showQuickFilter: true } }}
             sx={{
               width: "60vw",
               maxWidth: "70vw",
-              height: "65vh",
+              height: "65vh", // Ensures sufficient height
+              minHeight: "300px", // Ensures the No Data message is always visible properly
               marginTop: "15px",
+              // width: "60vw",
+              // maxWidth: "70vw",
+              // height: "65vh",
+              // marginTop: "15px",
 
               "& .MuiDataGrid-row:hover": {
                 transform: "scale(1)",
@@ -523,87 +772,152 @@ const ManageSubjects = () => {
           alignItems={"center"}
           mt={1}
         >
-          {/* <Typography variant="h6" alignSelf={"center"}>
-            <strong>Subjects To Class Assignment</strong>
-          </Typography> */}
-          <form onSubmit={handleSubmitForm2(HandleSubjectClassAssignment)}>
-            <Accordion
-              sx={{
-                mt: 2,
-                width: "80vw",
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6">
-                  <strong>Subjects To Class Assignment</strong>
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} display={"flex"} flexDirection={"column"}>
-                    <>
-                      <Box
-                        display={"flex"}
-                        flexDirection={"row"}
-                        alignItems={"center"}
-                        justifyContent={"flex-end"}
-                        mb={2}
-                      >
-                        <AnimatedButton
-                          label="Save"
-                          disabled={false}
-                          type={"submit"}
-                        />
-                        {"|"}
-                        <AnimatedButton
-                          label="Edit"
-                          onClick={() => console.log("Get TC Clicked")}
-                          disabled={false}
-                        />
-                      </Box>
-                      <TableContainer component={Paper}>
-                        <Table size="medium" aria-label="a dense table">
-                          <TableHead>
-                            <TableRow>
-                              <StyledTableCell>Class</StyledTableCell>
-                              <StyledTableCell align="center">
-                                Subjects
-                              </StyledTableCell>
-                            </TableRow>
-                          </TableHead>
+          {loading ? (
+            <>
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                height="200px"
+              >
+                <CircularProgress />
+              </Box>
+            </>
+          ) : (
+            <form onSubmit={handleSubmitForm2(HandleSubjectClassAssignment)}>
+              <Accordion
+                sx={{
+                  mt: 2,
+                  width: "80vw",
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="h6">
+                    <strong>Subjects To Class Assignment</strong>
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Grid container spacing={2}>
+                    <Grid
+                      item
+                      xs={12}
+                      display={"flex"}
+                      flexDirection={"column"}
+                    >
+                      <>
+                        <Box
+                          display={"flex"}
+                          flexDirection={"row"}
+                          alignItems={"center"}
+                          justifyContent={"flex-end"}
+                          mb={2}
+                        >
+                          {classSubjectDefault &&
+                          Object.entries(classSubjectDefault).length > 0 ? (
+                            !editAssignment ? (
+                              <MyCustomButton
+                                variant="contained"
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault(); // Ensure it doesn't submit the form
+                                  setEditAssignment(true);
+                                }}
+                                sx={{
+                                  width: "auto",
+                                  height: "100%",
+                                  alignSelf: "center",
+                                }}
+                              >
+                                Edit
+                              </MyCustomButton>
+                            ) : (
+                              <MyCustomButton
+                                variant="contained"
+                                type="submit"
+                                sx={{
+                                  width: "auto",
+                                  height: "100%",
+                                  alignSelf: "center",
+                                }}
+                                startIcon={
+                                  addingAssignment ? (
+                                    <CircularProgress size={20} />
+                                  ) : null
+                                }
+                                disabled={addingAssignment}
+                              >
+                                {addingAssignment ? "" : "Save Changes"}
+                              </MyCustomButton>
+                            )
+                          ) : (
+                            <MyCustomButton
+                              variant="contained"
+                              type="submit"
+                              sx={{
+                                width: "10%",
+                                height: "100%",
+                                alignSelf: "center",
+                              }}
+                              startIcon={
+                                addingAssignment ? (
+                                  <CircularProgress size={20} />
+                                ) : null
+                              }
+                              disabled={addingAssignment}
+                            >
+                              {addingAssignment ? "" : "Save"}
+                              {/* {!editAssignment ? "Save" : "Update"} */}
+                            </MyCustomButton>
+                          )}
+                        </Box>
+                        <TableContainer component={Paper}>
+                          <Table size="medium" aria-label="a dense table">
+                            <TableHead>
+                              <TableRow>
+                                <StyledTableCell>Class</StyledTableCell>
+                                <StyledTableCell align="center">
+                                  Subjects
+                                </StyledTableCell>
+                              </TableRow>
+                            </TableHead>
 
-                          <TableBody>
-                            {classList.length > 0 &&
-                              classList.map((class_item: any) => (
-                                <StyledTableRow>
-                                  <StyledTableCell component="th" scope="row">
-                                    {`${class_item?.name}`}
-                                  </StyledTableCell>
-                                  <StyledTableCell align="right">
-                                    <ControlledMultiSelect
-                                      name={`subjects.${class_item.id}`}
-                                      control={controlForm2}
-                                      errors={errorsForm2}
-                                      label="Subjects"
-                                      options={subjectList}
-                                      // rules={{
-                                      //   required:
-                                      //     "At least one subject is required",
-                                      // }}
-                                      sx={{ width: 900 }}
-                                    />
-                                  </StyledTableCell>
-                                </StyledTableRow>
-                              ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </>
+                            <TableBody>
+                              {classList.length > 0 &&
+                                classList.map((class_item: any) => (
+                                  <StyledTableRow
+                                    key={`${class_item?.class_id}`}
+                                  >
+                                    <StyledTableCell component="th" scope="row">
+                                      {`${class_item?.name}`}
+                                    </StyledTableCell>
+                                    <StyledTableCell align="right">
+                                      <ControlledMultiSelect
+                                        name={`subjects.${class_item.class_id}`}
+                                        control={controlForm2}
+                                        errors={errorsForm2}
+                                        label="Subjects"
+                                        options={subjectList}
+                                        sx={{ width: 900 }}
+                                        disabled={
+                                          Object.entries(classSubjectDefault)
+                                            .length > 0
+                                            ? !editAssignment
+                                            : false
+                                        }
+                                      />
+                                    </StyledTableCell>
+                                  </StyledTableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </>
+                    </Grid>
                   </Grid>
-                </Grid>
-              </AccordionDetails>
-            </Accordion>
-          </form>
+                </AccordionDetails>
+              </Accordion>
+            </form>
+          )}
         </Box>
       </Box>
     </>

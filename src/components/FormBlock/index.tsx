@@ -26,15 +26,9 @@ import {
 } from "@mui/material";
 import "react-toastify/dist/ReactToastify.css";
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
+import { login } from "../../service/authService";
 
-import { SendOtp, ValidateOtp } from "../../api/login";
-import { ListStudents } from "../../api/students";
-import SuccessPopup from "../../common/SuccessPopup";
-import ApiContext from "../../store/context";
 import userDataContext from "../../store/userContext";
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
-import VpnKeyIcon from "@mui/icons-material/VpnKey";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -54,12 +48,6 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
 
 const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
   const [loading, setLoading] = useState(false);
-  const [userPhone, setUserPhone] = useState<string | null>(null);
-  const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
-  const [otpResendable, setOtpResendable] = useState<boolean>(false);
-  const [timer, setTimer] = useState(3); // Timer countdown
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [otpValue, setOtpValue] = useState<string | undefined>(undefined);
   const [_userId, setUserId] = useState();
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
@@ -67,125 +55,21 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
   const [form] = Form.useForm();
 
   const snackbarRef = useRef<SnackbarHandle>(null);
-  const OTP_TIMEOUT = 30; // 30 seconds timer
-
-  // Close popup handler
-  const handleClosePopup = () => {
-    setIsPopupOpen(false);
-
-    //New User. Need to add students
-    // navigate(`/studentregistration?userId=${_userId}`);
-    navigate(`studentregistration/${_userId}`);
-  };
-
-  const startTimer = () => {
-    setOtpResendable(false);
-    setTimer(OTP_TIMEOUT);
-  };
-
-  useEffect(() => {
-    if (timer > 0) {
-      const countdown = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-
-      return () => {
-        clearInterval(countdown);
-      };
-    } else if (timer === 0) {
-      setOtpResendable(true);
-    }
-  }, [timer]);
 
   const onFinish = async (values: any) => {
-    if (values.username && values.password) navigate("/schooladmin");
+    const userName = values.username;
+    const password = values.password;
+    console.log(userName);
+    console.log(password);
+    const user = login(userName, password);
+    console.log(user);
+    if (user) navigate("/home");
   };
-
-  // const onFinish = async (values: any) => {
-  //   try {
-  //     setLoading(true);
-  //     //1. Get Phone number and send OTP
-  //     if (values?.username && !isOtpSent) {
-  //       const phoneNumber = "+91" + values.username;
-  //       setUserPhone(phoneNumber);
-  //       const response = await SendOtp(phoneNumber);
-  //       console.log(response);
-  //       if (response) {
-  //         snackbarRef.current?.showSnackbar(
-  //           `OTP sent to ${phoneNumber}.`,
-  //           "success"
-  //         );
-  //         setIsOtpSent(true);
-  //         startTimer();
-  //       }
-  //     }
-
-  //     if (values?.otp && isOtpSent) {
-  //       const response = await ValidateOtp(userPhone, values.otp, "STUDENT");
-  //       if (response?.status === "SUCCESS") {
-  //         //UPDATE CONTEXT WITH USER LOGGED IN TRUE
-  //         ctx?.user_dispatch({
-  //           type: "UPDATE_USER_LOGGEDIN",
-  //           payload: { phone: userPhone!, userId: response?.userId! },
-  //         });
-  //         if (response?.message === "User logged in") {
-  //           setUserId(response?.userId);
-  //           //USER ALREADY REGISTERED
-  //           //CHECKING IF STUDENT PRESENT FOR THIS USER
-  //           console.log("printing response - user logged in");
-  //           console.log(response);
-  //           const studentList = await ListStudents(response?.userId);
-  //           console.log("printing student list - user logged in");
-  //           console.log(studentList);
-  //           if (
-  //             //NO STUDENT PRESENT FOR THIS USER
-  //             //NAVIGATING TO REGISTRATION PAGE
-  //             studentList &&
-  //             studentList?.result &&
-  //             studentList?.result?.length === 0
-  //           )
-  //             navigate(`studentregistration/${response?.userId}`);
-  //           else if (
-  //             studentList &&
-  //             studentList?.result &&
-  //             studentList?.result?.length > 0
-  //           )
-  //             //STUDENT PRESENT FOR THIS USER
-  //             //NAVIGATING TO DASHBOARD
-  //             navigate(`studentdashboard/${response?.userId}`);
-  //         } else if (response?.message === "User registered") {
-  //           console.log("New user registered", response?.userId);
-  //           setUserId(response?.userId);
-  //           setIsPopupOpen(true);
-  //         }
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     snackbarRef.current?.showSnackbar(`Please Re-Generate OTP`, "error");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const onFinishFailed = (errorInfo: any) => {
     console.log("Failed:", errorInfo);
   };
-  const tailLayout = {
-    wrapperCol: { offset: 0, span: 24 },
-  };
 
-  const reGenerateOTP = async () => {
-    // setOtpValue(undefined);
-    console.log(`Regenerate OTP for ${userPhone}`);
-    const response = await SendOtp(userPhone);
-    console.log(response);
-    if (response) {
-      snackbarRef.current?.showSnackbar(`OTP sent to ${userPhone}.`, "success");
-      setIsOtpSent(true);
-      startTimer();
-    }
-  };
   return (
     <ContentSection>
       <ToastSnackbar ref={snackbarRef} />
@@ -195,12 +79,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
           flexDirection={"row"}
           alignItems={"center"}
           justifyContent={"space-between"}
-          // sx={{
-          //   backgroundColor: "gray",
-          // }}
-          // mt={-2}
         >
-          {/* <ToastContainer /> */}
           <Col lg={11} md={11} sm={12} xs={24}>
             <SvgIcon src={icon} width="100%" height="100%" />
           </Col>
@@ -215,178 +94,96 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
             <Typography variant="h3">
               <strong>Eduern Login</strong>
             </Typography>
-            {!isOtpSent && (
-              <Form
-                form={form}
-                name="login_form"
-                initialValues={{ remember: true }}
-                onFinish={onFinish}
-                onFinishFailed={onFinishFailed}
+            <Form
+              form={form}
+              name="login_form"
+              initialValues={{ remember: true }}
+              onFinish={onFinish}
+              onFinishFailed={onFinishFailed}
+            >
+              <Form.Item
+                name="username"
+                rules={[{ required: true, message: "Required" }]}
+                style={{ marginTop: "2rem" }}
               >
-                <Form.Item
-                  name="username"
-                  rules={[{ required: true, message: "Required" }]}
-                  style={{ marginTop: "2rem" }}
-                >
-                  <Input
-                    size="middle"
-                    placeholder="Username"
-                    prefix={
-                      <UserOutlined />
-                      // <AccountCircleOutlinedIcon
-                      //   style={{
-                      //     opacity: 0.3,
-                      //   }}
-                      // />
-                    }
-                    style={{ width: "60%" }}
-                    variant="outlined"
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="password"
-                  rules={[{ required: true, message: "Required" }]}
-                >
-                  <Input
-                    size="middle"
-                    placeholder="Password"
-                    prefix={<LockOutlined />}
-                    style={{ width: "60%" }}
-                    variant="outlined"
-                    type={visible ? "text" : "password"}
-                    suffix={
-                      <span
-                        onClick={() => setVisible((prev) => !prev)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" && setVisible((prev) => !prev)
-                        } // Keyboard accessibility
-                        role="button"
-                        tabIndex={0}
-                        style={{
-                          cursor: "pointer",
-                          padding: "5px",
-                          display: "flex",
-                          alignItems: "center",
-                          fontSize: "18px",
-                          color: "#888",
-                          transition: "color 0.2s",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.color = "#1890ff")
-                        } // Hover effect
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.color = "#888")
-                        }
-                      >
-                        {visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-                      </span>
-                    }
-                  />
-                </Form.Item>
-                <Form.Item>
-                  <Box display={"flex"} flexDirection={"column"}>
-                    <MyCustomButton
-                      variant="contained"
-                      type="submit"
-                      color="primary"
-                      sx={{
-                        width: "60%",
+                <Input
+                  size="middle"
+                  placeholder="Username"
+                  prefix={<UserOutlined />}
+                  style={{ width: "60%" }}
+                  variant="outlined"
+                />
+              </Form.Item>
+              <Form.Item
+                name="password"
+                rules={[{ required: true, message: "Required" }]}
+              >
+                <Input
+                  size="middle"
+                  placeholder="Password"
+                  prefix={<LockOutlined />}
+                  style={{ width: "60%" }}
+                  variant="outlined"
+                  type={visible ? "text" : "password"}
+                  suffix={
+                    <span
+                      onClick={() => setVisible((prev) => !prev)}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && setVisible((prev) => !prev)
+                      } // Keyboard accessibility
+                      role="button"
+                      tabIndex={0}
+                      style={{
+                        cursor: "pointer",
+                        padding: "5px",
+                        display: "flex",
+                        alignItems: "center",
+                        fontSize: "18px",
+                        color: "#888",
+                        transition: "color 0.2s",
                       }}
-                      disabled={loading}
-                      startIcon={
-                        loading ? <CircularProgress size={20} /> : null
-                      } // Show loader in button
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.color = "#1890ff")
+                      } // Hover effect
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.color = "#888")
+                      }
                     >
-                      {loading ? "Wait..." : "LOGIN"}
-                    </MyCustomButton>
-                    <Typography variant="caption" color="textSecondary">
-                      By using Eduern you agree our{" "}
-                      <Link href="/privacypolicy.html" color="inherit">
-                        Privacy Policy
-                      </Link>
-                      {" | "}
-                      <Link href="/termsconditions.html" color="inherit">
-                        Terms and Conditions
-                      </Link>
-                    </Typography>
-                  </Box>
-                </Form.Item>
-              </Form>
-            )}
-            {isOtpSent && (
-              <Fade direction={"right"} triggerOnce>
-                <Form
-                  form={form}
-                  name="login_form"
-                  initialValues={{ remember: true }}
-                  onFinish={onFinish}
-                  onFinishFailed={onFinishFailed}
-                >
-                  <Box
-                    display={"flex"}
-                    flexDirection={"column"}
-                    justifyContent={"center"}
-                    width={"80%"}
+                      {visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                    </span>
+                  }
+                />
+              </Form.Item>
+              <Form.Item>
+                <Box display={"flex"} flexDirection={"column"}>
+                  <MyCustomButton
+                    variant="contained"
+                    type="submit"
+                    color="primary"
+                    sx={{
+                      width: "60%",
+                    }}
+                    disabled={loading}
+                    startIcon={loading ? <CircularProgress size={20} /> : null} // Show loader in button
                   >
-                    <Form.Item
-                      name="otp"
-                      rules={[{ required: true, message: "Enter OTP" }]}
-                      style={{ marginTop: "2rem" }}
-                    >
-                      <Input.OTP
-                        size="large"
-                        style={{ width: "100%" }}
-                        value={otpValue}
-                      />
-                    </Form.Item>
-                    <Form.Item {...tailLayout}>
-                      <Box
-                        display={"flex"}
-                        flexDirection={"row"}
-                        justifyContent={"space-between"}
-                      >
-                        <MyCustomButton
-                          variant="contained"
-                          color="primary"
-                          disabled={!otpResendable}
-                          onClick={reGenerateOTP}
-                        >
-                          Re-Generate OTP
-                        </MyCustomButton>
-                        {!otpResendable && (
-                          <Box alignContent={"center"}>
-                            <Typography variant="body2" alignItems={"start"}>
-                              {timer > 0 ? `Resend OTP in ${timer} sec` : ""}
-                            </Typography>
-                          </Box>
-                        )}
-                        <MyCustomButton
-                          variant="contained"
-                          color="primary"
-                          type="submit"
-                          disabled={loading}
-                          startIcon={
-                            loading ? <CircularProgress size={20} /> : null
-                          }
-                        >
-                          {loading ? "WAIT..." : "Verify"}
-                        </MyCustomButton>
-                      </Box>
-                    </Form.Item>
-                  </Box>
-                </Form>
-              </Fade>
-            )}
+                    {loading ? "Wait..." : "LOGIN"}
+                  </MyCustomButton>
+                  <Typography variant="caption" color="textSecondary">
+                    By using Eduern you agree our{" "}
+                    <Link href="/privacypolicy.html" color="inherit">
+                      Privacy Policy
+                    </Link>
+                    {" | "}
+                    <Link href="/termsconditions.html" color="inherit">
+                      Terms and Conditions
+                    </Link>
+                  </Typography>
+                </Box>
+              </Form.Item>
+            </Form>
           </Col>
         </Box>
       </Fade>
-      <SuccessPopup
-        open={isPopupOpen}
-        onClose={handleClosePopup}
-        title="User Registered Successfully"
-        message="Please provide more details to serve you better."
-        buttonText="Continue"
-      />
     </ContentSection>
   );
 };

@@ -706,7 +706,7 @@ const FeeDetails: React.FC<any> = (props) => {
         <MyCustomButton
           variant="contained"
           startIcon={<HomeIcon />}
-          onClick={() => navigate("/schooladmin")}
+          onClick={() => navigate("/home")}
         >
           Home
         </MyCustomButton>

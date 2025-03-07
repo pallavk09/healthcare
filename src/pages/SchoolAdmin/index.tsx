@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import FooterLogin from "../../components/FooterLogin";
 import ArrowCircleRightIcon from "@mui/icons-material/ArrowCircleRight";
 import moment from "moment";
+import { hasPermission } from "../../service/authService";
 
 // const Container = lazy(() => import("../../common/Container"));
 
@@ -149,7 +150,7 @@ const SchoolAdmin: React.FC = () => {
           alignSelf={"center"}
           mt={2}
         >
-          <strong>WELCOME ADMIN AND {getGreeting()}</strong>
+          <strong>WELCOME AND {getGreeting()}</strong>
         </Typography>
         <Box
           display={"flex"}
@@ -158,24 +159,27 @@ const SchoolAdmin: React.FC = () => {
           justifyContent={"space-between"}
           width={"auto"}
         >
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            alignItems={"flex-end"}
-            justifyContent={"flex-end"}
-            width={"80%"}
-          >
-            <PaperCard
-              title={"Fees Collection"}
-              caption={"View Fees Record. Collect Fees."}
-              onClick={() => navigate("fees-details")}
-            />
-            <PaperCard
-              title={"Teachers Management"}
-              caption={"View Staff Details here."}
-              onClick={() => navigate("staff-management")}
-            />
-          </Box>
+          {hasPermission("Fees Collection") &&
+            hasPermission("Teachers Management") && (
+              <Box
+                display={"flex"}
+                flexDirection={"column"}
+                alignItems={"flex-end"}
+                justifyContent={"flex-end"}
+                width={"80%"}
+              >
+                <PaperCard
+                  title={"Fees Collection"}
+                  caption={"View Fees Record. Collect Fees."}
+                  onClick={() => navigate("fees-details")}
+                />
+                <PaperCard
+                  title={"Teachers Management"}
+                  caption={"View Staff Details here."}
+                  onClick={() => navigate("staff-management")}
+                />
+              </Box>
+            )}
           <Box
             display={"flex"}
             flexDirection={"column"}

@@ -1,5 +1,10 @@
 export const classes_records = [
   {
+    id: "2d154380",
+    class_id: "2d154380",
+    name: "NURSURY",
+  },
+  {
     id: "2d154374",
     class_id: "2d154374",
     name: "LKG",
@@ -24,9 +29,39 @@ export const classes_records = [
     class_id: "2d154378",
     name: "III",
   },
-  {
-    id: "2d154379",
-    class_id: "2d154379",
-    name: "IV",
-  },
+  // {
+  //   id: "2d154379",
+  //   class_id: "2d154379",
+  //   name: "IV",
+  // },
+  // {
+  //   id: "2d154381",
+  //   class_id: "2d154381",
+  //   name: "V",
+  // },
+  // {
+  //   id: "2d154382",
+  //   class_id: "2d154382",
+  //   name: "VI",
+  // },
+  // {
+  //   id: "2d154383",
+  //   class_id: "2d154383",
+  //   name: "VII",
+  // },
+  // {
+  //   id: "2d154384",
+  //   class_id: "2d154384",
+  //   name: "VIII",
+  // },
+  // {
+  //   id: "2d154385",
+  //   class_id: "2d154385",
+  //   name: "IX",
+  // },
+  // {
+  //   id: "2d154386",
+  //   class_id: "2d154386",
+  //   name: "X",
+  // },
 ];

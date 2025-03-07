@@ -12,6 +12,7 @@ export const students = [
     discount: "0",
     cast: "gen",
     is_active: "active",
+    photoUrl: "",
     transport_details: {
       mode: "School-Transport",
       vehicle_id: "5g13300",
@@ -84,6 +85,7 @@ export const students = [
     discount: "0",
     cast: "gen",
     is_active: "active",
+    photoUrl: "",
     transport_details: {
       mode: "School-Transport",
       vehicle_id: "5g13300",
@@ -156,6 +158,7 @@ export const students = [
     discount: "0",
     cast: "gen",
     is_active: "active",
+    photoUrl: "",
     transport_details: {
       mode: "School-Transport",
       vehicle_id: "5g13300",
@@ -228,6 +231,7 @@ export const students = [
     discount: "0",
     cast: "gen",
     is_active: "active",
+    photoUrl: "",
     transport_details: {
       mode: "School-Transport",
       vehicle_id: "5g13300",

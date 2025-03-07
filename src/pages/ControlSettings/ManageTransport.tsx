@@ -29,6 +29,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  CircularProgress,
 } from "@mui/material";
 import { tableCellClasses } from "@mui/material/TableCell";
 import { useNavigate } from "react-router-dom";
@@ -37,15 +38,27 @@ import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import HomeIcon from "@mui/icons-material/Home";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { classes } from "../../Config/classes";
+// import { classes } from "../../Config/classes";
 
 import moment from "moment";
 import { useForm } from "react-hook-form";
 import { v4 as uuid } from "uuid";
 import ControlledTextField from "../../common/ControlledComponents/ControlledTextField";
 import ControlledSelect from "../../common/ControlledComponents/ControlledSelect";
-import { vehicles_records } from "../../Config/vehicles_records";
-import { stops_records } from "../../Config/stops_records";
+// import { vehicles_records } from "../../Config/vehicles_records";
+// import { stops_records } from "../../Config/stops_records";
+
+import {
+  GetVehicles,
+  AddVehicles,
+  UpdateVehicles,
+  GetStops,
+  AddStop,
+  UpdateStop,
+  GetTransportFeeStructure,
+  AddTransportFeeStructure,
+  UpdateTransportFeeStructure,
+} from "../../api/Control-Settings/manage-transport";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -79,13 +92,29 @@ const MenuProps = {
   },
 };
 
-const CustomNoRowsOverlay = () => {
+const CustomNoRowsOverlay = ({ loading }: { loading: boolean }) => {
   return (
-    <GridOverlay>
+    <GridOverlay
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
       <Box sx={{ textAlign: "center", padding: 2 }}>
-        <Typography variant="h5" color="textSecondary">
-          NO DATA AVAILABLE
-        </Typography>
+        {loading ? (
+          <>
+            <CircularProgress size={40} />
+            <Typography variant="h6" color="textSecondary" mt={2}>
+              Loading data...
+            </Typography>
+          </>
+        ) : (
+          <Typography variant="h5" color="textSecondary">
+            NO DATA AVAILABLE
+          </Typography>
+        )}
       </Box>
     </GridOverlay>
   );
@@ -194,6 +223,18 @@ const ManageTransport = () => {
   const [applicationsStops, setApplicationsStop] = useState<any>([]);
   const [selectedRowStop, setSelectedRowStop] = useState<any>();
   const [editStop, setEditStop] = useState<boolean>(false);
+  const [editCost, setEditCost] = useState<boolean>(false);
+  const [stops_records, setStops_records] = useState<any>([]);
+  const [transport_fee_structure, setTransport_fee_structure] = useState<any>(
+    []
+  );
+  const [transport_fee_structureDB, setTransport_fee_structureDB] =
+    useState<any>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [addingVehicle, setAddingVehicle] = useState(false);
+  const [addingStops, setAddingStops] = useState(false);
+  const [addingCost, setAddingCost] = useState(false);
 
   const {
     handleSubmit,
@@ -235,9 +276,58 @@ const ManageTransport = () => {
   });
 
   useEffect(() => {
-    const _classList = classes.map((classObj) => classObj.title);
-    setApplications(vehicles_records);
-    setApplicationsStop(stops_records);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [vehicles_records, stops_records, transport_cost] =
+          await Promise.all([
+            GetVehicles(),
+            GetStops(),
+            GetTransportFeeStructure(),
+          ]);
+
+        if (vehicles_records && vehicles_records.result.documents?.length > 0) {
+          setApplications(vehicles_records.result.documents);
+        }
+        if (stops_records && stops_records.result.documents?.length > 0) {
+          setStops_records(stops_records.result.documents);
+        }
+        if (transport_cost && transport_cost.result.documents?.length > 0) {
+          const transformedData = {};
+
+          transport_cost.result.documents.forEach(
+            ({
+              stop_name,
+              monthly_fees,
+            }: {
+              stop_name: any;
+              monthly_fees: any;
+            }) => {
+              //@ts-ignore
+              transformedData[stop_name] = {};
+              const parsedFees = JSON.parse(monthly_fees);
+              parsedFees.forEach(
+                ({ month, total_fees }: { month: any; total_fees: any }) => {
+                  //@ts-ignore
+                  transformedData[stop_name][month] =
+                    total_fees !== null ? total_fees.toString() : "0";
+                }
+              );
+            }
+          );
+          // console.log("transformedData");
+          // console.log(transformedData);
+          setTransport_fee_structureDB(transport_cost.result.documents);
+          setTransport_fee_structure(transformedData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -273,13 +363,24 @@ const ManageTransport = () => {
     }
   }, [selectedRowStop, resetStops]);
 
+  // Update the class to subject assignment when classSubjectDefault is available
+  useEffect(() => {
+    if (
+      transport_fee_structure &&
+      Object.keys(transport_fee_structure).length > 0
+    ) {
+      resetTransportCost(transport_fee_structure);
+    }
+  }, [transport_fee_structure, resetTransportCost]);
+
   //Vehicle Table
   const columns: GridColDef[] = [
     { field: "vehicle_no", headerName: "Vehicle No", flex: 1 },
     { field: "type", headerName: "Type", flex: 1 },
     { field: "registration_no", headerName: "Registration No", flex: 1 },
     { field: "driver_name", headerName: "Driver", flex: 1 },
-    { field: "created_on", headerName: "Created On", flex: 1 },
+    { field: "updated_on", headerName: "Updated On", flex: 1 },
+    { field: "updated_by", headerName: "Updated By", flex: 1 },
     {
       field: "actions",
       headerName: "Actions",
@@ -319,7 +420,8 @@ const ManageTransport = () => {
     { field: "vehicle_no", headerName: "Vehicle No", flex: 1 },
     { field: "registration_no", headerName: "Registration", flex: 1 },
     { field: "driver_name", headerName: "Driver", flex: 1 },
-    { field: "created_on", headerName: "Created On", flex: 1 },
+    { field: "updated_on", headerName: "Updated On", flex: 1 },
+    { field: "updated_by", headerName: "Updated By", flex: 1 },
     {
       field: "actions",
       headerName: "Actions",
@@ -370,63 +472,102 @@ const ManageTransport = () => {
     );
   };
 
-  const updateItem = (updatedVehicle: any) => {
-    setApplications((prevVehicle: any) =>
-      prevVehicle.map((vehicle: any) =>
-        vehicle.vehicle_no === updatedVehicle.vehicle_no
-          ? { ...vehicle, ...updatedVehicle }
-          : vehicle
-      )
-    );
+  const updateItem = async (updatedVehicle: any) => {
+    try {
+      setAddingVehicle(true);
+      const item = applications.find(
+        (vehicle: any) => vehicle.vehicle_no === updatedVehicle.vehicle_no
+      );
+      if (!item) return;
+
+      const updatedVehicle_item = {
+        ...updatedVehicle,
+        vehicle_id: item.vehicle_id,
+        id: item.vehicle_id,
+        user: "pallav",
+      };
+      const updateItem = await UpdateVehicles(updatedVehicle_item);
+
+      if (updateItem && updateItem.result) {
+        setApplications((prevVehicle: any) =>
+          prevVehicle.map((vehicle: any) =>
+            vehicle.vehicle_no === updateItem.result.vehicle_no
+              ? { ...vehicle, ...updateItem.result }
+              : vehicle
+          )
+        );
+        snackbarRef.current?.showSnackbar(`Item Updated`, "success");
+      } else {
+        snackbarRef.current?.showSnackbar(`Item not updated`, "error");
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAddingVehicle(false);
+    }
   };
 
   const handleFormSubmit = async (data: any) => {
-    console.log("Handle submit for Subject");
-    console.log(data);
-    if (edit) {
-      updateItem(data);
-      setEdit(false);
-      reset({
-        vehicle_no: "",
-        type: "",
-        registration_no: "",
-        driver_name: "",
-      });
-      snackbarRef.current?.showSnackbar(
-        `Vehicle updated successfully.`,
-        "success"
-      );
-    } else {
-      if (isDuplicate(data.vehicle_no, data.registration_no)) {
-        console.log("Duplicate");
+    try {
+      console.log("Handle submit for Subject");
+      console.log(data);
+      setAddingVehicle(true);
+      if (edit) {
+        updateItem(data);
+        setEdit(false);
+        reset({
+          vehicle_no: "",
+          type: "",
+          registration_no: "",
+          driver_name: "",
+        });
         snackbarRef.current?.showSnackbar(
-          `Vehicle Already Present.`,
-          "warning"
+          `Vehicle updated successfully.`,
+          "success"
         );
-        return;
-      }
-      const _id = uuid().slice(0, 5);
-      const vehicle_item = {
-        ...data,
-        vehicle_id: _id,
-        id: _id,
-        created_on: moment().format("DD/MM/YYYY"),
-      };
+      } else {
+        if (isDuplicate(data.vehicle_no, data.registration_no)) {
+          console.log("Duplicate");
+          snackbarRef.current?.showSnackbar(
+            `Vehicle Already Present.`,
+            "warning"
+          );
+          return;
+        }
+        const _id = uuid().slice(0, 5);
+        const vehicle_item = {
+          ...data,
+          vehicle_id: _id,
+          id: _id,
+          user: "pallav",
+        };
 
-      const newApplicationList = [...applications, vehicle_item];
-      console.log(newApplicationList);
-      setApplications(newApplicationList);
-      setEdit(false);
-      reset({
-        vehicle_no: "",
-        type: "",
-        registration_no: "",
-        driver_name: "",
-      });
-      snackbarRef.current?.showSnackbar(
-        `Vehicle added successfully.`,
-        "success"
-      );
+        const addNewItem = await AddVehicles(vehicle_item);
+        if (addNewItem && addNewItem.result) {
+          const newApplicationList = [...applications, addNewItem.result];
+          console.log(newApplicationList);
+          setApplications(newApplicationList);
+          setEdit(false);
+          reset({
+            vehicle_no: "",
+            type: "",
+            registration_no: "",
+            driver_name: "",
+          });
+          snackbarRef.current?.showSnackbar(
+            `Vehicle added successfully.`,
+            "success"
+          );
+        } else {
+          snackbarRef.current?.showSnackbar(`Item not added`, "error");
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAddingVehicle(false);
     }
   };
 
@@ -446,115 +587,240 @@ const ManageTransport = () => {
     );
   };
 
-  const updateStop = (updatedStop: any) => {
-    console.log("updatedStop");
-    console.log(updatedStop);
-    setApplicationsStop((prevStop: any) => {
-      console.log("prevStop");
-      console.log(prevStop);
-      const {
-        vehicle_no = "",
-        registration_no = "",
-        driver_name = "",
-      } = applications.find(
-        (item: any) => updatedStop.vehicle_id === item.vehicle_id
-      ) || {};
+  const updateStop = async (updatedStop: any) => {
+    try {
+      setAddingStops(true);
 
-      return prevStop.map((stopItem: any) =>
-        stopItem.stop_id === updatedStop.stop_id
-          ? {
-              ...stopItem,
-              name: updatedStop.name,
-              vehicle_id: updatedStop.vehicle_id,
-              vehicle_no,
-              registration_no,
-              driver_name,
-            }
-          : stopItem
+      const item = applicationsStops.find(
+        (stop: any) => stop.stop_id === updatedStop.stop_id
       );
-    });
+      if (!item) return;
+
+      const updatedStopItem = {
+        ...updatedStop,
+        id: item.stop_id,
+        user: "pallav",
+      };
+
+      const updateItem = await UpdateStop(updatedStopItem);
+
+      if (updateItem && updateItem.result) {
+        setApplicationsStop((prevStop: any) => {
+          const {
+            vehicle_no = "",
+            registration_no = "",
+            driver_name = "",
+            updated_on = "",
+            updated_by = "",
+          } = applicationsStops.find(
+            (item: any) => item.stop_id === updateItem.result.stop_id
+          ) || {};
+
+          return prevStop.map((stopItem: any) =>
+            stopItem.stop_id === updateItem.result.stop_id
+              ? {
+                  ...stopItem,
+                  name: updateItem.result.name,
+                  vehicle_id: updateItem.result.vehicle_id,
+                  vehicle_no,
+                  registration_no,
+                  driver_name,
+                }
+              : stopItem
+          );
+        });
+        snackbarRef.current?.showSnackbar(`Item Updated`, "success");
+      } else {
+        snackbarRef.current?.showSnackbar(`Item not updated`, "error");
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAddingStops(false);
+    }
   };
 
   const handleFormSubmitStop = async (data: any) => {
-    console.log("Handle Stops for Subject");
-    console.log(data);
-    if (editStop) {
-      updateStop(data);
-      setEditStop(false);
-      resetStops({
-        name: "",
-        vehicle_id: "",
-      });
-      snackbarRef.current?.showSnackbar(
-        `Entry updated successfully.`,
-        "success"
-      );
-    } else {
-      if (isDuplicateStop(data.name)) {
-        console.log("Duplicate");
-        snackbarRef.current?.showSnackbar(`Stop Already Present.`, "warning");
-        return;
+    try {
+      setAddingStops(true);
+      if (editStop) {
+        updateStop(data);
+        setEditStop(false);
+        resetStops({
+          name: "",
+          vehicle_id: "",
+        });
+      } else {
+        if (isDuplicateStop(data.name)) {
+          console.log("Duplicate");
+          snackbarRef.current?.showSnackbar(`Stop Already Present.`, "warning");
+          return;
+        }
+        const _id = uuid().slice(0, 5);
+
+        const newStop = {
+          stop_id: _id,
+          id: _id,
+          name: data.name,
+          vehicle_id: data.vehicle_id,
+          user: "Pallav",
+        };
+        const addNewItem = await AddStop(newStop);
+        if (addNewItem && addNewItem.result) {
+          const {
+            vehicle_no = "",
+            registration_no = "",
+            driver_name = "",
+            updated_on = "",
+            updated_by = "",
+          } = applications.find(
+            (item: any) => item.vehicle_id === addNewItem.result.vehicle_id
+          ) || {};
+
+          const newStop_record = {
+            name: data.name,
+            vehicle_no,
+            registration_no,
+            driver_name,
+            stop_id: _id,
+            id: _id,
+            updated_on,
+            updated_by,
+          };
+
+          const newApplicationList = [...applicationsStops, newStop_record];
+          setApplicationsStop(newApplicationList);
+          setEditStop(false);
+          resetStops({
+            name: "",
+            vehicle_id: "",
+          });
+          snackbarRef.current?.showSnackbar(
+            `Stop added successfully.`,
+            "success"
+          );
+        } else {
+          snackbarRef.current?.showSnackbar(`Item not added`, "error");
+        }
       }
-      const _id = uuid().slice(0, 5);
-
-      const {
-        vehicle_no = "",
-        registration_no = "",
-        driver_name = "",
-      } = applications.find(
-        (item: any) => item.vehicle_id === data.vehicle_id
-      ) || {};
-
-      const newStop_record = {
-        name: data.name,
-        vehicle_no,
-        registration_no,
-        driver_name,
-        stop_id: _id,
-        id: _id,
-        created_on: moment().format("DD/MM/YYYY"),
-      };
-
-      const newApplicationList = [...applicationsStops, newStop_record];
-      console.log(newApplicationList);
-      setApplicationsStop(newApplicationList);
-      setEditStop(false);
-      resetStops({
-        name: "",
-        vehicle_id: "",
-      });
-      snackbarRef.current?.showSnackbar(`Stop added successfully.`, "success");
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAddingStops(false);
     }
   };
 
   const handleFormSubmitTransportCost = async (data: any) => {
-    console.log("Under handleFormSubmitTransportCost");
-    console.log(data);
+    try {
+      setAddingCost(true);
 
-    const costData = Object.entries(data).map(([key, value]: [string, any]) => {
-      const _id = uuid().slice(0, 5);
-      return {
-        id: _id,
-        transport_structure_id: _id,
-        stop_name: key,
-        fee_collection_cycle: 10,
-        monthly_fees: value
-          ? Object.entries(value).map(([_month, fee]) => {
-              const feeAmount = Number(fee); // Ensure it's treated as a number
-              return {
-                month: _month,
-                fees_particulars: {
-                  transport: feeAmount,
-                },
-                total_fees: feeAmount,
-              };
-            })
-          : [],
+      if (editCost) {
+        console.log(data);
+        console.log(transport_fee_structureDB);
+
+        const updatedData = transport_fee_structureDB.map((entry: any) => {
+          const { stop_name, monthly_fees } = entry;
+          const parsedFees = JSON.parse(monthly_fees);
+
+          if (data[stop_name]) {
+            parsedFees.forEach((fee: any) => {
+              if (data[stop_name][fee.month]) {
+                fee.total_fees = parseInt(data[stop_name][fee.month]);
+                fee.fees_particulars.transport = parseInt(
+                  data[stop_name][fee.month]
+                );
+              }
+            });
+          }
+
+          return { ...entry, monthly_fees: JSON.stringify(parsedFees) };
+        });
+
+        Object.keys(data).forEach((stop) => {
+          if (
+            !transport_fee_structureDB.some(
+              (entry: any) => entry.stop_name === stop
+            )
+          ) {
+            const newEntry = {
+              transport_structure_id: uuid().slice(0, 5),
+              academic_year: null,
+              stop_name: stop,
+              fee_collection_cycle: 10,
+              monthly_fees: JSON.stringify(
+                Object.keys(data[stop]).map((month) => ({
+                  month,
+                  fees_particulars: { transport: parseInt(data[stop][month]) },
+                  total_fees: parseInt(data[stop][month]),
+                }))
+              ),
+            };
+            updatedData.push(newEntry);
+          }
+        });
+        console.log(updatedData);
+        const updatedData_with_id = updatedData.map((item: any) => ({
+          id: item.transport_structure_id,
+          transport_structure_id: item.transport_structure_id,
+          academic_year: item.academic_year,
+          stop_name: item.stop_name,
+          fee_collection_cycle: item.fee_collection_cycle,
+          monthly_fees: item.monthly_fees,
+        }));
+
+        const payload = {
+          user: "pallav",
+          arrayOfItems: updatedData_with_id,
+        };
+        const response = await UpdateTransportFeeStructure(payload);
+        setTransport_fee_structure(data);
+        snackbarRef.current?.showSnackbar(`Transport Fees Updated.`, "success");
+        setEditCost(false);
+        return;
+      }
+
+      const costData = Object.entries(data).map(
+        ([key, value]: [string, any]) => {
+          const _id = uuid().slice(0, 5);
+          const _monthly_fees = value
+            ? Object.entries(value).map(([_month, fee]) => {
+                const feeAmount = Number(fee); // Ensure it's treated as a number
+                return {
+                  month: _month,
+                  fees_particulars: {
+                    transport: feeAmount,
+                  },
+                  total_fees: feeAmount,
+                };
+              })
+            : [];
+          return {
+            id: _id,
+            transport_structure_id: _id,
+            stop_name: key,
+            fee_collection_cycle: 10,
+            monthly_fees: JSON.stringify(_monthly_fees),
+          };
+        }
+      );
+
+      const payload = {
+        user: "pallav",
+        arrayOfItems: costData,
       };
-    });
+      const response = await AddTransportFeeStructure(payload);
+      setTransport_fee_structure(data);
 
-    console.log("costData");
-    console.log(costData);
+      snackbarRef.current?.showSnackbar(`Transport Fees Assigned.`, "success");
+    } catch (error) {
+      console.log("Exception Occured");
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error Occured`, "error");
+    } finally {
+      setAddingCost(false);
+    }
   };
 
   return (
@@ -578,7 +844,7 @@ const ManageTransport = () => {
         <MyCustomButton
           variant="contained"
           startIcon={<HomeIcon />}
-          onClick={() => navigate("/schooladmin")}
+          onClick={() => navigate("/home")}
         >
           Home
         </MyCustomButton>
@@ -671,6 +937,39 @@ const ManageTransport = () => {
               <MyCustomButton
                 variant="contained"
                 type="submit"
+                startIcon={
+                  addingVehicle ? <CircularProgress size={20} /> : null
+                }
+                disabled={addingVehicle}
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "30%",
+                }}
+              >
+                {!edit
+                  ? addingVehicle
+                    ? ""
+                    : "Add"
+                  : addingVehicle
+                  ? ""
+                  : "Save"}
+              </MyCustomButton>
+              <MyCustomButton
+                variant="contained"
+                type="reset"
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "30%",
+                }}
+              >
+                Clear
+              </MyCustomButton>
+
+              {/* <MyCustomButton
+                variant="contained"
+                type="submit"
                 sx={{ width: "10%", height: "70%", alignSelf: "center" }}
               >
                 {!edit ? "Add" : "Save"}
@@ -681,13 +980,14 @@ const ManageTransport = () => {
                 sx={{ width: "10%", height: "70%", alignSelf: "center" }}
               >
                 Clear
-              </MyCustomButton>
+              </MyCustomButton> */}
             </Box>
           </form>
           <DataGrid
             rows={applications}
             columns={columns}
             rowHeight={40}
+            getRowId={(row) => row.vehicle_id}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[50, 100, 150]}
@@ -695,14 +995,19 @@ const ManageTransport = () => {
             disableRowSelectionOnClick
             slots={{
               toolbar: GridToolbar,
-              noRowsOverlay: CustomNoRowsOverlay,
+              noRowsOverlay: () => <CustomNoRowsOverlay loading={loading} />,
             }}
             slotProps={{ toolbar: { showQuickFilter: true } }}
             sx={{
-              width: "80vw",
-              maxWidth: "90vw",
-              height: "65vh",
-              marginTop: "20px",
+              width: "60vw",
+              maxWidth: "70vw",
+              height: "65vh", // Ensures sufficient height
+              minHeight: "300px", // Ensures the No Data message is always visible properly
+              marginTop: "15px",
+              // width: "80vw",
+              // maxWidth: "90vw",
+              // height: "65vh",
+              // marginTop: "20px",
 
               "& .MuiDataGrid-row:hover": {
                 transform: "scale(1)",
@@ -788,14 +1093,30 @@ const ManageTransport = () => {
               <MyCustomButton
                 variant="contained"
                 type="submit"
-                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+                startIcon={addingStops ? <CircularProgress size={20} /> : null}
+                disabled={addingStops}
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "30%",
+                }}
               >
-                {!editStop ? "Add" : "Save"}
+                {!editStop
+                  ? addingStops
+                    ? ""
+                    : "Add"
+                  : addingStops
+                  ? ""
+                  : "Save"}
               </MyCustomButton>
               <MyCustomButton
                 variant="contained"
                 type="reset"
-                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+                sx={{
+                  alignSelf: "center",
+                  height: "70%",
+                  width: "30%",
+                }}
               >
                 Clear
               </MyCustomButton>
@@ -805,6 +1126,7 @@ const ManageTransport = () => {
             rows={applicationsStops}
             columns={columnsStops}
             rowHeight={40}
+            getRowId={(row) => row.stop_id}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[50, 100, 150]}
@@ -812,14 +1134,19 @@ const ManageTransport = () => {
             disableRowSelectionOnClick
             slots={{
               toolbar: GridToolbar,
-              noRowsOverlay: CustomNoRowsOverlay,
+              noRowsOverlay: () => <CustomNoRowsOverlay loading={loading} />,
             }}
             slotProps={{ toolbar: { showQuickFilter: true } }}
             sx={{
-              width: "50vw",
-              maxWidth: "90vw",
-              height: "65vh",
-              marginTop: "20px",
+              width: "60vw",
+              maxWidth: "70vw",
+              height: "65vh", // Ensures sufficient height
+              minHeight: "300px", // Ensures the No Data message is always visible properly
+              marginTop: "15px",
+              // width: "50vw",
+              // maxWidth: "90vw",
+              // height: "65vh",
+              // marginTop: "20px",
 
               "& .MuiDataGrid-row:hover": {
                 transform: "scale(1)",
@@ -862,95 +1189,178 @@ const ManageTransport = () => {
           alignItems={"center"}
           mt={1}
         >
-          <form
-            onSubmit={handleSubmitTransportCost(handleFormSubmitTransportCost)}
-          >
-            <Accordion
-              sx={{
-                mt: 2,
-                width: "95vw",
-              }}
+          {loading ? (
+            <>
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                height="200px"
+              >
+                <CircularProgress />
+              </Box>
+            </>
+          ) : (
+            <form
+              onSubmit={handleSubmitTransportCost(
+                handleFormSubmitTransportCost
+              )}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6">
-                  <strong>Configure Monthly Cost</strong>
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} display={"flex"} flexDirection={"column"}>
-                    <>
-                      <Box
+              <Accordion
+                sx={{
+                  mt: 2,
+                  width: "95vw",
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="h6">
+                    <strong>Configure Monthly Cost</strong>
+                  </Typography>
+                </AccordionSummary>
+                {applicationsStops.length > 0 ? (
+                  <AccordionDetails>
+                    <Grid container spacing={2}>
+                      <Grid
+                        item
+                        xs={12}
                         display={"flex"}
-                        flexDirection={"row"}
-                        alignItems={"center"}
-                        justifyContent={"flex-end"}
-                        mb={2}
+                        flexDirection={"column"}
                       >
-                        <AnimatedButton
-                          label="Edit"
-                          onClick={() => console.log("Get TC Clicked")}
-                          disabled={false}
-                        />
-                        {"|"}
-                        <AnimatedButton
-                          label="Save"
-                          disabled={false}
-                          type={"submit"}
-                        />
-                      </Box>
-                      <TableContainer component={Paper}>
-                        <Table size="medium" aria-label="a dense table">
-                          <TableHead>
-                            <TableRow>
-                              <StyledTableCell>Stops</StyledTableCell>
-                              {MONTHS.map((month: string) => (
-                                <StyledTableCell align="center" key={month}>
-                                  {month}
-                                </StyledTableCell>
-                              ))}
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {applicationsStops.map(
-                              (stopItem: any, stopIndex: number) => (
-                                <StyledTableRow key={stopIndex}>
-                                  <StyledTableCell component="th" scope="row">
-                                    {stopItem.name}
-                                  </StyledTableCell>
-                                  {/* <StyledTableCell
-                                    align="right"
-                                    key={stopIndex}
-                                  >OPTION TO ENTER AMOUNT FOR ALL MONTHS</StyledTableCell> */}
-                                  {MONTHS.map((key) => (
-                                    <StyledTableCell align="right" key={key}>
-                                      <ControlledTextField
-                                        variant="standard"
-                                        name={`${stopItem.name}.${key}`}
-                                        control={controlTransportCost}
-                                        errors={errorsTransportCost}
-                                        // label="₹Amount"
-                                        type="number"
-                                        // rules={{
-                                        //   required: "Required",
-                                        // }}
-                                        // sx={{ width: "40%" }}
-                                        // required
-                                      />
+                        <>
+                          <Box
+                            display={"flex"}
+                            flexDirection={"row"}
+                            alignItems={"center"}
+                            justifyContent={"flex-end"}
+                            mb={2}
+                          >
+                            {transport_fee_structure &&
+                            Object.entries(transport_fee_structure).length >
+                              0 ? (
+                              !editCost ? (
+                                <MyCustomButton
+                                  variant="contained"
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault(); // Ensure it doesn't submit the form
+                                    setEditCost(true);
+                                  }}
+                                  sx={{
+                                    width: "auto",
+                                    height: "100%",
+                                    alignSelf: "center",
+                                  }}
+                                >
+                                  Edit
+                                </MyCustomButton>
+                              ) : (
+                                <MyCustomButton
+                                  variant="contained"
+                                  type="submit"
+                                  sx={{
+                                    width: "auto",
+                                    height: "100%",
+                                    alignSelf: "center",
+                                  }}
+                                  startIcon={
+                                    addingCost ? (
+                                      <CircularProgress size={20} />
+                                    ) : null
+                                  }
+                                  disabled={addingCost}
+                                >
+                                  {addingCost ? "" : "Save Changes"}
+                                </MyCustomButton>
+                              )
+                            ) : (
+                              <MyCustomButton
+                                variant="contained"
+                                type="submit"
+                                sx={{
+                                  width: "10%",
+                                  height: "100%",
+                                  alignSelf: "center",
+                                }}
+                                startIcon={
+                                  addingCost ? (
+                                    <CircularProgress size={20} />
+                                  ) : null
+                                }
+                                disabled={addingCost}
+                              >
+                                {addingCost ? "" : "Save"}
+                                {/* {!editAssignment ? "Save" : "Update"} */}
+                              </MyCustomButton>
+                            )}
+                          </Box>
+                          <TableContainer component={Paper}>
+                            <Table size="medium" aria-label="a dense table">
+                              <TableHead>
+                                <TableRow>
+                                  <StyledTableCell>Stops</StyledTableCell>
+                                  {MONTHS.map((month: string) => (
+                                    <StyledTableCell align="center" key={month}>
+                                      {month}
                                     </StyledTableCell>
                                   ))}
-                                </StyledTableRow>
-                              )
-                            )}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </>
-                  </Grid>
-                </Grid>
-              </AccordionDetails>
-            </Accordion>
-          </form>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {applicationsStops.map(
+                                  (stopItem: any, stopIndex: number) => (
+                                    <StyledTableRow key={stopIndex}>
+                                      <StyledTableCell
+                                        component="th"
+                                        scope="row"
+                                      >
+                                        {stopItem.name}
+                                      </StyledTableCell>
+
+                                      {MONTHS.map((key) => (
+                                        <StyledTableCell
+                                          align="right"
+                                          key={key}
+                                        >
+                                          <ControlledTextField
+                                            variant="standard"
+                                            name={`${stopItem.name}.${key}`}
+                                            control={controlTransportCost}
+                                            errors={errorsTransportCost}
+                                            type="number"
+                                            label="₹0"
+                                            disabled={
+                                              Object.entries(
+                                                transport_fee_structure
+                                              ).length > 0
+                                                ? !editCost
+                                                : false
+                                            }
+                                          />
+                                        </StyledTableCell>
+                                      ))}
+                                    </StyledTableRow>
+                                  )
+                                )}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </>
+                      </Grid>
+                    </Grid>
+                  </AccordionDetails>
+                ) : (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    height="100px"
+                  >
+                    No Stops Found. Please Add Stops.
+                  </Box>
+                )}
+              </Accordion>
+            </form>
+          )}
         </Box>
       </Box>
     </>

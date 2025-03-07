@@ -4,7 +4,7 @@ export const classes = [
     class_id: "2d154374",
     title: "LKG",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -35,7 +35,7 @@ export const classes = [
     class_id: "2d154374",
     title: "LKG",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -66,7 +66,7 @@ export const classes = [
     class_id: "2d154374",
     title: "LKG",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -97,7 +97,7 @@ export const classes = [
     class_id: "2d154374",
     title: "LKG",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -128,7 +128,7 @@ export const classes = [
     class_id: "2d154375",
     title: "UKG",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "5g13300",
@@ -153,7 +153,7 @@ export const classes = [
     class_id: "2d154375",
     title: "UKG",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "5g13300",
@@ -178,7 +178,7 @@ export const classes = [
     class_id: "2d154375",
     title: "UKG",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "5g13300",
@@ -203,7 +203,7 @@ export const classes = [
     class_id: "2d154375",
     title: "UKG",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "5g13300",
@@ -228,7 +228,7 @@ export const classes = [
     class_id: "2d154376",
     title: "I",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "d6d0f",
@@ -259,7 +259,7 @@ export const classes = [
     class_id: "2d154376",
     title: "I",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -290,7 +290,7 @@ export const classes = [
     class_id: "2d154376",
     title: "I",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -321,7 +321,7 @@ export const classes = [
     class_id: "2d154376",
     title: "I",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -352,7 +352,7 @@ export const classes = [
     class_id: "2d154377",
     title: "II",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -389,7 +389,7 @@ export const classes = [
     class_id: "2d154377",
     title: "II",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -426,7 +426,7 @@ export const classes = [
     class_id: "2d154377",
     title: "II",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -463,7 +463,7 @@ export const classes = [
     class_id: "2d154377",
     title: "II",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -500,7 +500,7 @@ export const classes = [
     class_id: "2d154378",
     title: "III",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "3d17763",
@@ -537,7 +537,7 @@ export const classes = [
     class_id: "2d154378",
     title: "III",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "3d17763",
@@ -574,7 +574,7 @@ export const classes = [
     class_id: "2d154378",
     title: "III",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "3d17763",
@@ -611,7 +611,7 @@ export const classes = [
     class_id: "2d154378",
     title: "III",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "3d17763",
@@ -648,7 +648,7 @@ export const classes = [
     class_id: "2d154379",
     title: "IV",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -685,7 +685,7 @@ export const classes = [
     class_id: "2d154379",
     title: "IV",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -722,7 +722,7 @@ export const classes = [
     class_id: "2d154379",
     title: "IV",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",
@@ -759,7 +759,7 @@ export const classes = [
     class_id: "2d154379",
     title: "IV",
     class_teacher_id: "",
-    students: [],
+
     subjects: [
       {
         id: "2d154374",

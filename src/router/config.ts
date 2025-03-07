@@ -20,7 +20,7 @@ const routes = [
     component: "StudentDashboard",
   },
   {
-    path: "/schooladmin",
+    path: "/home",
     exact: true,
     component: "SchoolAdmin",
   },

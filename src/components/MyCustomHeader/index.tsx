@@ -8,6 +8,8 @@ import { styled } from "@mui/system";
 import { Box, Button, Typography } from "@mui/material";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { useNavigate } from "react-router-dom";
+import { getCurrentUser, logout } from "../../service/authService";
+import { useEffect, useState } from "react";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -27,7 +29,11 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
 }));
 
 const MyCustomHeader = () => {
+  // const [user, setUser] = useState<boolean>(false);
+  // const getuser = getCurrentUser();
+  // getuser ? setUser(true) : setUser(false);
   const navigate = useNavigate();
+
   return (
     <>
       <HeaderSection>
@@ -51,13 +57,19 @@ const MyCustomHeader = () => {
                   marginLeft="-5rem"
                 />
               </Box>
-              <MyCustomButton
-                variant="contained"
-                startIcon={<ExitToAppIcon />}
-                onClick={() => navigate("/login")}
-              >
-                Logout
-              </MyCustomButton>
+
+              {getCurrentUser() && (
+                <MyCustomButton
+                  variant="contained"
+                  startIcon={<ExitToAppIcon />}
+                  onClick={() => {
+                    logout();
+                    navigate("/login");
+                  }}
+                >
+                  Logout
+                </MyCustomButton>
+              )}
             </Box>
 
             <Box
