@@ -21,29 +21,29 @@ const FeePaymentsScreen: React.FC = () => {
 
   const snackbarRef = React.useRef<SnackbarHandle>(null);
 
-  React.useEffect(() => {
-    const LoadAllApplications = async () => {
-      try {
-        console.log(`Calling ListAllFees data`);
-        const applicationList = await GetAllFeeData();
-        if (applicationList?.result && applicationList?.result.length > 0) {
-          console.log("All Fees data List");
-          console.log(applicationList?.result);
+  // React.useEffect(() => {
+  //   const LoadAllApplications = async () => {
+  //     try {
+  //       console.log(`Calling ListAllFees data`);
+  //       const applicationList = await GetAllFeeData();
+  //       if (applicationList?.result && applicationList?.result.length > 0) {
+  //         console.log("All Fees data List");
+  //         console.log(applicationList?.result);
 
-          setFeesData(applicationList?.result);
-        } else {
-          setFeesData([]);
-        }
-      } catch (error: any) {
-        snackbarRef.current?.showSnackbar(
-          `Error while fetching data ${error.message}`,
-          "error"
-        );
-      }
-    };
+  //         setFeesData(applicationList?.result);
+  //       } else {
+  //         setFeesData([]);
+  //       }
+  //     } catch (error: any) {
+  //       snackbarRef.current?.showSnackbar(
+  //         `Error while fetching data ${error.message}`,
+  //         "error"
+  //       );
+  //     }
+  //   };
 
-    LoadAllApplications();
-  }, []);
+  //   LoadAllApplications();
+  // }, []);
 
   return (
     <>

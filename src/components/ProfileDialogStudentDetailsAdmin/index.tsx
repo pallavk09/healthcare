@@ -28,10 +28,17 @@ import { GeneratePrevieUrl } from "../../common/utils/generatePreviewUrl";
 import moment from "moment";
 import { v4 as uuid } from "uuid";
 import { sections } from "../../Config/sections_records";
-import { classes_records } from "../../Config/classes_records";
+// import { classes_records } from "../../Config/classes_records";
 import { vehicles_records } from "../../Config/vehicles_records";
 import { stops_records } from "../../Config/stops_records";
 import { AddBoxSharp } from "@mui/icons-material";
+import { GetAcademicsRecord } from "../../api/Students-Management/add-view-students";
+import { GetSections } from "../../api/Students-Management/manage-section";
+import { Get as GetClass } from "../../api/Control-Settings/manage-class";
+import {
+  GetStops,
+  GetVehicles,
+} from "../../api/Control-Settings/manage-transport";
 
 interface ProfileDialogProps {
   isOpen: boolean;
@@ -46,6 +53,8 @@ interface ProfileDialogProps {
 }
 
 const SESSIONS = ["term1", "term2"];
+const ALLOWED_EXTENTIONS = ["jpg", "jpeg", "png"];
+const ALLOWED_FILE_SIZE = 2;
 
 const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
   isOpen,
@@ -77,7 +86,56 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
   const [sectionsList, setSectionsList] = useState<any>([]);
   const [vehicle_Stops, setVehicle_stops] = useState<any>([]);
   const [stopNames, setStopNames] = useState<any>([]);
+  const [vehicles, setVehicles] = useState<any>([]);
   const [transportMode, setTransportMode] = useState("");
+  // const [academiceRecordList, setAcademiceRecordList] = useState<any>([]);
+  const [loading, setLoading] = useState(true);
+  const [vehicleNo, setVehicleNo] = useState("");
+  const [errorMsgPhoto, setErrorMsgPhoto] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [
+          classes_records,
+          section_records,
+          stops_records,
+          vehicles_records,
+        ] = await Promise.all([
+          // GetAcademicsRecord(),
+          GetClass(),
+          GetSections(),
+          GetStops(),
+          GetVehicles(),
+        ]);
+
+        // if (academic_records && academic_records.result.documents?.length > 0) {
+        //   setAcademiceRecordList(academic_records.result.documents);
+        //   // console.log("academiceRecordList");
+        //   // console.log(academic_records.result.documents);
+        // }
+        if (classes_records && classes_records.result.documents?.length > 0) {
+          setClassList(classes_records.result.documents);
+        }
+        if (section_records && section_records.result.documents?.length > 0) {
+          setSectionsList(section_records.result.documents);
+        }
+        if (stops_records && stops_records.result.documents?.length > 0) {
+          setStopNames(stops_records.result.documents);
+        }
+        if (vehicles_records && vehicles_records.result.documents?.length > 0) {
+          setVehicles(vehicles_records.result.documents);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (
@@ -88,8 +146,6 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
       Object.keys(vehicles_records).length > 0 &&
       Object.keys(stops_records).length > 0
     ) {
-      console.log("Pop up opened");
-      console.log(profileData);
       const _vehicle_stops = vehicles_records.map((vehicle) => ({
         vehicle_no: vehicle.vehicle_no,
         vehicle_id: vehicle.vehicle_id,
@@ -103,28 +159,17 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
           stop.vehicle_id === profileData.transport_details.vehicle_id
       );
 
-      console.log("stopList");
-      console.log(stopList);
-
       stopList[0]?.name && setStopNames(stopList[0]?.name || []);
 
       setVehicle_stops(_vehicle_stops);
       setTransportMode(profileData.transport_details.mode);
+
+      console.log("Setting Profile data state");
+      console.log(profileData);
+      setVehicleNo(profileData.transport_details.vehicle_no);
       _SetProfileData(profileData); // Update state correctly
     }
   }, [profileData, vehicles_records, stops_records]); // Re-run when `profileData` updates
-
-  useEffect(() => {
-    if (
-      sections &&
-      sections.length > 0 &&
-      classes_records &&
-      classes_records.length > 0
-    ) {
-      setClassList(classes_records);
-      setSectionsList(sections);
-    }
-  }, [classes_records, sections]);
 
   useEffect(() => {
     if (isOpen && profileData && Object.keys(profileData).length > 0) {
@@ -140,6 +185,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
       console.log("Under useEffect of View Student Data");
       console.log(profileData);
       reset(profileData); // Reset form with new profileData
+      setVehicleNo("");
 
       const getPhotoUrl = profileData.photoUrl
         ? GeneratePrevieUrl(profileData.photoUrl)
@@ -153,6 +199,18 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
     }
   }, [profileData, reset]); // Ensure it runs only when `profileData` is valid
 
+  useEffect(() => {
+    if (resetFormRef) {
+      const getPhotoUrl = profileData.photoUrl
+        ? GeneratePrevieUrl(profileData.photoUrl)
+        : "";
+      profileData.photoUrl && setPhotoFile(undefined);
+      setPhoto(getPhotoUrl);
+      resetFormRef.current = () => reset(profileData);
+      setVehicleNo("");
+    }
+  }, [resetFormRef, reset, profileData]);
+
   // Create a custom onClose handler for the Dialog component.
   const handleDialogClose = (event: object, reason: string) => {
     if (reason === "backdropClick" || reason === "escapeKeyDown") {
@@ -163,46 +221,92 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
     onClose();
   };
 
-  useEffect(() => {
-    if (resetFormRef) {
-      const getPhotoUrl = profileData.photoUrl
-        ? GeneratePrevieUrl(profileData.photoUrl)
-        : "";
-      profileData.photoUrl && setPhotoFile(undefined);
-      setPhoto(getPhotoUrl);
-      resetFormRef.current = () => reset(profileData);
-    }
-  }, [resetFormRef, reset, profileData]);
-
   const handleFormSubmit = async (data: any) => {
-    console.log("handleFormSubmit");
+    try {
+      console.log("handleFormSubmit");
+      const _class = classList.find(
+        (item: any) => item.class_id === data.academic_records[0].class_id
+      );
+      const _section = sectionsList.find(
+        (item: any) => item.section_id === data.academic_records[0].section_id
+      );
+      const _id = uuid().slice(0, 6);
 
-    let updatedData = addSibling
-      ? {
-          ...data,
-          id: uuid(),
-          student_id: uuid(),
-          photofile,
-          academic_records: {
-            ...data.academic_records,
-            academic_year: GetCurrentAcademciSession(),
-          },
-        }
-      : data;
-    console.log(updatedData);
-    const isValid = await trigger();
-    if (isValid) {
-      console.log("Data submission. Validation passed");
-      onSubmit(updatedData);
-      onClose();
-    } else {
-      console.log("Data submission. Validation failed");
+      let updatedData = addSibling
+        ? {
+            ...data,
+            id: _id,
+            student_id: _id,
+            photofile,
+            class_id: data.academic_records[0].class_id,
+            class_name: _class?.name,
+            section_id: data.academic_records[0].section_id,
+            section_name: _section?.name,
+            roll_number: data.academic_records[0].roll_number,
+            academic_records: {
+              ...data.academic_records,
+              academic_year: GetCurrentAcademciSession(),
+            },
+            transport_details: {
+              ...data.transport_details,
+              vehicle_no: vehicleNo,
+            },
+          }
+        : {
+            ...data,
+            photofile,
+            class_id: data.academic_records.class_id,
+            class_name: _class?.name,
+            section_id: data.academic_records.section_id,
+            section_name: _section?.name,
+            roll_number: data.academic_records.roll_number,
+            transport_details: {
+              ...data.transport_details,
+              vehicle_no: vehicleNo,
+            },
+          };
+      console.log(updatedData);
+      const isValid = await trigger();
+      if (isValid) {
+        onSubmit(updatedData);
+        onClose();
+      } else {
+        console.log("Data submission. Validation failed");
+      }
+    } catch (error) {
+      console.log("Error While Adding/Updating student: ");
+      console.log(error);
+    } finally {
     }
   };
 
   // Handle photo upload
   const handlePhotoUpload = (event: any) => {
+    setErrorMsgPhoto("");
     const file = event.target.files[0];
+    if (!file) return;
+
+    const maxFileSize = ALLOWED_FILE_SIZE * 1024 * 1024; // 2MB
+
+    const fileExtension = file.name.split(".").pop()?.toLowerCase();
+    const fileSize = file.size;
+    console.log("fileExtension", fileExtension);
+    console.log("fileSize", fileSize);
+
+    // Validate file extension
+    if (!fileExtension || !ALLOWED_EXTENTIONS.includes(fileExtension)) {
+      setErrorMsgPhoto("Invalid file type.");
+      return;
+    }
+
+    // Validate file size
+    if (fileSize > maxFileSize) {
+      setErrorMsgPhoto("File size exceeds 2MB");
+      return;
+    }
+
+    console.log("Photo Upload");
+    console.log(event);
     setPhotoFile(file);
     // formData.append("file", file);
     if (file) {
@@ -214,17 +318,21 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
     }
   };
 
-  const HandleVehicleNoChange = (event: any) => {
-    console.log("HandleVehicleNoChange");
+  const HandleStopNameChange = (event: any) => {
+    console.log("HandleStopNameChange");
     console.log(event.target.value);
-    const stopList = vehicle_Stops.filter(
-      (stop: any) => stop.vehicle_id === event.target.value
+    const stopDetail = stopNames.find(
+      (stop: any) => stop.name === event.target.value
     );
+    console.log(stopDetail);
+    const vehicle_id = stopDetail.vehicle_id;
+    console.log(vehicle_id);
 
-    console.log("stopList");
-    console.log(stopList);
-
-    setStopNames(stopList[0].name);
+    const vehicleDetail = vehicles.find(
+      (vehicle: any) => vehicle.vehicle_id === vehicle_id
+    );
+    console.log(vehicleDetail);
+    setVehicleNo(vehicleDetail.vehicle_no || "Not Found");
   };
 
   const HandleTransportModeChange = (event: any) => {
@@ -276,7 +384,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
           },
         }}
       >
-        {!isFormReady || !profileData ? (
+        {!isFormReady || !profileData || loading ? (
           <Box
             display="flex"
             justifyContent="center"
@@ -304,6 +412,27 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                       flexDirection={"column"}
                       sx={{ mt: -3 }}
                     >
+                      <Box
+                        display={"flex"}
+                        flexDirection={"row"}
+                        justifyContent={"flex-start"}
+                        alignItems={"center"}
+                        gap={1}
+                      >
+                        <Typography variant="body2" pt={0}>
+                          <strong>Admission Date: </strong>
+                        </Typography>
+                        <ControlledTextField
+                          name="admission_date"
+                          control={control}
+                          errors={errors}
+                          // label="Admission Date"
+                          fullWidth
+                          type="date"
+                          disabled={!addSibling}
+                          sx={{ width: "15%", mt: 0, ml: 0 }}
+                        />
+                      </Box>
                       <ControlledTextField
                         name="admission_id"
                         control={control}
@@ -353,7 +482,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                       justifyContent={"normal"}
                       sx={{ mt: -1 }}
                     >
-                      <CustomDatePicker
+                      {/* <CustomDatePicker
                         format="YYYY-MM-DD"
                         name="admission_date"
                         label="Admission Date"
@@ -361,7 +490,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                         errors={errors}
                         selectedDate={_profileData?.admission_date}
                         disabled={!isEditing}
-                      />
+                      /> */}
 
                       <ControlledSelect
                         name="admission_catagory"
@@ -374,8 +503,8 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           { value: "staff_ward", label: "Staff Ward" },
                           { value: "bpl", label: "BPL" },
                         ]}
-                        sx={{ width: "31%", mt: 2, ml: 3 }}
-                        disabled={!addSibling}
+                        sx={{ width: "31%", mt: 0, ml: 0 }}
+                        disabled={!isEditing}
                       />
 
                       <ControlledSelect
@@ -388,8 +517,8 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           { value: "rte", label: "RTE" },
                           { value: "non-rte", label: "Non RTE" },
                         ]}
-                        sx={{ width: "31%", mt: 2, ml: 3 }}
-                        disabled={!addSibling}
+                        sx={{ width: "31%", mt: 0, ml: 3 }}
+                        disabled={!isEditing}
                       />
                     </Grid>
 
@@ -414,8 +543,8 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           { value: "st", label: "ST" },
                           { value: "sc", label: "SC" },
                         ]}
-                        sx={{ width: "31%", mt: 2 }}
-                        disabled={!addSibling}
+                        sx={{ width: "31%", mt: 0 }}
+                        disabled={!isEditing}
                       />
 
                       {/* Is Active */}
@@ -430,7 +559,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           { value: "active", label: "active" },
                           { value: "inactive", label: "inactive" },
                         ]}
-                        sx={{ width: "31%", mt: 2, ml: 3 }}
+                        sx={{ width: "31%", mt: 0, ml: 3 }}
                         disabled={addSibling ? false : !isEditing}
                       />
                     </Grid>
@@ -451,7 +580,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                         errors={errors}
                         label="School Name"
                         fullWidth
-                        disabled={!addSibling}
+                        disabled={!isEditing}
                       />
                       {/* English Hindi Maths */}
                       <Grid
@@ -467,11 +596,11 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           errors={errors}
                           label="Marks English"
                           type="number"
-                          rules={{
-                            required: "Required",
-                          }}
+                          // rules={{
+                          //   required: "Required",
+                          // }}
                           sx={{ width: "30%", mt: 0 }}
-                          required
+                          // required
                           disabled={addSibling ? false : !isEditing}
                         />
 
@@ -481,11 +610,11 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           errors={errors}
                           label="Marks Maths"
                           type="number"
-                          rules={{
-                            required: "Required",
-                          }}
+                          // rules={{
+                          //   required: "Required",
+                          // }}
                           sx={{ width: "30%", mt: 0 }}
-                          required
+                          // required
                           disabled={addSibling ? false : !isEditing}
                         />
 
@@ -495,11 +624,11 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           errors={errors}
                           label="Marks Hindi"
                           type="number"
-                          rules={{
-                            required: "Required",
-                          }}
+                          // rules={{
+                          //   required: "Required",
+                          // }}
                           sx={{ width: "30%", mt: 0 }}
-                          required
+                          // required
                           disabled={addSibling ? false : !isEditing}
                         />
                       </Grid>
@@ -519,11 +648,11 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           errors={errors}
                           label="Marks Science"
                           type="number"
-                          rules={{
-                            required: "Required",
-                          }}
+                          // rules={{
+                          //   required: "Required",
+                          // }}
                           sx={{ width: "30%", mt: 0 }}
-                          required
+                          // required
                           disabled={addSibling ? false : !isEditing}
                         />
 
@@ -533,11 +662,11 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           errors={errors}
                           label="Marks Computer"
                           type="number"
-                          rules={{
-                            required: "Required",
-                          }}
+                          // rules={{
+                          //   required: "Required",
+                          // }}
                           sx={{ width: "30%", mt: 0 }}
-                          required
+                          // required
                           disabled={addSibling ? false : !isEditing}
                         />
                       </Grid>
@@ -555,165 +684,250 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={4} sx={{ mt: -3 }}>
-                    <Grid item xs={8}>
-                      <Box
-                        sx={{
-                          // position: { xs: "static", md: "absolute" },
-                          // top: { md: 16 },
-                          // right: { md: 16 },
-                          mt: { xs: 2, md: 0 },
-                          width: 132,
-                          height: 170,
-                          border: "2px solid #ccc",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "#f5f5f5",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            position: "relative",
-                            width: "100%",
-                            height: "100%",
-                          }}
-                        >
-                          {photo ? (
-                            <>
-                              <Avatar
-                                src={photo as string}
-                                alt="Student Photo"
-                                sx={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "contain",
-                                }}
-                                variant="square"
-                              />
-                              {/* Hover effect for Camera Icon */}
-                              {(addSibling || isEditing) && (
-                                <Box
-                                  sx={{
-                                    position: "absolute",
-                                    top: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    left: 0,
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    bgcolor: "rgba(0, 0, 0, 0.4)", // Dark overlay on hover
-                                    opacity: 0,
-                                    transition: "opacity 0.3s ease",
-                                    cursor: "pointer",
-                                    "&:hover": {
-                                      opacity: 1, // Show icon on hover
-                                    },
-                                  }}
-                                  onClick={() =>
-                                    document
-                                      .getElementById("photo-upload")
-                                      ?.click()
-                                  } // Trigger file input on click
-                                >
-                                  <PhotoCameraIcon
-                                    sx={{ color: "white", fontSize: 40 }}
-                                  />
-                                </Box>
-                              )}
-                              <input
-                                id="photo-upload"
-                                type="file"
-                                accept="image/*"
-                                style={{ display: "none" }}
-                                onChange={handlePhotoUpload}
-                              />
-                            </>
-                          ) : (
-                            <>
-                              <Avatar
-                                sx={{
-                                  width: "100%",
-                                  height: "100%",
-                                  bgcolor: "#f0f0f0", // Background color for the empty avatar
-                                }}
-                                variant="square"
-                              >
-                                <PersonIcon
-                                  sx={{ fontSize: 120, color: "#bdbdbd" }}
-                                />
-                              </Avatar>
-                              {/* Hover effect for Camera Icon when no photo */}
-                              {(addSibling || isEditing) && (
-                                <Box
-                                  sx={{
-                                    position: "absolute",
-                                    top: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    left: 0,
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    bgcolor: "rgba(0, 0, 0, 0.4)", // Dark overlay on hover
-                                    opacity: 0,
-                                    transition: "opacity 0.3s ease",
-                                    cursor: "pointer",
-                                    "&:hover": {
-                                      opacity: 1, // Show icon on hover
-                                    },
-                                  }}
-                                  onClick={() =>
-                                    document
-                                      .getElementById("photo-upload")
-                                      ?.click()
-                                  } // Trigger file input on click
-                                >
-                                  <PhotoCameraIcon
-                                    sx={{ color: "white", fontSize: 40 }}
-                                  />
-                                </Box>
-                              )}
-
-                              <input
-                                id="photo-upload"
-                                type="file"
-                                accept="image/*"
-                                style={{ display: "none" }}
-                                onChange={handlePhotoUpload}
-                              />
-                            </>
-                          )}
-                        </Box>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <ControlledTextField
-                        name="personal_details.name"
-                        control={control}
-                        errors={errors}
-                        label="Full Name"
-                        rules={{
-                          required: "Required",
-                        }}
-                        sx={{ width: "65%" }}
-                        // value={formData?.studentObj.personalDetails.studentfullname}
-                        required
-                        disabled={addSibling ? false : !isEditing}
-                      />
-                    </Grid>
-
-                    {/* DOB and Gender */}
                     <Grid
                       item
                       xs={12}
-                      display={"flex"}
+                      display="flex"
                       flexDirection={"row"}
                       justifyContent={"normal"}
-                      sx={{ mt: -1 }}
+                      gap={3}
                     >
-                      <CustomDatePicker
+                      <Grid
+                        item
+                        width={"15%"}
+                        display={"flex"}
+                        flexDirection={"column"}
+                      >
+                        <Box
+                          sx={{
+                            mt: { xs: 2, md: 0 },
+                            width: 132,
+                            height: 170,
+                            border: "2px solid #ccc",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#f5f5f5",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              position: "relative",
+                              width: "100%",
+                              height: "100%",
+                            }}
+                          >
+                            {photo ? (
+                              <>
+                                <Avatar
+                                  src={photo as string}
+                                  alt="Student Photo"
+                                  sx={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "contain",
+                                  }}
+                                  variant="square"
+                                />
+                                {/* Hover effect for Camera Icon */}
+                                {(addSibling || isEditing) && (
+                                  <Box
+                                    sx={{
+                                      position: "absolute",
+                                      top: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      left: 0,
+                                      display: "flex",
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                      bgcolor: "rgba(0, 0, 0, 0.4)", // Dark overlay on hover
+                                      opacity: 0,
+                                      transition: "opacity 0.3s ease",
+                                      cursor: "pointer",
+                                      "&:hover": {
+                                        opacity: 1, // Show icon on hover
+                                      },
+                                    }}
+                                    onClick={() =>
+                                      document
+                                        .getElementById("photo-upload")
+                                        ?.click()
+                                    } // Trigger file input on click
+                                  >
+                                    <Box
+                                      display={"flex"}
+                                      flexDirection="column"
+                                      justifyContent={"center"}
+                                      alignItems={"center"}
+                                    >
+                                      <PhotoCameraIcon
+                                        sx={{ color: "white", fontSize: 40 }}
+                                      />
+                                      <Typography
+                                        variant="caption"
+                                        alignSelf={"center"}
+                                        color="#fff"
+                                        sx={{ fontSize: "0.65rem" }}
+                                      >
+                                        <strong>jpg, jpeg, png</strong> max{" "}
+                                        <strong>2MB</strong>
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                )}
+                                <input
+                                  id="photo-upload"
+                                  type="file"
+                                  accept="image/*"
+                                  style={{ display: "none" }}
+                                  onChange={handlePhotoUpload}
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <Avatar
+                                  sx={{
+                                    width: "100%",
+                                    height: "100%",
+                                    bgcolor: "#f0f0f0", // Background color for the empty avatar
+                                  }}
+                                  variant="square"
+                                >
+                                  <PersonIcon
+                                    sx={{ fontSize: 120, color: "#bdbdbd" }}
+                                  />
+                                </Avatar>
+                                {/* Hover effect for Camera Icon when no photo */}
+                                {(addSibling || isEditing) && (
+                                  <Box
+                                    sx={{
+                                      position: "absolute",
+                                      top: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      left: 0,
+                                      display: "flex",
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                      bgcolor: "rgba(0, 0, 0, 0.4)", // Dark overlay on hover
+                                      opacity: 0,
+                                      transition: "opacity 0.3s ease",
+                                      cursor: "pointer",
+                                      "&:hover": {
+                                        opacity: 1, // Show icon on hover
+                                      },
+                                    }}
+                                    onClick={() =>
+                                      document
+                                        .getElementById("photo-upload")
+                                        ?.click()
+                                    } // Trigger file input on click
+                                  >
+                                    <Box
+                                      display={"flex"}
+                                      flexDirection="column"
+                                      justifyContent={"center"}
+                                      alignItems={"center"}
+                                    >
+                                      <PhotoCameraIcon
+                                        sx={{ color: "white", fontSize: 40 }}
+                                      />
+                                      <Typography
+                                        variant="caption"
+                                        alignSelf={"center"}
+                                        color="#fff"
+                                        sx={{ fontSize: "0.65rem" }}
+                                      >
+                                        <strong>jpg, jpeg, png</strong> max{" "}
+                                        <strong>2MB</strong>
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                )}
+
+                                <input
+                                  id="photo-upload"
+                                  type="file"
+                                  accept="image/*"
+                                  style={{ display: "none" }}
+                                  onChange={handlePhotoUpload}
+                                />
+                              </>
+                            )}
+                          </Box>
+                        </Box>
+                        {errorMsgPhoto && (
+                          <Typography
+                            variant="caption"
+                            alignSelf={"center"}
+                            color="red"
+                            sx={{ fontSize: "0.65rem" }}
+                          >
+                            {errorMsgPhoto}
+                          </Typography>
+                        )}
+                      </Grid>
+
+                      <Grid
+                        container
+                        width={"80%"}
+                        display="flex"
+                        flexDirection={"column"}
+                        justifyContent={"flex-start"}
+                      >
+                        {/* Full Name */}
+                        <Grid item width={"100%"} mt={0}>
+                          <ControlledTextField
+                            name="personal_details.name"
+                            control={control}
+                            errors={errors}
+                            label="Full Name"
+                            rules={{
+                              required: "Required",
+                            }}
+                            // sx={{ width: "100%" }}
+                            fullWidth
+                            required
+                            disabled={addSibling ? false : !isEditing}
+                          />
+                        </Grid>
+
+                        {/* DOB */}
+                        <Grid
+                          item
+                          width={"100%"}
+                          display={"flex"}
+                          flexDirection={"row"}
+                          // justifyContent={"normal"}
+                          justifyContent={"space-between"}
+                          mt={2}
+                          // sx={{ mt: -1 }}
+                        >
+                          <Box
+                            display={"flex"}
+                            flexDirection={"row"}
+                            justifyContent={"flex-start"}
+                            alignItems={"center"}
+                            gap={1}
+                            mt={1}
+                          >
+                            <Typography variant="body2" pt={0}>
+                              <strong>Date of Birth: </strong>
+                            </Typography>
+                            <ControlledTextField
+                              name="personal_details.dob"
+                              control={control}
+                              errors={errors}
+                              // label="Admission Date"
+                              // fullWidth
+                              type="date"
+                              disabled={addSibling ? false : !isEditing}
+                              sx={{ width: "50%" }}
+                            />
+                          </Box>
+                          {/* <CustomDatePicker
                         format="YYYY-MM-DD"
                         name="personal_details.dob"
                         label="Date of Birth"
@@ -722,65 +936,70 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                         rules={{ required: "required" }}
                         selectedDate={_profileData?.personal_details?.dob}
                         disabled={addSibling ? false : !isEditing}
-                      />
+                      /> */}
 
-                      {/* Gender */}
-                      <ControlledSelect
-                        name="personal_details.gender"
-                        control={control}
-                        errors={errors}
-                        label="Gender"
-                        rules={{ required: "Required" }}
-                        options={[
-                          { value: "", label: "Select" },
-                          { value: "male", label: "male" },
-                          { value: "female", label: "female" },
-                          { value: "other", label: "other" },
-                        ]}
-                        sx={{ width: "31%", mt: 2, ml: 3 }}
-                        disabled={addSibling ? false : !isEditing}
-                      />
-                    </Grid>
+                          {/* Gender */}
+                        </Grid>
 
-                    {/* Height and Blood Group */}
-                    <Grid
-                      item
-                      xs={12}
-                      display={"flex"}
-                      flexDirection={"row"}
-                      justifyContent={"normal"}
-                      sx={{ mt: -1 }}
-                    >
-                      <ControlledTextField
-                        name="personal_details.height"
-                        control={control}
-                        errors={errors}
-                        label="Height (CM)"
-                        type="number"
-                        sx={{ width: "65%" }}
-                        disabled={addSibling ? false : !isEditing}
-                      />
+                        {/* Gender Height and Blood Group */}
+                        <Grid
+                          item
+                          width={"100%"}
+                          display={"flex"}
+                          flexDirection={"row"}
+                          justifyContent={"space-between"}
+                          mt={3}
+                          gap={1}
+                          // sx={{ mt: -1 }}
+                        >
+                          <ControlledSelect
+                            name="personal_details.gender"
+                            control={control}
+                            errors={errors}
+                            label="Gender"
+                            rules={{ required: "Required" }}
+                            options={[
+                              { value: "", label: "Select" },
+                              { value: "male", label: "male" },
+                              { value: "female", label: "female" },
+                              { value: "other", label: "other" },
+                            ]}
+                            sx={{ width: "31%", mt: 0, pb: 1 }}
+                            disabled={addSibling ? false : !isEditing}
+                          />
 
-                      <ControlledSelect
-                        name="personal_details.blood_group"
-                        control={control}
-                        errors={errors}
-                        label="Blood Group"
-                        // rules={{ required: "Required" }}
-                        options={[
-                          { value: "", label: "Select" },
-                          { value: "A+", label: "A+" },
-                          { value: "A-", label: "A-" },
-                          { value: "B+", label: "B+" },
-                          { value: "B-", label: "B-" },
-                          { value: "O+", label: "O+" },
-                          { value: "O-", label: "O-" },
-                          { value: "Ab+", label: "Ab+" },
-                          { value: "Ab-", label: "Ab-" },
-                        ]}
-                        sx={{ width: "31%", mt: 2, ml: 3 }}
-                        disabled={addSibling ? false : !isEditing}
-                      />
+                          <ControlledTextField
+                            name="personal_details.height"
+                            control={control}
+                            errors={errors}
+                            label="Height (CM)"
+                            type="number"
+                            sx={{ width: "31%" }}
+                            disabled={addSibling ? false : !isEditing}
+                          />
+
+                          <ControlledSelect
+                            name="personal_details.blood_group"
+                            control={control}
+                            errors={errors}
+                            label="Blood Group"
+                            // rules={{ required: "Required" }}
+                            options={[
+                              { value: "", label: "Select" },
+                              { value: "A+", label: "A+" },
+                              { value: "A-", label: "A-" },
+                              { value: "B+", label: "B+" },
+                              { value: "B-", label: "B-" },
+                              { value: "O+", label: "O+" },
+                              { value: "O-", label: "O-" },
+                              { value: "Ab+", label: "Ab+" },
+                              { value: "Ab-", label: "Ab-" },
+                            ]}
+                            sx={{ width: "31%" }}
+                            disabled={addSibling ? false : !isEditing}
+                          />
+                        </Grid>
+                      </Grid>
                     </Grid>
 
                     <Typography variant="body2" pl={2} pt={2} ml={2}>
@@ -1003,7 +1222,8 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                                       label: item.name,
                                     }))}
                                     sx={{ width: "30%", mt: 0 }}
-                                    disabled={addSibling ? false : !isEditing}
+                                    disabled={!addSibling}
+                                    required
                                   />
 
                                   <ControlledSelect
@@ -1017,7 +1237,8 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                                       label: item.name,
                                     }))}
                                     sx={{ width: "30%", mt: 0 }}
-                                    disabled={addSibling ? false : !isEditing}
+                                    disabled={!addSibling}
+                                    required
                                   />
 
                                   <ControlledTextField
@@ -1031,7 +1252,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                                     }}
                                     sx={{ width: "30%", mt: 0 }}
                                     required
-                                    disabled={addSibling ? false : !isEditing}
+                                    disabled={!addSibling}
                                   />
                                 </Grid>
 
@@ -1370,33 +1591,63 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
 
                       {transportMode === "School-Transport" && (
                         <ControlledSelect
-                          name="transport_details.vehicle_id"
-                          control={control}
-                          errors={errors}
-                          label="Vehicle No"
-                          options={vehicle_Stops.map((data: any) => ({
-                            value: data.vehicle_id,
-                            label: data.vehicle_no,
-                          }))}
-                          sx={{ width: "40%", mt: 0 }}
-                          disabled={!isEditing}
-                          selectProps={{ onChange: HandleVehicleNoChange }}
-                        />
-                      )}
-
-                      {transportMode === "School-Transport" && (
-                        <ControlledSelect
                           name="transport_details.stop_name"
                           control={control}
                           errors={errors}
                           label="Stop"
-                          options={stopNames.map((name: any) => ({
-                            value: name,
-                            label: name,
+                          options={stopNames.map((stop: any) => ({
+                            value: stop.name,
+                            label: stop.name,
                           }))}
-                          sx={{ width: "40%", mt: 0 }}
+                          sx={{ width: "20%", mt: 0 }}
+                          selectProps={{ onChange: HandleStopNameChange }}
                           disabled={!isEditing}
                         />
+                      )}
+                      {transportMode === "School-Transport" && (
+                        <Box
+                          display={"flex"}
+                          flexDirection={"row"}
+                          justifyContent={"flex-start"}
+                          alignItems={"center"}
+                          gap={1}
+                          mt={1}
+                        >
+                          <Typography variant="h6" pt={0}>
+                            <strong>
+                              {`Vehicle No: ${
+                                vehicleNo ||
+                                _profileData.transport_details.vehicle_no ||
+                                ""
+                              }`}{" "}
+                            </strong>
+                          </Typography>
+                        </Box>
+                        // <ControlledTextField
+                        //   name={`transport_details.vehicle_id`}
+                        //   control={control}
+                        //   errors={errors}
+                        //   label="Vehicle No"
+                        //   // rules={{
+                        //   //   required: "Required",
+                        //   // }}
+                        //   sx={{ width: "40%", mt: 0 }}
+                        //   // required
+                        //   disabled={true}
+                        // />
+                        // <ControlledSelect
+                        //   name="transport_details.vehicle_id"
+                        //   control={control}
+                        //   errors={errors}
+                        //   label="Vehicle No"
+                        //   options={vehicle_Stops.map((data: any) => ({
+                        //     value: data.vehicle_id,
+                        //     label: data.vehicle_no,
+                        //   }))}
+                        //   sx={{ width: "40%", mt: 0 }}
+                        //   disabled={!isEditing}
+                        //   selectProps={{ onChange: HandleVehicleNoChange }}
+                        // />
                       )}
                     </Grid>
                   </Grid>
@@ -1525,11 +1776,11 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                         control={control}
                         errors={errors}
                         label="Name"
-                        rules={{
-                          required: "Required",
-                        }}
+                        // rules={{
+                        //   required: "Required",
+                        // }}
                         fullWidth
-                        required
+                        // required
                         sx={{ width: "65%" }}
                         disabled={!isEditing}
                       />
@@ -1553,6 +1804,7 @@ const ProfileDialogStudentDetailsAdmin: React.FC<ProfileDialogProps> = ({
                           { value: "Graduate", label: "Graduate" },
                           { value: "PG", label: "PG" },
                           { value: "Masters", label: "Masters" },
+                          { value: "Others", label: "Others" },
                         ]}
                         sx={{ width: "40%", mt: 0 }}
                         disabled={!isEditing}

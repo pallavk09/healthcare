@@ -363,10 +363,7 @@ const ManageSubjects = () => {
           code: "",
           title: "",
         });
-        snackbarRef.current?.showSnackbar(
-          `Entry updated successfully.`,
-          "success"
-        );
+        snackbarRef.current?.showSnackbar(`Entry updated.`, "success");
       } else {
         if (isDuplicate(data.code, data.title)) {
           console.log("Duplicate");
@@ -396,17 +393,14 @@ const ManageSubjects = () => {
             code: "",
             title: "",
           });
-          snackbarRef.current?.showSnackbar(
-            `Subject added successfully.`,
-            "success"
-          );
+          snackbarRef.current?.showSnackbar(`Subject Added.`, "success");
         } else {
-          snackbarRef.current?.showSnackbar(`Item not added`, "error");
+          snackbarRef.current?.showSnackbar(`Item Not Added`, "error");
         }
       }
     } catch (error) {
       console.log(error);
-      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+      snackbarRef.current?.showSnackbar(`Some Error Occured`, "error");
     } finally {
       setAdding(false);
     }

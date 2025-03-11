@@ -16,44 +16,20 @@ import {
   Typography,
   Box,
   styled,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Grid,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
   TextField,
   CircularProgress,
 } from "@mui/material";
-import { tableCellClasses } from "@mui/material/TableCell";
 import { useNavigate } from "react-router-dom";
 
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import HomeIcon from "@mui/icons-material/Home";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import moment from "moment";
 import { useForm } from "react-hook-form";
 import { v4 as uuid } from "uuid";
 import ControlledSelect from "../../common/ControlledComponents/ControlledSelect";
-import ControlledTextField from "../../common/ControlledComponents/ControlledTextField";
-import { exam_records } from "../../Config/exams_records";
-import { classes_records } from "../../Config/classes_records";
-import { subjects } from "../../Config/subjects";
-import { classes } from "../../Config/classes";
-import { exam_schedules } from "../../Config/exams_schedules";
+
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -66,6 +42,7 @@ import { GetExams } from "../../api/Exams-Management/new_exam";
 import {
   AddSchedules,
   GetSchedules,
+  UpdateSchedules,
 } from "../../api/Exams-Management/schedule-exam";
 
 const CustomNoRowsOverlay = ({ loading }: { loading: boolean }) => {
@@ -123,7 +100,6 @@ const ScheduleExam = () => {
   const [examSession, setExamSession] = useState(undefined);
   const [subjectsList, setSubjectsList] = useState<any>([]);
   const [classSubject, setClassSubject] = useState<any>([]);
-  const [examSchedules, setExamSchedules] = useState<any>([]);
 
   const [selectedSubjects, setSelectedSubjects] = useState<any>([]);
   const [rows, setRows] = useState<any>([]);
@@ -136,6 +112,7 @@ const ScheduleExam = () => {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [addingSchedule, setAddingSchedule] = useState(false);
+  const [scheduledExamFromDB, setScheduledExamFromDB] = useState<any>();
 
   const {
     handleSubmit,
@@ -278,7 +255,6 @@ const ScheduleExam = () => {
           }
           disabled={examAlreadyScheduled ? !edit : false}
           sx={{
-            // border: "1px solid #ccc",
             borderRadius: 1,
             padding: 1,
             paddingRight: 2,
@@ -378,6 +354,7 @@ const ScheduleExam = () => {
         setRows(_exam_Schedule_json);
         setEdit(false);
         setExamAlreadyScheduled(true);
+        setScheduledExamFromDB(_exam_Schedule[0]);
       } else {
         const _class_id = data.class_id;
         const classSubjectObj = classSubject.filter(
@@ -411,36 +388,75 @@ const ScheduleExam = () => {
     }
   };
 
+  const HandleReset = () => {
+    reset({
+      session: "",
+      exam_id: "",
+      class_id: "",
+    });
+
+    setRows([]);
+    setEdit(false);
+    setExamAlreadyScheduled(false);
+  };
+
   const handleSave = async () => {
     try {
       setAddingSchedule(true);
-      console.log("Saved data:", rows);
-      const exam_schedule_array = [];
-      const _id = uuid().slice(0, 5);
-
-      const exam_schedule_obj = {
-        id: _id,
-        schedule_id: _id,
-        class_id: selectedClass,
-        session: examSession,
-        exam_id: selectedExam,
-        exam_schedule: JSON.stringify(rows),
-        user: "Pallav",
-        // exam_schedule: rows,
-      };
-
-      const addNewItem = await AddSchedules(exam_schedule_obj);
-      if (addNewItem && addNewItem.result) {
-        setRows(rows);
-        setEdit(false);
-        setExamAlreadyScheduled(true);
+      if (edit) {
+        console.log("Exam Already Scheduled:", rows);
+        console.log("scheduledExamFromDB:");
+        console.log(scheduledExamFromDB);
+        const exam_schedule_obj = {
+          id: scheduledExamFromDB.schedule_id,
+          schedule_id: scheduledExamFromDB.schedule_id,
+          class_id: selectedClass,
+          session: examSession,
+          exam_id: selectedExam,
+          exam_schedule: JSON.stringify(rows),
+          user: "Pallav",
+        };
+        console.log(exam_schedule_obj);
+        const updateItem = await UpdateSchedules(exam_schedule_obj);
+        if (updateItem && updateItem.result) {
+          setRows(rows);
+          setEdit(false);
+          setExamAlreadyScheduled(true);
+          setScheduledExamFromDB(updateItem.result);
+          snackbarRef.current?.showSnackbar(
+            `Exam Schedule Updated.`,
+            "success"
+          );
+        } else {
+          snackbarRef.current?.showSnackbar(`Item not added`, "error");
+        }
       } else {
-        snackbarRef.current?.showSnackbar(`Item not added`, "error");
+        console.log("Saved data:", rows);
+        const exam_schedule_array = [];
+        const _id = uuid().slice(0, 5);
+
+        const exam_schedule_obj = {
+          id: _id,
+          schedule_id: _id,
+          class_id: selectedClass,
+          session: examSession,
+          exam_id: selectedExam,
+          exam_schedule: JSON.stringify(rows),
+          user: "Pallav",
+          // exam_schedule: rows,
+        };
+
+        const addNewItem = await AddSchedules(exam_schedule_obj);
+        if (addNewItem && addNewItem.result) {
+          setRows(rows);
+          setEdit(false);
+          setExamAlreadyScheduled(true);
+          setScheduledExamFromDB(addNewItem.result);
+          snackbarRef.current?.showSnackbar(`Exam Scheduled.`, "success");
+        } else {
+          snackbarRef.current?.showSnackbar(`Item not added`, "error");
+        }
       }
-
-      // exam_schedule_array.push(exam_schedule_obj);
-
-      // console.log(exam_schedule_array);
     } catch (error) {
       console.log(error);
       snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
@@ -542,7 +558,10 @@ const ScheduleExam = () => {
               alignItems={"center"}
               mt={1}
             >
-              <form onSubmit={handleSubmit(HandleShowSubjects)}>
+              <form
+                onSubmit={handleSubmit(HandleShowSubjects)}
+                onReset={HandleReset}
+              >
                 <Box
                   display={"flex"}
                   flexDirection={"row"}
@@ -597,6 +616,31 @@ const ScheduleExam = () => {
                   <MyCustomButton
                     variant="contained"
                     type="submit"
+                    startIcon={adding ? <CircularProgress size={20} /> : null}
+                    disabled={adding}
+                    sx={{
+                      alignSelf: "center",
+                      height: "70%",
+                      width: "10%",
+                    }}
+                  >
+                    {adding ? "" : "Show"}
+                  </MyCustomButton>
+                  <MyCustomButton
+                    variant="contained"
+                    type="reset"
+                    sx={{
+                      alignSelf: "center",
+                      height: "70%",
+                      width: "10%",
+                    }}
+                  >
+                    Clear
+                  </MyCustomButton>
+
+                  {/* <MyCustomButton
+                    variant="contained"
+                    type="submit"
                     sx={{
                       width: "10%",
                       height: "70%",
@@ -604,7 +648,7 @@ const ScheduleExam = () => {
                     }}
                   >
                     {"Go"}
-                  </MyCustomButton>
+                  </MyCustomButton> */}
                 </Box>
               </form>
               {rows && rows.length > 0 && (
@@ -668,16 +712,28 @@ const ScheduleExam = () => {
                     variant="contained"
                     onClick={handleSave}
                     sx={{ width: "10%", height: "70%", alignSelf: "center" }}
+                    startIcon={
+                      addingSchedule ? <CircularProgress size={20} /> : null
+                    }
+                    disabled={addingSchedule}
                   >
-                    {!edit ? "Save" : "Update"}
+                    {addingSchedule ? "" : "Save"}
                   </MyCustomButton>
                 ) : (
                   <MyCustomButton
                     variant="contained"
                     onClick={edit ? handleSave : () => setEdit(true)}
                     sx={{ width: "auto", height: "70%", alignSelf: "center" }}
+                    disabled={addingSchedule}
+                    startIcon={
+                      addingSchedule ? <CircularProgress size={20} /> : null
+                    }
                   >
-                    {!edit ? "Edit Schedule" : "Save Changes"}
+                    {!edit
+                      ? "Edit Schedule"
+                      : addingSchedule
+                      ? ""
+                      : "Save Changes"}
                   </MyCustomButton>
                 ))}
             </Box>

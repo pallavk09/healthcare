@@ -10,7 +10,14 @@ import {
   GridOverlay,
   GridToolbarQuickFilter,
 } from "@mui/x-data-grid";
-import { Button, Typography, Box, styled, TextField } from "@mui/material";
+import {
+  Button,
+  Typography,
+  Box,
+  styled,
+  TextField,
+  CircularProgress,
+} from "@mui/material";
 
 import { useNavigate } from "react-router-dom";
 
@@ -24,14 +31,37 @@ import { exam_records } from "../../Config/exams_records";
 import { sections } from "../../Config/sections_records";
 import { academic_records } from "../../Config/academic_records";
 import { attendance_records } from "../../Config/attendance_records";
+import { Get as GetClass } from "../../api/Control-Settings/manage-class";
+import { GetSections } from "../../api/Students-Management/manage-section";
+import { GetExams } from "../../api/Exams-Management/new_exam";
+import {
+  ListAcademicRecordClassSection,
+  UpdateMultipleAcademicRecords,
+} from "../../api/Students-Management/manage-attendance";
 
-const CustomNoRowsOverlay = () => {
+const CustomNoRowsOverlay = ({ loading }: { loading: boolean }) => {
   return (
-    <GridOverlay>
+    <GridOverlay
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
       <Box sx={{ textAlign: "center", padding: 2 }}>
-        <Typography variant="h5" color="textSecondary">
-          NO DATA AVAILABLE
-        </Typography>
+        {loading ? (
+          <>
+            <CircularProgress size={40} />
+            <Typography variant="h6" color="textSecondary" mt={2}>
+              Loading data...
+            </Typography>
+          </>
+        ) : (
+          <Typography variant="h5" color="textSecondary">
+            NO DATA AVAILABLE
+          </Typography>
+        )}
       </Box>
     </GridOverlay>
   );
@@ -77,6 +107,7 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
 }));
 
 const ManageAttendance = () => {
+  const snackbarRef = React.useRef<SnackbarHandle>(null);
   const navigate = useNavigate();
   const [sectionList, setSectionList] = useState<any>([]);
   const [classRecords, setClassRecords] = useState<any>([]);
@@ -92,22 +123,58 @@ const ManageAttendance = () => {
   const [edit, setEdit] = useState<boolean>(false);
   const [paginationModel, setPaginationModel] =
     React.useState<GridPaginationModel>({ page: 0, pageSize: 10 });
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [examRecords, setexamRecords] = useState<any>([]);
+  const [saveAttendance, setSaveAttendance] = useState(false);
 
   useEffect(() => {
-    setClassRecords(classes_records);
-    setSectionList(sections);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [classes_records, section_records, exam_records] =
+          await Promise.all([GetClass(), GetSections(), GetExams()]);
+
+        if (classes_records && classes_records.result.documents?.length > 0) {
+          setClassRecords(classes_records.result.documents);
+        }
+        if (section_records && section_records.result.documents?.length > 0) {
+          setSectionList(section_records.result.documents);
+        }
+        if (exam_records && exam_records.result.documents?.length > 0) {
+          setexamRecords(exam_records.result.documents);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
     console.log(examSession);
-    const filteredExamList = exam_records.filter(
-      (examItem) => examItem.session === examSession
+    console.log(examRecords);
+    const filteredExamList = examRecords.filter(
+      (examItem: any) => examItem.session === examSession
     );
 
-    console.log("filteredExamList");
     console.log(filteredExamList);
     setExams(filteredExamList);
   }, [examSession]);
+
+  // useEffect(() => {
+  //   console.log(examSession);
+  //   const filteredExamList = exam_records.filter(
+  //     (examItem) => examItem.session === examSession
+  //   );
+
+  //   console.log("filteredExamList");
+  //   console.log(filteredExamList);
+  //   setExams(filteredExamList);
+  // }, [examSession]);
 
   const {
     handleSubmit,
@@ -182,120 +249,178 @@ const ManageAttendance = () => {
     },
   ];
 
-  const HandleShowSubjects = (data: any) => {
-    console.log("Go Clicked for Class");
-    console.log(data);
-
-    const student_list = academic_records.filter(
-      (item: any) =>
-        item.class_id === data.class_id && item.section_id === data.section_id
-    );
-
-    const examsDetails = exam_records.find(
-      (item: any) =>
-        item.session === data.session && item.exam_id === data.exam_id
-    );
-
-    const attendanceRecords = student_list.map((student: any) => {
-      const attendanceRecord = attendance_records.find(
-        (item: any) => item.student_id === student.student_id
-      );
-
-      //attendanceRecord.attendance is an object with explicitly defined keys (term1, term2, etc.)
-      //TypeScript does not allow dynamic string indexing on an object unless an index signature is explicitly defined.
-      //Hence we need to define type AttendanceRecord for this
-
-      const studentAttendance = attendanceRecord?.attendance as
-        | AttendanceRecord
-        | undefined;
-      const examAttendance =
-        studentAttendance?.[data.session]?.exams?.[data.exam_id];
-
-      return {
-        id: `${student.id}`,
-        student_id: student.student_id,
-        name: student.name,
-        exam_id: examsDetails?.exam_id || "", // ✅ Default to empty string if undefined
-        session: examsDetails?.session || "",
-        code: examsDetails?.code || "",
-        exam_name: examsDetails?.name || "",
-        total_working_days: examsDetails?.total_working_days || "",
-        total_days_present: examAttendance?.total_days_present ?? 0, // ✅ Default to 0 if not found
+  const HandleShowSubjects = async (data: any) => {
+    try {
+      setAdding(true);
+      console.log("Go Clicked for Class");
+      console.log(data);
+      const { class_id, section_id, session, exam_id } = data;
+      const payload = {
+        class_id,
+        section_id,
       };
-    });
-
-    setRows(attendanceRecords);
-    setSearchState(data);
+      const academic_records_list = await ListAcademicRecordClassSection(
+        payload
+      );
+      if (academic_records_list && academic_records_list.result) {
+        console.log(academic_records_list.result.documents);
+        const attendanceRecords = academic_records_list.result.documents.map(
+          (record: any) => ({
+            ...record,
+            id: record.academic_record_id,
+            total_working_days:
+              JSON.parse(record.performance)[session].exams[exam_id]
+                .total_working_days || "",
+            total_days_present:
+              JSON.parse(record.performance)[session].exams[exam_id]
+                .total_days_present || "",
+          })
+        );
+        setSearchState(data);
+        console.log("attendanceRecords");
+        console.log(attendanceRecords);
+        setRows(attendanceRecords);
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setAdding(false);
+    }
   };
 
-  const ResetScreen = () => {};
+  const onResetHandler = () => {
+    reset({
+      session: "",
+      exam_id: "",
+      class_id: "",
+      section_id: "",
+    });
+  };
 
   const HandleSessionChange = (event: any) => {
-    console.log("Session Change Event");
-    console.log(event.target.value);
     setExamSession(event.target.value);
-    ResetScreen();
   };
 
-  const updateAttendanceRecords = (
-    attendanceRecords: any,
-    studentsAttendance: any
-  ) => {
-    studentsAttendance.forEach((record: any) => {
-      const {
-        id,
-        student_id,
-        name,
-        exam_id,
-        session,
-        code,
-        exam_name,
-        total_working_days,
-        total_days_present,
-      } = record;
+  // const updateAttendanceRecords = (
+  //   attendanceRecords: any,
+  //   studentsAttendance: any
+  // ) => {
+  //   studentsAttendance.forEach((record: any) => {
+  //     const {
+  //       id,
+  //       student_id,
+  //       name,
+  //       exam_id,
+  //       session,
+  //       code,
+  //       exam_name,
+  //       total_working_days,
+  //       total_days_present,
+  //     } = record;
 
-      const { class_id, section_id } = searchState;
+  //     const { class_id, section_id } = searchState;
 
-      if (!attendanceRecords[student_id]) {
-        attendanceRecords[student_id] = {
-          id: student_id,
-          student_id,
-          name,
-          academic_year: "2025-2026",
-          class_id: class_id,
-          section_id: section_id,
-          attendance: {},
-          remarks: "Aut tripudio vilis.",
+  //     if (!attendanceRecords[student_id]) {
+  //       attendanceRecords[student_id] = {
+  //         id: student_id,
+  //         student_id,
+  //         name,
+  //         academic_year: "2025-2026",
+  //         class_id: class_id,
+  //         section_id: section_id,
+  //         attendance: {},
+  //         remarks: "Aut tripudio vilis.",
+  //       };
+  //     }
+
+  //     if (!attendanceRecords[student_id].attendance[session]) {
+  //       attendanceRecords[student_id].attendance[session] = { exams: {} };
+  //     }
+
+  //     if (!attendanceRecords[student_id].attendance[session].exams[exam_id]) {
+  //       attendanceRecords[student_id].attendance[session].exams[exam_id] = {
+  //         code,
+  //         exam_name,
+  //         total_working_days: total_working_days,
+  //         total_days_present: total_days_present,
+  //       };
+  //     }
+  //   });
+
+  //   return Object.values(attendanceRecords);
+  // };
+
+  const handleSave = async () => {
+    try {
+      setSaveAttendance(true);
+
+      console.log("Saved data:", rows);
+      const hasError = rows.some((row: any) => {
+        const working_days = parseInt(row.total_working_days) || 0;
+        const days_present = parseInt(row.total_days_present) || 0;
+
+        if (days_present > working_days) {
+          snackbarRef.current?.showSnackbar(
+            `Days Present Cannot be Greater Than Working Days`,
+            "warning"
+          );
+          return true; // Stops iteration
+        }
+        return false;
+      });
+
+      if (hasError) return;
+
+      const updated_performance = rows.map((row: any) => {
+        const {
+          academic_record_id,
+          performance,
+          total_days_present,
+          ...others
+        } = row;
+
+        const performace_json = JSON.parse(performance);
+        performace_json[searchState.session].exams[
+          searchState.exam_id
+        ].total_days_present = total_days_present;
+        return {
+          id: academic_record_id,
+          performance: JSON.stringify(performace_json),
         };
+      });
+
+      console.log("updated_performance");
+      console.log(updated_performance);
+
+      const payload = {
+        user: "pallav",
+        arrayOfItems: updated_performance,
+      };
+
+      const response = await UpdateMultipleAcademicRecords(payload);
+
+      if (response.status === "SUCCESS") {
+        snackbarRef.current?.showSnackbar(`Attendance Saved.`, "success");
+      } else {
+        snackbarRef.current?.showSnackbar(`Attendance Not Saved.`, "warning");
       }
 
-      if (!attendanceRecords[student_id].attendance[session]) {
-        attendanceRecords[student_id].attendance[session] = { exams: {} };
-      }
-
-      if (!attendanceRecords[student_id].attendance[session].exams[exam_id]) {
-        attendanceRecords[student_id].attendance[session].exams[exam_id] = {
-          code,
-          exam_name,
-          total_working_days: total_working_days,
-          total_days_present: total_days_present,
-        };
-      }
-    });
-
-    return Object.values(attendanceRecords);
-  };
-
-  const handleSave = () => {
-    console.log("Saved data:", rows);
-    // const attendance_records = {};
-    const updatedAcademicRecords = updateAttendanceRecords([], rows);
-    console.log("updatedAcademicRecords");
-    console.log(updatedAcademicRecords);
+      // const updatedAcademicRecords = updateAttendanceRecords([], rows);
+      // console.log("updatedAcademicRecords");
+      // console.log(updatedAcademicRecords);
+    } catch (error) {
+      console.log("Exception Occured");
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error Occured`, "error");
+    } finally {
+      setSaveAttendance(false);
+    }
   };
 
   return (
     <>
+      <ToastSnackbar ref={snackbarRef} />
       <Box
         display={"flex"}
         flexDirection={"row"}
@@ -340,95 +465,120 @@ const ManageAttendance = () => {
           <Typography variant="h6" alignSelf={"center"}>
             <strong>Update Students Attendance</strong>
           </Typography>
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            p={2}
-            pt={0}
-            height="auto"
-            justifyContent={"center"}
-            alignItems={"center"}
-            mt={1}
-          >
-            <form onSubmit={handleSubmit(HandleShowSubjects)}>
-              <Box
-                display={"flex"}
-                flexDirection={"row"}
-                justifyContent={"space-evenly"}
-                gap={3}
-                width="70vw"
+          {loading ? (
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              height="100px"
+            >
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Box
+              display={"flex"}
+              flexDirection={"column"}
+              p={2}
+              pt={0}
+              height="auto"
+              justifyContent={"center"}
+              alignItems={"center"}
+              mt={1}
+            >
+              <form
+                onSubmit={handleSubmit(HandleShowSubjects)}
+                onReset={onResetHandler}
               >
-                <ControlledSelect
-                  name={`class_id`}
-                  control={control}
-                  errors={errors}
-                  label="Class"
-                  rules={{ required: "Required" }}
-                  options={classRecords.map((item: any) => ({
-                    value: item.class_id,
-                    label: item.name,
-                  }))}
-                  sx={{ width: "30%" }}
-                  // selectProps={{ onChange: HandleClassChange }}
-                />
-                <ControlledSelect
-                  name={`section_id`}
-                  control={control}
-                  errors={errors}
-                  label="Section"
-                  rules={{ required: "Required" }}
-                  options={sectionList.map((item: any) => ({
-                    value: item.section_id,
-                    label: item.name,
-                  }))}
-                  sx={{ width: "30%" }}
-                  // selectProps={{ onChange: HandleClassChange }}
-                />
-
-                <ControlledSelect
-                  name={`session`}
-                  control={control}
-                  errors={errors}
-                  label="Session"
-                  rules={{ required: "Required" }}
-                  options={[
-                    { value: "", label: "Select" },
-                    { value: "term1", label: "Term 1" },
-                    { value: "term2", label: "Term 2" },
-                  ]}
-                  sx={{ width: "30%" }}
-                  selectProps={{ onChange: HandleSessionChange }}
-                />
-
-                <ControlledSelect
-                  name={`exam_id`}
-                  control={control}
-                  errors={errors}
-                  label="Exam"
-                  rules={{ required: "Required" }}
-                  options={exams.map((item: any) => ({
-                    value: item.exam_id,
-                    label: item.name,
-                  }))}
-                  sx={{ width: "30%" }}
-                  disabled={examSession == null || examSession == undefined}
-                  // selectProps={{ onChange: HandleExamChange }}
-                />
-
-                <MyCustomButton
-                  variant="contained"
-                  type="submit"
-                  sx={{
-                    width: "10%",
-                    height: "70%",
-                    alignSelf: "center",
-                  }}
+                <Box
+                  display={"flex"}
+                  flexDirection={"row"}
+                  justifyContent={"space-evenly"}
+                  gap={3}
+                  width="70vw"
                 >
-                  {"Go"}
-                </MyCustomButton>
-              </Box>
-            </form>
-            {rows && rows.length > 0 && (
+                  <ControlledSelect
+                    name={`class_id`}
+                    control={control}
+                    errors={errors}
+                    label="Class"
+                    rules={{ required: "Required" }}
+                    options={classRecords.map((item: any) => ({
+                      value: item.class_id,
+                      label: item.name,
+                    }))}
+                    sx={{ width: "30%" }}
+                    // selectProps={{ onChange: HandleClassChange }}
+                  />
+                  <ControlledSelect
+                    name={`section_id`}
+                    control={control}
+                    errors={errors}
+                    label="Section"
+                    rules={{ required: "Required" }}
+                    options={sectionList.map((item: any) => ({
+                      value: item.section_id,
+                      label: item.name,
+                    }))}
+                    sx={{ width: "30%" }}
+                    // selectProps={{ onChange: HandleClassChange }}
+                  />
+
+                  <ControlledSelect
+                    name={`session`}
+                    control={control}
+                    errors={errors}
+                    label="Session"
+                    rules={{ required: "Required" }}
+                    options={[
+                      { value: "", label: "Select" },
+                      { value: "term1", label: "Term 1" },
+                      { value: "term2", label: "Term 2" },
+                    ]}
+                    sx={{ width: "30%" }}
+                    selectProps={{ onChange: HandleSessionChange }}
+                  />
+
+                  <ControlledSelect
+                    name={`exam_id`}
+                    control={control}
+                    errors={errors}
+                    label="Exam"
+                    rules={{ required: "Required" }}
+                    options={exams.map((item: any) => ({
+                      value: item.exam_id,
+                      label: item.name,
+                    }))}
+                    sx={{ width: "30%" }}
+                    disabled={examSession == null || examSession == undefined}
+                    // selectProps={{ onChange: HandleExamChange }}
+                  />
+
+                  <MyCustomButton
+                    variant="contained"
+                    type="submit"
+                    startIcon={adding ? <CircularProgress size={20} /> : null}
+                    disabled={adding}
+                    sx={{
+                      alignSelf: "center",
+                      height: "70%",
+                      width: "30%",
+                    }}
+                  >
+                    {adding ? "" : "Fetch Students"}
+                  </MyCustomButton>
+                  <MyCustomButton
+                    variant="contained"
+                    type="reset"
+                    sx={{
+                      alignSelf: "center",
+                      height: "70%",
+                      width: "30%",
+                    }}
+                  >
+                    Clear
+                  </MyCustomButton>
+                </Box>
+              </form>
               <>
                 <DataGrid
                   rows={rows}
@@ -441,13 +591,16 @@ const ManageAttendance = () => {
                   disableRowSelectionOnClick
                   slots={{
                     toolbar: GridToolbar,
-                    noRowsOverlay: CustomNoRowsOverlay,
+                    noRowsOverlay: () => (
+                      <CustomNoRowsOverlay loading={loading} />
+                    ),
                   }}
                   slotProps={{ toolbar: { showQuickFilter: true } }}
                   sx={{
-                    width: "80vw",
-                    maxWidth: "90vw",
-                    height: "65vh",
+                    width: "60vw",
+                    maxWidth: "70vw",
+                    height: "65vh", // Ensures sufficient height
+                    minHeight: "300px", // Ensures the No Data message is always visible properly
                     marginTop: "15px",
 
                     "& .MuiDataGrid-row:hover": {
@@ -479,17 +632,21 @@ const ManageAttendance = () => {
                   }}
                 />
               </>
-            )}
-            {rows && rows.length > 0 && (
-              <MyCustomButton
-                variant="contained"
-                onClick={handleSave}
-                sx={{ width: "10%", height: "70%", alignSelf: "center" }}
-              >
-                {!edit ? "Save" : "Update"}
-              </MyCustomButton>
-            )}
-          </Box>
+              {rows && rows.length > 0 && (
+                <MyCustomButton
+                  variant="contained"
+                  onClick={handleSave}
+                  sx={{ width: "20%", height: "70%", alignSelf: "center" }}
+                  startIcon={
+                    saveAttendance ? <CircularProgress size={20} /> : null
+                  }
+                  disabled={saveAttendance}
+                >
+                  {saveAttendance ? "" : "Save Attendance"}
+                </MyCustomButton>
+              )}
+            </Box>
+          )}
         </Box>
       </Box>
     </>

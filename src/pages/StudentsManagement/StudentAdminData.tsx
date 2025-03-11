@@ -11,7 +11,14 @@ import {
   GridToolbarQuickFilter,
   GridValueGetter,
 } from "@mui/x-data-grid";
-import { Button, Typography, Box, Grid, styled } from "@mui/material";
+import {
+  Button,
+  Typography,
+  Box,
+  Grid,
+  styled,
+  CircularProgress,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
@@ -24,16 +31,47 @@ import ProfileDialogStudentPerformance from "../../components/ProfileDialogStude
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import { classes_records } from "../../Config/classes_records";
 import { sections } from "../../Config/sections_records";
+import {
+  AddAcademicsRecord,
+  AddStudent,
+  GetAcademicsRecord,
+  GetAcademicsRecordStudent,
+  GetStudents,
+  UpdateStudent,
+} from "../../api/Students-Management/add-view-students";
+import { Get as GetClass } from "../../api/Control-Settings/manage-class";
+import { GetSections } from "../../api/Students-Management/manage-section";
+import {
+  GetSchedules,
+  GetSchedulesForClass,
+} from "../../api/Exams-Management/schedule-exam";
+import { v4 as uuid } from "uuid";
+import { GetExams } from "../../api/Exams-Management/new_exam";
+import { deleteFile, uploadFile, UploadFileType } from "../../api/upload";
 
-const rows = students;
-
-const CustomNoRowsOverlay = () => {
+const CustomNoRowsOverlay = ({ loading }: { loading: boolean }) => {
   return (
-    <GridOverlay>
+    <GridOverlay
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
       <Box sx={{ textAlign: "center", padding: 2 }}>
-        <Typography variant="h5" color="textSecondary">
-          NO DATA AVAILABLE
-        </Typography>
+        {loading ? (
+          <>
+            <CircularProgress size={40} />
+            <Typography variant="h6" color="textSecondary" mt={2}>
+              Loading data...
+            </Typography>
+          </>
+        ) : (
+          <Typography variant="h5" color="textSecondary">
+            NO DATA AVAILABLE
+          </Typography>
+        )}
       </Box>
     </GridOverlay>
   );
@@ -117,7 +155,6 @@ const StudentAdminData = () => {
   const [applications, setApplications] = useState<any>([]);
 
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
-  const [isPerformanceDialogOpen, setPerformanceDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const resetFormRef = useRef<() => void>(() => {});
 
@@ -127,6 +164,11 @@ const StudentAdminData = () => {
 
   const [classList, setClassList] = useState<any>([]);
   const [sectionList, setSectionList] = useState<any>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [studentList, setStudentList] = useState<any>([]);
+  const [academiceRecordList, setAcademiceRecordList] = useState<any>([]);
 
   const [paginationModel, setPaginationModel] =
     React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
@@ -139,37 +181,134 @@ const StudentAdminData = () => {
     setIsEditing(false);
   };
 
-  const onClosePerformanceDialog = () => {
-    setPerformanceDialogOpen(false);
-  };
-
   useEffect(() => {
-    const mergedStudents = students.map((student) => {
-      const studentAcademicRecords = academic_records
-        .filter((record) => record.student_id === student.student_id)
-        .sort((a, b) => b.academic_year.localeCompare(a.academic_year)); // Sort by academic_year in descending order
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [
+          students_records,
+          academic_records,
+          classes_records,
+          section_records,
+        ] = await Promise.all([
+          GetStudents(),
+          GetAcademicsRecord(),
+          GetClass(),
+          GetSections(),
+        ]);
 
-      return {
-        ...student,
-        academic_records: studentAcademicRecords,
-      };
-    });
-    console.log(mergedStudents);
+        if (students_records && students_records.result.documents?.length > 0) {
+          const student_string = students_records.result.documents;
+          const student_json_parsed = JSONParseStudentObject(student_string);
 
-    setApplications(mergedStudents);
+          setApplications(student_json_parsed);
+        }
+        if (academic_records && academic_records.result.documents?.length > 0) {
+          setAcademiceRecordList(academic_records.result.documents);
+        }
+        if (classes_records && classes_records.result.documents?.length > 0) {
+          setClassList(classes_records.result.documents);
+        }
+        if (section_records && section_records.result.documents?.length > 0) {
+          setSectionList(section_records.result.documents);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    if (
-      classes_records &&
-      classes_records.length > 0 &&
-      sections &&
-      sections.length > 0
-    ) {
-      setClassList(classes_records);
-      setSectionList(sections);
+  const CreatePerformaceObj = (examsList: any, exam_schedules: any) => {
+    try {
+      const performance = {};
+
+      // Iterate over each exam
+      examsList.forEach((exam: any) => {
+        const {
+          session,
+          exam_id,
+          name,
+          max_marks,
+          pass_marks,
+          total_working_days,
+        } = exam;
+
+        // Initialize the session if not present
+        //@ts-ignore
+        if (!performance[session]) {
+          //@ts-ignore
+          performance[session] = { exams: {} };
+        }
+
+        // Find the corresponding exam schedule
+        const schedule = exam_schedules.find(
+          (sched: any) => sched.exam_id === exam_id
+        );
+
+        // Extract subjects from the schedule
+        let marks_details = [];
+        let totalMarks = 0;
+        let totalPassMarks = 0;
+
+        if (schedule) {
+          const subjects = JSON.parse(schedule.exam_schedule);
+          marks_details = subjects.map((subject: any) => {
+            totalMarks += Number(max_marks); // Accumulate max marks
+            totalPassMarks += Number(pass_marks); // Accumulate pass marks
+
+            return {
+              subject_name: subject.subject,
+              marks_obtained: 0, // Default value
+              subject_max_marks: Number(max_marks),
+              subject_pass_marks: Number(pass_marks),
+            };
+          });
+        }
+
+        // Populate exam details
+        //@ts-ignore
+        performance[session].exams[exam_id] = {
+          exam_name: name,
+          max_marks: totalMarks, // Sum of all subjects' max marks
+          pass_marks: totalPassMarks, // Sum of all subjects' pass marks
+          total_marks_obtained: 0, // Will be sum of marks_obtained for all subjects
+          total_working_days: total_working_days,
+          total_days_present: 0, // Default value
+          marks_details,
+        };
+      });
+
+      return performance;
+    } catch (error) {
+      console.log("Error getting Performance object");
+      console.log(error);
+      return {};
     }
-  }, [classes_records, sections]);
+  };
+
+  const JSONParseStudentObject = (student_string: any) => {
+    try {
+      const student_json_parsed = student_string.map((stud: any) => ({
+        ...stud,
+        transport_details: JSON.parse(stud.transport_details),
+        personal_details: JSON.parse(stud.personal_details),
+        guardian_details: JSON.parse(stud.guardian_details),
+        father_details: JSON.parse(stud.father_details),
+        mother_details: JSON.parse(stud.mother_details),
+        previous_school: JSON.parse(stud.previous_school),
+      }));
+
+      return student_json_parsed;
+    } catch (error) {
+      console.log("Error JSON parsing student object");
+      console.log(error);
+      return [];
+    }
+  };
 
   const updateData = (data: any, updatedRecord: any) => {
     return data.map((record: any) => {
@@ -182,40 +321,272 @@ const StudentAdminData = () => {
   const handleSaveProfile = async (data: any) => {
     try {
       if (data) {
+        setAdding(true);
         console.log("Student data received to be added to DB");
         console.log(data);
-        addNewStudent
-          ? setApplications([...applications, data])
-          : setApplications(updateData(applications, data));
 
-        snackbarRef.current?.showSnackbar(`Record has been updated`, "success");
+        if (addNewStudent) {
+          console.log("New Registration");
+          let academic_records_obj = {};
+          //Check if exams already scheduled
+          const payload = {
+            class_id: data.class_id,
+          };
+          const exam_schedules = await GetSchedulesForClass(payload);
+
+          console.log("examSchedules");
+          console.log(exam_schedules);
+
+          if (exam_schedules && exam_schedules.result.documents.length > 0) {
+            console.log("exam already scheduled");
+            const examsList = await GetExams();
+
+            const performance = CreatePerformaceObj(
+              examsList.result.documents,
+              exam_schedules.result.documents
+            );
+
+            console.log("Performace Object created");
+            console.log(performance);
+
+            const _id = uuid().slice(0, 5);
+            academic_records_obj = {
+              id: _id,
+              academic_record_id: _id,
+              student_id: data.student_id,
+              name: data.personal_details.name,
+              academic_year: "2025-2026",
+              class_id: data.class_id,
+              class_name: data.class_name,
+              section_id: data.section_id,
+              section: data.section_name,
+              roll_number: parseInt(data.roll_number),
+              performance: JSON.stringify(performance),
+              user: "Pallav",
+            };
+
+            console.log("academic_records_obj Object created");
+            console.log(academic_records_obj);
+
+            //If Scheduled then create one academic_record with exam and marks and other placeholders details
+          } else {
+            //If Not scheduled then create standard academic_record
+            console.log("exam not scheduled");
+            const _id = uuid().slice(0, 5);
+            academic_records_obj = {
+              id: _id,
+              academic_record_id: _id,
+              student_id: data.student_id,
+              name: data.personal_details.name,
+              academic_year: "2025-2026",
+              class_id: data.class_id,
+              class_name: data.class_name,
+              section_id: data.section_id,
+              section: data.section_name,
+              roll_number: parseInt(data.roll_number),
+              user: "Pallav",
+              performance: JSON.stringify({
+                term1: {
+                  exams: {},
+                },
+                term2: {
+                  exams: {},
+                },
+              }),
+            };
+
+            console.log("academic_records_obj Object created");
+            console.log(academic_records_obj);
+          }
+
+          const uploadFileObject: UploadFileType = {
+            filepath: data.photofile!,
+            bucket_id: process.env.REACT_APP_APPWRITE_NEW_ADMISSION_BUCKET_ID!,
+          };
+          const upload = await uploadFile(uploadFileObject);
+
+          console.log("Photo uploaded.");
+          const photoUrl = upload?.$id || "";
+          console.log(photoUrl);
+
+          const student_item = {
+            ...data,
+            roll_number: parseInt(data.roll_number),
+            photoUrl: photoUrl,
+            discount: data.discount || "0",
+            transport_details: JSON.stringify(data.transport_details),
+            personal_details: JSON.stringify(data.personal_details),
+            guardian_details: JSON.stringify(data.guardian_details),
+            father_details: JSON.stringify(data.father_details),
+            mother_details: JSON.stringify(data.mother_details),
+            previous_school: JSON.stringify(data.previous_school),
+            user: "pallav",
+          };
+          console.log("Student to be saved in DB");
+          console.log(student_item);
+
+          const addNewItem = await AddStudent(student_item);
+          if (addNewItem && addNewItem.result) {
+            console.log("Student saved in DB");
+            const addNewItem_acad_record = await AddAcademicsRecord(
+              academic_records_obj
+            );
+            if (addNewItem_acad_record && addNewItem_acad_record.result) {
+              console.log("Academic record saved in DB");
+              const jsonParsedStudent = JSONParseStudentObject([
+                addNewItem.result,
+              ]);
+              setApplications([...applications, jsonParsedStudent[0]]);
+              snackbarRef.current?.showSnackbar(
+                `Student Added And Academics Updated`,
+                "success"
+              );
+            } else {
+              snackbarRef.current?.showSnackbar(
+                `Academic Record Creation Failed.`,
+                "error"
+              );
+            }
+          } else {
+            snackbarRef.current?.showSnackbar(`Student Not Added`, "error");
+          }
+        } else {
+          console.log("Update Student");
+          let student_item_updated = {};
+          let photoUrl_new;
+          //Update Photo if needed
+          if (data.photofile) {
+            console.log("New Photo added");
+            const photoUrl_old = data.photoUrl;
+            const uploadFileObject: UploadFileType = {
+              filepath: data.photofile!,
+              bucket_id:
+                process.env.REACT_APP_APPWRITE_NEW_ADMISSION_BUCKET_ID!,
+            };
+            const upload = await uploadFile(uploadFileObject);
+
+            console.log("Photo uploaded.");
+
+            photoUrl_new = upload?.$id || "";
+            try {
+              const delete_photoUrl = await deleteFile(
+                process.env.REACT_APP_APPWRITE_NEW_ADMISSION_BUCKET_ID!,
+                photoUrl_old
+              );
+              if (delete_photoUrl)
+                console.log("PhotoUrl has been removed from DB", photoUrl_old);
+            } catch (error) {
+              console.log("Error while deleting old photoUrl");
+            }
+
+            student_item_updated = {
+              ...data,
+              id: data.student_id,
+              roll_number: parseInt(data.roll_number),
+              photoUrl: photoUrl_new, //Updated photoUrl for updated photo
+              discount: data.discount || "0",
+              transport_details: JSON.stringify(data.transport_details),
+              personal_details: JSON.stringify(data.personal_details),
+              guardian_details: JSON.stringify(data.guardian_details),
+              father_details: JSON.stringify(data.father_details),
+              mother_details: JSON.stringify(data.mother_details),
+              previous_school: JSON.stringify(data.previous_school),
+              user: "pallav",
+            };
+          } else {
+            student_item_updated = {
+              ...data,
+              id: data.student_id,
+              roll_number: parseInt(data.roll_number),
+              discount: data.discount || "0",
+              transport_details: JSON.stringify(data.transport_details),
+              personal_details: JSON.stringify(data.personal_details),
+              guardian_details: JSON.stringify(data.guardian_details),
+              father_details: JSON.stringify(data.father_details),
+              mother_details: JSON.stringify(data.mother_details),
+              previous_school: JSON.stringify(data.previous_school),
+              user: "pallav",
+            };
+          }
+
+          //Call API to update student
+          console.log("Student to be updated");
+          console.log(student_item_updated);
+          const updateItem = await UpdateStudent(student_item_updated);
+          //Call API to update academic records with class_name, class_id, section, section_id --- NOT NEEDED AS OF NOW
+          if (updateItem && updateItem.result) {
+            setApplications(
+              updateData(applications, {
+                ...data,
+                photoUrl: photoUrl_new || data.photoUrl,
+              })
+            );
+            snackbarRef.current?.showSnackbar(
+              `Record has been updated`,
+              "success"
+            );
+          } else {
+            snackbarRef.current?.showSnackbar(`Item not updated`, "error");
+          }
+        }
       } else {
         console.log("Student data not received from modal");
       }
     } catch (error) {
       snackbarRef.current?.showSnackbar(`Error While Saving Record`, "error");
+    } finally {
+      setAdding(false);
     }
   };
 
-  const handleViewClick = useCallback((rowData: any) => {
-    console.log("View Clicked");
-    setProfileDialogOpen(true); // Open the dialog immediately
+  const handleViewClick = useCallback(async (rowData: any) => {
+    console.log("View Clicked", rowData.student_id);
+    let academic_record_student_array = [];
+    const payload = {
+      student_id: rowData.student_id,
+    };
+    const academic_record_response = await GetAcademicsRecordStudent(payload);
+    if (
+      academic_record_response.result &&
+      Object.entries(academic_record_response.result.documents[0].length > 0)
+    ) {
+      const academic_record_student = {
+        academic_record_id:
+          academic_record_response.result.documents[0].academic_record_id,
+        student_id: academic_record_response.result.documents[0].student_id,
+        name: academic_record_response.result.documents[0].name,
+        academic_year:
+          academic_record_response.result.documents[0].academic_year,
+        class_id: academic_record_response.result.documents[0].class_id,
+        class_name: academic_record_response.result.documents[0].class_name,
+        section_id: academic_record_response.result.documents[0].section_id,
+        section: academic_record_response.result.documents[0].section,
+        roll_number: academic_record_response.result.documents[0].roll_number,
+        performance: JSON.parse(
+          academic_record_response.result.documents[0].performance || []
+        ),
+        remarks: academic_record_response.result.documents[0].remarks,
+      };
+      academic_record_student_array.push(academic_record_student);
+    }
+
+    const student_full_Data = {
+      ...rowData,
+      academic_records: academic_record_student_array,
+    };
+
+    setProfileDialogOpen(true);
     setAddNewStudent(false);
+    setSelectedRow(student_full_Data);
+    console.log("Row Data:", student_full_Data);
 
     // Slightly defer setting selectedRow to prevent blocking UI rendering
-    setTimeout(() => {
-      setSelectedRow(rowData);
-      console.log("Row Data:", rowData);
-    }, 0); // Delay execution until the next event loop cycle
+    // setTimeout(() => {
+    //   // setSelectedRow(rowData);
+    //   setSelectedRow(student_full_Data);
+    //   console.log("Row Data:", student_full_Data);
+    // }, 0); // Delay execution until the next event loop cycle
   }, []);
-
-  // const handleViewClick = (rowData: any) => {
-  //   console.log("View Clicked");
-  //   setProfileDialogOpen(true);
-  //   setAddNewStudent(false);
-  //   setSelectedRow(rowData);
-  //   console.log("Row Data:", rowData);
-  // };
 
   const handleAddNewStudent = () => {
     console.log("Add New Student Clicked");
@@ -225,44 +596,53 @@ const StudentAdminData = () => {
 
   // Define columns with DataGrid
   const columns: GridColDef[] = [
-    // { field: "student_id", headerName: "Student ID", flex: 1 },
-    // { field: "admission_id", headerName: "Admission ID", flex: 1 },
+    { field: "admission_id", headerName: "Admission ID", flex: 1 },
     {
       field: "personal_details",
-      headerName: "Student Name",
+      headerName: "Name",
       flex: 1,
       valueGetter: (_, row) => row.personal_details.name,
     },
     {
+      field: "parent_details",
+      headerName: "Father's Name",
+      flex: 1,
+      valueGetter: (_, row) => row.father_details.name,
+    },
+    {
       field: "class",
       headerName: "Class",
-      flex: 0.5,
-      valueGetter: (_, row) => {
-        const classItem = classList.find(
-          (item: any) => item.class_id === row.academic_records[0]?.class_id
-        );
+      flex: 1,
+      valueGetter: (_, row) => row.class_name,
+      // valueGetter: (_, row) => {
+      //   const classItem = classList.find(
+      //     (item: any) => item.class_id === row.academic_records[0]?.class_id
+      //   );
 
-        if (classItem) return classItem.name;
-      },
+      //   if (classItem) return classItem.name;
+      // },
     },
     {
       field: "Section",
       headerName: "Section",
       flex: 0.5,
-      valueGetter: (_, row) => {
-        const sectionItem = sectionList.find(
-          (item: any) => item.section_id === row.academic_records[0]?.section_id
-        );
+      valueGetter: (_, row) => row.section_name,
+      // valueGetter: (_, row) => {
+      //   const sectionItem = sectionList.find(
+      //     (item: any) => item.section_id === row.academic_records[0]?.section_id
+      //   );
 
-        if (sectionItem) return sectionItem.name;
-      },
+      //   if (sectionItem) return sectionItem.name;
+      // },
     },
     {
       field: "roll_number",
       headerName: "Roll No.",
       flex: 0.5,
-      valueGetter: (_, row) => row.academic_records[0]?.roll_number,
+      valueGetter: (_, row) => row.roll_number,
+      // valueGetter: (_, row) => row.academic_records[0]?.roll_number,
     },
+
     {
       field: "parent_contact",
       headerName: "Contact",
@@ -275,7 +655,7 @@ const StudentAdminData = () => {
     {
       field: "is_active",
       headerName: "Status",
-      flex: 0.5,
+      flex: 0.8,
       renderCell: (params) => (
         <>
           <Box
@@ -313,13 +693,13 @@ const StudentAdminData = () => {
     {
       field: "actions",
       headerName: "Actions",
-      flex: 3,
+      flex: 2,
       headerAlign: "center",
       align: "center",
       renderCell: (params) => (
         <>
           <AnimatedButton
-            label="View"
+            label="Details"
             onClick={() => {
               handleViewClick(params.row);
             }}
@@ -331,18 +711,18 @@ const StudentAdminData = () => {
             onClick={() => setPerformanceDialogOpen(true)}
             disabled={false}
           /> */}
-          {"|"}
+          {/* {"|"}
           <AnimatedButton
             label="TC"
             onClick={() => console.log("Get TC Clicked")}
             disabled={false}
-          />
-          {"|"}
+          /> */}
+          {/* {"|"}
           <AnimatedButton
             label="Character"
             onClick={() => console.log("Get TC Clicked")}
             disabled={false}
-          />
+          /> */}
           {/* {"|"}
           <AnimatedButton
             label="DeActivate"
@@ -408,12 +788,17 @@ const StudentAdminData = () => {
           </Box>
           <MyCustomButton
             variant="contained"
-            startIcon={<PersonAddIcon />}
+            startIcon={adding ? <CircularProgress /> : <PersonAddIcon />}
             onClick={handleAddNewStudent}
+            disabled={adding}
           >
-            NEW STUDENT
+            {adding ? "...WAIT" : "NEW STUDENT"}
           </MyCustomButton>
         </Box>
+
+        <Typography variant="body2" sx={{ alignSelf: "center", mb: -3 }}>
+          <strong> {`STUDENT COUNT : ${applications.length || 0}`}</strong>
+        </Typography>
 
         {/**This is Datagrid */}
         <Grid container direction="column" mt={4}>
@@ -422,7 +807,8 @@ const StudentAdminData = () => {
               rows={applications}
               columns={columns}
               rowHeight={40}
-              //   autoHeight
+              getRowId={(row) => row.student_id}
+              loading={loading}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel} // Controls pagination behavior
               pageSizeOptions={[50, 100, 150]}
@@ -430,7 +816,7 @@ const StudentAdminData = () => {
               disableRowSelectionOnClick
               slots={{
                 toolbar: GridToolbar,
-                noRowsOverlay: CustomNoRowsOverlay,
+                noRowsOverlay: () => <CustomNoRowsOverlay loading={loading} />,
               }}
               slotProps={{ toolbar: { showQuickFilter: true } }}
               //   slots={{
@@ -487,6 +873,7 @@ const StudentAdminData = () => {
           onClose={onClose}
           onSubmit={handleSaveProfile}
           profileData={addNewStudent ? students_empty[0] : selectedRow}
+          // profileData={addNewStudent ? {paste data from student.ts} : selectedRow}
           resetFormRef={resetFormRef}
           isEditing={addNewStudent ? true : isEditing}
           onEdit={() => setIsEditing(true)}

@@ -38,8 +38,6 @@ const ControlledTextField: React.FC<ControlledTextFieldProps> = ({
   disabled,
   defaultValue,
 }) => {
-  // console.log(errors?.[name.split(".")[0]]);
-  // console.log(errors?.[name]?.message?.toString());
   return (
     <Controller
       name={name}

@@ -4,7 +4,7 @@ export const student_fee_collection_records = [
     student_id: "2d154321",
     academic_year: "2025-2026",
     class: "III",
-    fees_structure_id: "b39b49af-b2b3-44b3-8d63-549e546c688e",
+    fees_structure_id: "b4438",
     monthly_payments: [
       {
         id: "ea38daa3-ec0f-4b2a-b1bf-99d34545bf05",

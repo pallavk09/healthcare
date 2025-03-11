@@ -10,6 +10,23 @@ const GetSchedules = async () => {
   }
 };
 
+const GetSchedulesForClass = async (newItem: any) => {
+  const { class_id } = newItem;
+  const payload = {
+    class_id,
+  };
+  const response = await axios_instance.post(
+    "/examschedule/get-for-class",
+    payload
+  );
+  console.log(response);
+  if (response?.data?.status === "SUCCESS") {
+    return response.data;
+  } else {
+    return [];
+  }
+};
+
 const AddSchedules = async (newItem: any) => {
   const { id, user, schedule_id, class_id, exam_id, session, exam_schedule } =
     newItem;
@@ -58,4 +75,4 @@ const UpdateSchedules = async (updatedItem: any) => {
   }
 };
 
-export { GetSchedules, AddSchedules, UpdateSchedules };
+export { GetSchedules, AddSchedules, UpdateSchedules, GetSchedulesForClass };

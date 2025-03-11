@@ -46,3 +46,14 @@ export async function getFilePreview(bucket_id: string, file_id: string) {
     return null;
   }
 }
+
+export async function deleteFile(bucket_id: string, file_id: string) {
+  try {
+    const result = await storage.deleteFile(bucket_id, file_id);
+    return result;
+  } catch (error: any) {
+    console.log(error);
+    console.log("Error while uploading file", error.message);
+    return null;
+  }
+}
