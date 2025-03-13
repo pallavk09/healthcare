@@ -53,6 +53,7 @@ import {
   UpdateSubjectsToClass,
 } from "../../api/Control-Settings/manage-subjects";
 import { Get as GetClass } from "../../api/Control-Settings/manage-class";
+import { useUser } from "../../store/UserLoginContext";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -179,6 +180,7 @@ const MyCustomButton = styled(Button)(({ theme }) => ({
 }));
 
 const ManageSubjects = () => {
+  const { user } = useUser();
   const snackbarRef = React.useRef<SnackbarHandle>(null);
   const navigate = useNavigate();
   const [applications, setApplications] = useState<any>([]);
@@ -231,6 +233,7 @@ const ManageSubjects = () => {
   }, [classSubjectDefault, resetForm2]); // Depend on `classSubjectDefault`
 
   useEffect(() => {
+    console.log("User fetched from context as :", user);
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -270,6 +273,7 @@ const ManageSubjects = () => {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        snackbarRef.current?.showSnackbar(`Error fetching data`, "error");
       } finally {
         setLoading(false);
       }

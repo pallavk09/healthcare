@@ -29,7 +29,7 @@ import { MyCustomButton } from "../../common/MyCustomControls";
 import ApplicationStepper from "../../components/ApplicationStepper";
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 
-import userDataContext from "../../store/userContext";
+import userDataContext from "../../store/UserContext";
 import { jwtDecode } from "jwt-decode";
 import { GeneratePrevieUrl } from "../../common/utils/generatePreviewUrl";
 import { VimlaPandeyDataProps } from "../../components/Services/NewAdmission/types";

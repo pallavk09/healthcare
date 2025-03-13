@@ -10,7 +10,14 @@ import {
   GridOverlay,
   GridToolbarQuickFilter,
 } from "@mui/x-data-grid";
-import { Button, Typography, Box, Grid, styled } from "@mui/material";
+import {
+  Button,
+  Typography,
+  Box,
+  Grid,
+  styled,
+  CircularProgress,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import ToastSnackbar, {
@@ -23,14 +30,31 @@ import ProfileDialogTeacherDetailsAdmin from "../../../components/ProfileDialogT
 import ProfileDialogTeacherCreds from "../../../components/ProfileDialogTeacherCreds";
 
 import { teachers_data, teachers_empty } from "../../../Config/teachers";
+import { GetTeachers } from "../../../api/Staff-Management/Teacher-Management/add-view-teachers";
 
-const CustomNoRowsOverlay = () => {
+const CustomNoRowsOverlay = ({ loading }: { loading: boolean }) => {
   return (
-    <GridOverlay>
+    <GridOverlay
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
       <Box sx={{ textAlign: "center", padding: 2 }}>
-        <Typography variant="h5" color="textSecondary">
-          NO DATA AVAILABLE
-        </Typography>
+        {loading ? (
+          <>
+            <CircularProgress size={40} />
+            <Typography variant="h6" color="textSecondary" mt={2}>
+              Loading data...
+            </Typography>
+          </>
+        ) : (
+          <Typography variant="h5" color="textSecondary">
+            NO DATA AVAILABLE
+          </Typography>
+        )}
       </Box>
     </GridOverlay>
   );
@@ -120,13 +144,29 @@ const TeachersAdminData = () => {
   const resetFormRef = useRef<() => void>(() => {});
 
   const snackbarRef = useRef<SnackbarHandle>(null);
+  const [loading, setLoading] = useState(true);
 
   const [paginationModel, setPaginationModel] =
     React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
 
   useEffect(() => {
-    teachers_data && teachers_data.length > 0 && setTeachers(teachers_data);
-  }, [teachers_data]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [teachers_records] = await Promise.all([GetTeachers()]);
+
+        if (teachers_records && teachers_records.result.documents?.length > 0) {
+          setTeachers(teachers_records.result.documents);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const onClose = () => {
     if (resetFormRef.current) {
@@ -259,12 +299,12 @@ const TeachersAdminData = () => {
             disabled={false}
           />
 
-          {"|"}
+          {/* {"|"}
           <AnimatedButton
             label="Class Assignment"
             onClick={() => console.log("Disabled Clicked")}
             disabled={false}
-          />
+          /> */}
         </>
       ),
     },
@@ -308,8 +348,8 @@ const TeachersAdminData = () => {
             <DataGrid
               rows={teachers}
               columns={columns}
+              getRowId={(row) => row.teacher_id}
               rowHeight={40}
-              //   autoHeight
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel} // Controls pagination behavior
               pageSizeOptions={[50, 100, 150]}
@@ -317,7 +357,7 @@ const TeachersAdminData = () => {
               disableRowSelectionOnClick
               slots={{
                 toolbar: GridToolbar,
-                noRowsOverlay: CustomNoRowsOverlay,
+                noRowsOverlay: () => <CustomNoRowsOverlay loading={loading} />,
               }}
               slotProps={{ toolbar: { showQuickFilter: true } }}
               //   slots={{
@@ -327,6 +367,7 @@ const TeachersAdminData = () => {
               sx={{
                 maxWidth: "98vw",
                 height: "65vh", // Fixed height for the grid
+                // Target the column headers specifically
                 "& .MuiDataGrid-row:hover": {
                   transform: "scale(1)",
                   backgroundColor: "#f5f5f5",

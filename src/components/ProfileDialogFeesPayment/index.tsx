@@ -67,6 +67,7 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
   );
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [updatingFeePayment, setUpdatingFeePayment] = useState<boolean>(false);
   const [rebateFigure, setRebateFigure] = useState<string>();
   const [rebateValue, setRebateValue] = useState<number>(0);
   const [totalDue, setTotalDue] = useState<number>(0);
@@ -266,10 +267,11 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
   };
 
   const handlePayment = async () => {
-    console.log("Payment Amount to be submitted: ", GetPaymentAmount());
+    // console.log("Payment Amount to be submitted: ", GetPaymentAmount());
     const paymentId = uuidv4(); // Generate a single payment_id for this transaction
 
     const records: any[] = [];
+    setUpdatingFeePayment(true);
     try {
       Object.entries(selectedFees).forEach(([monthYear, feeHeads]) => {
         const [month, year] = monthYear.split("-");
@@ -336,17 +338,17 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
       console.log("Payment Records:", payload);
       const updateFeePayment = await UpdateFeePayment(payload);
       if (updateFeePayment && updateFeePayment.result) {
-        alert("Fee payment updated");
-        // snackbarRef.current?.showSnackbar(`Exam Scheduled.`, "success");
+        onSubmit(true);
       } else {
-        alert("Fee payment not updated");
-        // snackbarRef.current?.showSnackbar(`Item not added`, "error");
+        onSubmit(false);
       }
-      // onSubmit(records);
     } catch (error) {
       console.log(error);
-      alert(error);
+      onSubmit(false);
+      // alert(error);
     } finally {
+      setUpdatingFeePayment(false);
+      onClose();
     }
   };
 
@@ -1176,15 +1178,23 @@ const ProfileDialogFeesPayment: React.FC<ProfileDialogProps> = ({
                         <MyCustomButton
                           variant="contained"
                           color="primary"
-                          startIcon={<LockIcon />}
+                          startIcon={
+                            updatingFeePayment ? (
+                              <CircularProgress size={20} />
+                            ) : (
+                              <LockIcon />
+                            )
+                          }
                           onClick={handlePayment}
+                          disabled={updatingFeePayment}
                           sx={{
                             fontSize: "1rem",
                           }}
                           fullWidth
                         >
                           {/* PAY ₹ {GetPaymentAmount()} */}
-                          PAY ₹ {totalDue}
+                          {updatingFeePayment ? "" : `PAY ₹ ${totalDue}`}
+                          {/* PAY ₹ {totalDue} */}
                         </MyCustomButton>
                       </Box>
                     </>

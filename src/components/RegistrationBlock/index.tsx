@@ -21,7 +21,7 @@ import { FormatNewStudentPayload } from "../../helper/formatPayload";
 import { CreateNewStudent } from "../../api/students";
 import SuccessPopup from "../../common/SuccessPopup";
 import { GetRegisteredUser } from "../../api/registration";
-import userDataContext from "../../store/userContext";
+import userDataContext from "../../store/UserContext";
 import { jwtDecode } from "jwt-decode";
 import { uploadFile, UploadFileType } from "../../api/upload";
 

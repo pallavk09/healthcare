@@ -33,6 +33,7 @@ import ProfileDialogFeesPayment from "../../components/ProfileDialogFeesPayment"
 
 import moment from "moment";
 import HomeIcon from "@mui/icons-material/Home";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useNavigate } from "react-router-dom";
 // import { student_transport_collection } from "../../Config/student_transport_collection";
 // import { transport_fees_structure } from "../../Config/transport_fees_structure";
@@ -45,26 +46,32 @@ import {
   GetClassFeeStructure,
   GetClassWiseStudentCount,
   GetClassWiseTotalFees,
+  GetFeeCollectionRecords,
+  GetFeeCollectionReport,
   GetFeeSummary,
   GetStopWiseStudentCount,
   GetStopWiseTotalFees,
   GetTransportFeeStructure,
 } from "../../api/Fees-Collection/fee-collection";
+import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 
 // Create buttons with hover underline animation
 const AnimatedButton = ({
   label,
   onClick,
   disabled,
+  startIcon,
 }: {
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  startIcon?: any;
 }) => {
   return (
     <Button
       variant="text"
       onClick={onClick}
+      startIcon={startIcon}
       sx={{
         position: "relative",
         // fontFamily: "Motiva Sans Bold",
@@ -172,8 +179,10 @@ const CustomNoRowsOverlay = ({ loading }: { loading: boolean }) => {
 
 const FeeDetails: React.FC<any> = (props) => {
   const navigate = useNavigate();
+  const snackbarRef = React.useRef<SnackbarHandle>(null);
   // const [applicationData, setApplicationData] = useState<any>([]);
   const [feeSummaryData, setFeeSummaryData] = useState<any>([]);
+  const [feeCollectionReport, setFeeCollectionReport] = useState<any>();
   // const [pendingMonths, setPendingMonths] = useState<{}>({});
   // const [pendingMonthsTransport, setPendingMonthsTransport] = useState<{}>({});
   const [totalViewOnlyFees, setTotalViewOnlyFees] = useState<number>(0);
@@ -183,7 +192,10 @@ const FeeDetails: React.FC<any> = (props) => {
   const [transpFeeExpected_Month, setTranspFeeExpected_Month] =
     useState<number>(0);
   const [amountCollectedThisAY, setAmountCollectedThisAY] = useState<number>(0);
+  const [transport_collection, setTransport_collection] = useState<number>(0);
+  const [class_fee_collection, setClass_fee_collection] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [printingReceipt, setPrintingReceipt] = useState(false);
   const [fees_structure_records, setFees_structure_records] = useState<any>([]);
   const [class_student_summary, setClass_student_summary] = useState<any>([]);
   const [stops_student_summary, setStops_student_summary] = useState<any>([]);
@@ -210,203 +222,7 @@ const FeeDetails: React.FC<any> = (props) => {
     React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [
-          class_fees,
-          transport_fees,
-          class_wise_student_count,
-          class_wise_total_fees,
-          stop_wise_total_fees,
-          stop_wise_student_count,
-          fee_summary,
-        ] = await Promise.all([
-          GetClassFeeStructure(),
-          GetTransportFeeStructure(),
-          GetClassWiseStudentCount(),
-          GetClassWiseTotalFees(),
-          GetStopWiseTotalFees(),
-          GetStopWiseStudentCount(),
-          GetFeeSummary(),
-        ]);
-        if (class_fees && class_fees.result) {
-          const class_fees_json = class_fees.result.documents.map(
-            (fee: any) => ({
-              ...fee,
-              monthly_fees: JSON.parse(fee.monthly_fees || "[]"),
-            })
-          );
-
-          console.log(class_fees_json);
-
-          setFees_structure_records(class_fees_json);
-        }
-        if (transport_fees && transport_fees.result) {
-          const transport_fees_json = transport_fees.result.documents.map(
-            (fee: any) => ({
-              ...fee,
-              monthly_fees: JSON.parse(fee.monthly_fees || "[]"),
-            })
-          );
-
-          console.log(transport_fees);
-
-          setFees_structure_records_trasnport(transport_fees_json);
-        }
-        if (class_wise_student_count && class_wise_student_count.result) {
-          console.log(class_wise_student_count.result);
-          setClass_student_summary(class_wise_student_count.result);
-        }
-        if (class_wise_total_fees && class_wise_total_fees.result) {
-          console.log(class_wise_total_fees.result);
-          setClass_fees_summary(class_wise_total_fees.result);
-        }
-        if (stop_wise_total_fees && stop_wise_total_fees.result) {
-          setStop_fees_summary(stop_wise_total_fees.result);
-        }
-        if (stop_wise_student_count && stop_wise_student_count.result) {
-          console.log(stop_wise_student_count.result);
-          setStops_student_summary(stop_wise_student_count.result);
-        }
-        if (fee_summary && fee_summary.result) {
-          console.log(fee_summary.result);
-          setFeeSummaryData(fee_summary.result);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
-
-    // const merged_fee_collection_structure = student_fee_collection_records.map(
-    //   (record) => {
-    //     const feeStructureRecord = fees_structure_records.filter(
-    //       (fee_structure: any) =>
-    //         fee_structure.fees_structure_id === record.fees_structure_id
-    //     );
-    //     // .sort((a, b) => b.academic_year.localeCompare(a.academic_year)); // Sort by academic_year in descending order
-
-    //     return {
-    //       ...record,
-    //       fees_particulars: feeStructureRecord[0],
-    //     };
-    //   }
-    // );
-
-    // const merged_transport_collection_structure =
-    //   student_transport_collection.map((record) => {
-    //     const feeStructureRecord = transport_fees_structure.filter(
-    //       (fee_structure) =>
-    //         fee_structure.transport_structure_id ===
-    //         record.transport_structure_id
-    //     );
-
-    //     return {
-    //       ...record,
-    //       fees_particulars: feeStructureRecord[0],
-    //     };
-    //   });
-
-    // const merged_student_fee_collection = students.map((student) => {
-    //   const studentFeeCollectionReport = merged_fee_collection_structure
-    //     .filter((record) => record.student_id === student.student_id)
-    //     .sort((a, b) => b.academic_year.localeCompare(a.academic_year)); // Sort by academic_year in descending order
-
-    //   return {
-    //     ...student,
-    //     fee_collection_data: studentFeeCollectionReport,
-    //   };
-    // });
-
-    // const merged_student_fee_transport_collection =
-    //   merged_student_fee_collection.map((student) => {
-    //     const studentFeeCollectionReport = merged_transport_collection_structure
-    //       .filter((record) => record.student_id === student.student_id)
-    //       .sort((a, b) => b.academic_year.localeCompare(a.academic_year)); // Sort by academic_year in descending order
-
-    //     return {
-    //       ...student,
-    //       fee_collection_data_transport: studentFeeCollectionReport,
-    //     };
-    //   });
-
-    // // console.log("merged_student_fee_transport_collection");
-    // // console.log(merged_student_fee_transport_collection);
-
-    // //Calculate total Fees (meaning sum through each class) Expected in current Month
-    // //Return array of below object
-    // //   {
-    // //     "fees_structure_id": "39e04b7b-ceb4-4148-a542-b12a542ac496",
-    // //     "total_fees": 1250
-    // // }
-    // // const fee_strucrture_TotalFee = filterFeeStructureAndTotalFee(
-    // //   fees_structure_records,
-    // //   _currentAcademicYear,
-    // //   _currentMonth
-    // // );
-
-    // // console.log("fee_strucrture_TotalFee", fee_strucrture_TotalFee);`
-
-    // // const expectedFeeThisMonth = fee_strucrture_TotalFee.reduce(
-    // //   (sum: number, record: any) => sum + record.total_fees,
-    // //   0
-    // // );
-
-    // // getExpectedFees(
-    // //   _currentAcademicYear,
-    // //   fee_strucrture_TotalFee
-    // // );
-
-    // // console.log("expectedFeeThisMonth", expectedFeeThisMonth);
-
-    // //Calculate total Fees Collected in current Month
-
-    // const fee_records_academic_year = fee_payment_collection_records.filter(
-    //   (record: any) =>
-    //     moment(record.payment_date).isSame(moment(), "year") &&
-    //     moment(record.payment_date).isSame(moment(), "month")
-    // );
-
-    // const fee_records_current_month = fee_records_academic_year.filter(
-    //   (record: any) => record.month === _currentMonth
-    // );
-
-    // const total_paid_this_month = fee_records_current_month.reduce(
-    //   (initalVal, feeObj) => feeObj!.amount_due_class + initalVal,
-    //   0
-    // );
-
-    // //Calculate total Fees Collected this Academic Year
-
-    // const student_fee_collection_records_AY =
-    //   student_fee_collection_records.filter(
-    //     (record: any) => record.academic_year === _currentAcademicYear
-    //   );
-
-    // // console.log("student_fee_collection_records_AY");
-    // // console.log(student_fee_collection_records_AY);
-
-    // const _amountCollectedThisAY = student_fee_collection_records_AY.reduce(
-    //   (sum, record) => record.paid_amount ?? 0 + sum,
-    //   0
-    // );
-
-    // // class_wise_student_count,
-    // //class_wise_total_fees,
-    // //
-
-    // // setAmountExpectedThisMonth(expectedFeeThisMonth);
-    // console.log("merged_student_fee_transport_collection");
-    // console.log(merged_student_fee_transport_collection);
-
-    // setCollectedThisMonth(total_paid_this_month);
-
-    // setAmountCollectedThisAY(_amountCollectedThisAY);
-    // setApplicationData(merged_student_fee_transport_collection);
   }, []);
 
   useEffect(() => {
@@ -470,8 +286,118 @@ const FeeDetails: React.FC<any> = (props) => {
     setIsEditing(false);
   };
 
-  const handleSaveProfile = async (data: any) => {
-    console.log("Inside Handle Save Profile. With PhotoFile");
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [
+        class_fees,
+        transport_fees,
+        class_wise_student_count,
+        class_wise_total_fees,
+        stop_wise_total_fees,
+        stop_wise_student_count,
+        fee_summary,
+        fee_collection_report,
+      ] = await Promise.all([
+        GetClassFeeStructure(),
+        GetTransportFeeStructure(),
+        GetClassWiseStudentCount(),
+        GetClassWiseTotalFees(),
+        GetStopWiseTotalFees(),
+        GetStopWiseStudentCount(),
+        GetFeeSummary(),
+        GetFeeCollectionReport(),
+      ]);
+      if (class_fees && class_fees.result) {
+        const class_fees_json = class_fees.result.documents.map((fee: any) => ({
+          ...fee,
+          monthly_fees: JSON.parse(fee.monthly_fees || "[]"),
+        }));
+
+        console.log(class_fees_json);
+
+        setFees_structure_records(class_fees_json);
+      }
+      if (transport_fees && transport_fees.result) {
+        const transport_fees_json = transport_fees.result.documents.map(
+          (fee: any) => ({
+            ...fee,
+            monthly_fees: JSON.parse(fee.monthly_fees || "[]"),
+          })
+        );
+
+        console.log(transport_fees);
+
+        setFees_structure_records_trasnport(transport_fees_json);
+      }
+      if (class_wise_student_count && class_wise_student_count.result) {
+        console.log(class_wise_student_count.result);
+        setClass_student_summary(class_wise_student_count.result);
+      }
+      if (class_wise_total_fees && class_wise_total_fees.result) {
+        console.log(class_wise_total_fees.result);
+        setClass_fees_summary(class_wise_total_fees.result);
+      }
+      if (stop_wise_total_fees && stop_wise_total_fees.result) {
+        setStop_fees_summary(stop_wise_total_fees.result);
+      }
+      if (stop_wise_student_count && stop_wise_student_count.result) {
+        console.log(stop_wise_student_count.result);
+        setStops_student_summary(stop_wise_student_count.result);
+      }
+      if (fee_summary && fee_summary.result) {
+        console.log(fee_summary.result);
+        setFeeSummaryData(fee_summary.result);
+      }
+      if (fee_collection_report && fee_collection_report.result) {
+        // console.log("fee_collection_report");
+        // console.log(fee_collection_report.result);
+        const collection_report_obj = fee_collection_report.result;
+        const current_month_year = `${moment().format(
+          "MMMM"
+        )}-${moment().format("YYYY")}`;
+        const transport_collection =
+          collection_report_obj[current_month_year]?.transport_collection || 0;
+        const class_fee_collection =
+          collection_report_obj[current_month_year]?.class_fee_collection || 0;
+
+        const overallTotalCollection = Object.values(
+          collection_report_obj
+        ).reduce(
+          //@ts-ignore
+          (sum, entry) => sum + entry.total_collection,
+          0
+        );
+
+        console.log(
+          `class_fee_collection: ${class_fee_collection}, transport_collection: ${transport_collection}, overallTotalCollection: ${overallTotalCollection}`
+        );
+        setClass_fee_collection(class_fee_collection);
+        setTransport_collection(transport_collection);
+        //@ts-ignore
+        setAmountCollectedThisAY(parseFloat(overallTotalCollection));
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      snackbarRef.current?.showSnackbar(`Error fetching data`, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async (isFeePaymentUpdated: any) => {
+    console.log("Fee Details. Inside Handle Save Profile.");
+    try {
+      if (isFeePaymentUpdated) {
+        await fetchData();
+        snackbarRef.current?.showSnackbar("Fee Payment Updated", "success");
+      } else {
+        snackbarRef.current?.showSnackbar("Fee Payment Failed", "error");
+      }
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    }
   };
 
   const HandleFeeDepositClick = (data: any) => {
@@ -481,7 +407,33 @@ const FeeDetails: React.FC<any> = (props) => {
       setSelectedStudent({ student_id: data.student_id });
       setProfileDialogOpen(true);
     } catch (error) {
-      alert(error);
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    }
+  };
+
+  const HandlePrintReceipt = async (data: any) => {
+    console.log("HandlePrintReceipt");
+    console.log(data);
+    try {
+      setPrintingReceipt(true);
+      const response = await GetFeeCollectionRecords({
+        student_id: data.student_id,
+      });
+      const fee_collection_records_str = response.result[0];
+      const fee_collection_records_json = {
+        ...fee_collection_records_str,
+        monthly_payments: JSON.parse(
+          fee_collection_records_str.monthly_payments || "[]"
+        ),
+      };
+      //BIND DATA TO THE FORMAT AND SEND FOR PRINT
+      console.log(fee_collection_records_json);
+    } catch (error) {
+      console.log(error);
+      snackbarRef.current?.showSnackbar(`Some Error occured`, "error");
+    } finally {
+      setPrintingReceipt(false);
     }
   };
 
@@ -547,7 +499,7 @@ const FeeDetails: React.FC<any> = (props) => {
         return row.status;
       },
       renderCell: (params) => {
-        const isPaid = params.value === "Paid"; // Use precomputed value
+        // const isPaid = params.value === "Paid"; // Use precomputed value
 
         return (
           <Box
@@ -598,193 +550,59 @@ const FeeDetails: React.FC<any> = (props) => {
       flex: 2,
       headerAlign: "center",
       align: "center",
+      valueGetter: (_, row) => {
+        return row.status;
+      },
       renderCell: (params) => {
-        const isPaid = params.row.payment_status === "Paid"; // Use computed value
+        // const isPaid = params.row.payment_status === "Paid"; // Use computed value
         return (
           <>
             <AnimatedButton
               label="Fee Deposit"
               onClick={() => HandleFeeDepositClick(params.row)}
-              disabled={isPaid}
+              disabled={params.value === "Paid"}
             />
 
             {"|"}
             <AnimatedButton
-              label="Receipts"
-              onClick={() => console.log(params.row.payment_status)}
+              label={printingReceipt ? "...Wait" : "Print Receipts"}
+              onClick={() => HandlePrintReceipt(params.row)}
+              disabled={printingReceipt || params.value !== "Paid"}
+              startIcon={
+                printingReceipt ? <CircularProgress size={10} /> : null
+              }
+            />
+            {/* {printingReceipt ? (
+              <CircularProgress size={20} />
+            ) : (
+              <AnimatedButton
+                label={printingReceipt ? "...Wait" : "Print Receipts"}
+                onClick={() => HandlePrintReceipt(params.row)}
+                disabled={params.value !== "Paid"}
+                startIcon={
+                  printingReceipt ? <CircularProgress size={20} /> : null
+                }
+              />
+            )} */}
+            {"|"}
+            <AnimatedButton
+              label="History"
+              onClick={() => console.log("Get TC Clicked")}
               disabled={false}
             />
-            {/* {"|"} */}
-            {/* <AnimatedButton
-            label="History"
-            onClick={() => console.log("Get TC Clicked")}
-            disabled={false}
-          /> */}
           </>
         );
       },
     },
   ];
 
-  // const ExtractPendingFeeParticularsWithMonth = (
-  //   pending_month_array: any,
-  //   monthly_fee: any
-  // ) => {
-  //   console.log("monthly_fee");
-  //   console.log(monthly_fee);
-  //   const pending_particulars = pending_month_array
-  //     .map((entry: any) => {
-  //       const [month, year] = entry.split(" - ");
-  //       const feeDetails = monthly_fee.find((fee: any) => fee.month === month);
-
-  //       if (feeDetails) {
-  //         return {
-  //           ...feeDetails,
-  //           year: year, // Adding year from pending_month_array
-  //         };
-  //       }
-  //       return null;
-  //     })
-  //     .filter(Boolean); // Remove null values if no match found
-  //   return pending_particulars;
-  // };
-
-  // const GetFeeCardMonthHeading = (dates: string[]) => {
-  //   console.log(`Dates Received as: ${dates}`);
-  //   return dates.map((_date) => {
-  //     let _monthIndex = moment(_date as string, "DD/MM/YYYY").format("MM");
-  //     let _monthString = months[Number(_monthIndex) - 1];
-  //     let _year = moment(_date as string, "DD/MM/YYYY").format("YYYY");
-  //     console.log(_monthIndex, _monthString, _year);
-  //     return `${_monthString} - ${_year}`;
-  //   });
-  // };
-  // const CheckPendingPayment = (
-  //   lastPaymentDate: String | "" | null,
-  //   payment_cycle: number
-  // ) => {
-  //   let pendingDueDates: any = [];
-  //   let _payementDueDate = moment().date(payment_cycle);
-
-  //   if (lastPaymentDate) {
-  //     let _lastPaymentDate = ChangeDateFormat(
-  //       lastPaymentDate as string,
-  //       "DD/MM/YYYY"
-  //     );
-  //     const todayDate = moment().format("DD/MM/YYYY");
-  //     let nextDueDate = moment(_lastPaymentDate, "DD/MM/YYYY")
-  //       .date(10)
-  //       .add(1, "month");
-
-  //     const todayDateStr = moment(todayDate as string, "DD/MM/YYYY"); // Convert today’s date
-
-  //     while (nextDueDate.isSameOrBefore(todayDateStr, "month")) {
-  //       pendingDueDates.push(nextDueDate.format("DD/MM/YYYY"));
-  //       nextDueDate.add(1, "month"); // Move to the next month's due date
-  //     }
-
-  //     return pendingDueDates;
-
-  //     // let _lastPaymentMonth = moment(lastPaymentDate as string).format("MM");
-  //     // let _lastPaymentYear = moment(lastPaymentDate as string).format("YYYY");
-  //     // let _paymentDueMonth = moment().date(payment_cycle).format("MM");
-  //     // let _paymentDueYear = moment().date(payment_cycle).format("YYYY");
-
-  //     // if (_lastPaymentYear == _paymentDueYear) {
-  //     //   console.log("No dues for previous year");
-  //     //   if (_lastPaymentMonth == _paymentDueMonth) {
-  //     //     console.log("No dues");
-  //     //   } else {
-  //     //     console.log("Fees due");
-  //     //   }
-  //     // } else {
-  //     //   console.log("Due through previous year");
-  //     // }
-
-  //     // if (
-  //     //   _lastPaymentYear == _paymentDueYear &&
-  //     //   _lastPaymentMonth == _paymentDueMonth
-  //     // ) {
-  //     //   console.log("No dues");
-  //     //   return pending_months;
-  //     // } else {
-  //     //   console.log("Payment pending");
-  //     //   return pending_months;
-  //     // }
-  //   } else {
-  //     //Since no record of last payment, meaning new student or paying for the first time
-  //     // let _paymentDueMonth = moment().date(payment_cycle).format("MM");
-  //     pendingDueDates.push(_payementDueDate.format("DD/MM/YYYY"));
-  //     // console.log(pendingDueDates);
-  //     return pendingDueDates;
-  //   }
-  // };
-  // const ChangeDateFormat = (date: string, format: string) => {
-  //   // console.log("Date received: ", date);
-  //   return date
-  //     ? moment(date, ["YYYY-MM-DD", "DD/MM/YYYY", "DD/MM/YY"], true).format(
-  //         format
-  //       )
-  //     : "";
-  //   // return moment(date).format(format);
-  // };
-  // const filterFeeStructureAndTotalFee = (
-  //   fees_records: any,
-  //   academicYear: any,
-  //   month: any
-  // ) => {
-  //   const records = fees_records.filter(
-  //     (record: any) => record.academic_year === academicYear
-  //   );
-
-  //   console.log(records);
-
-  //   if (!records) return null; // If no record found for the given academic year
-
-  //   const _monthData = records.map((record: any) => {
-  //     const monthData = record.monthly_fees.filter(
-  //       (fee: any) => fee.month === month
-  //     );
-
-  //     return {
-  //       fees_structure_id: record.fees_structure_id,
-  //       total_fees: monthData[0]?.total_fees || 0,
-  //     };
-  //   });
-
-  //   console.log(_monthData);
-  //   return _monthData;
-  // };
-
-  // const getExpectedFees = (academicYear: string, fees_structure_data: any) => {
-  //   const filteredRecords = student_fee_collection_records.filter(
-  //     (record) => record.academic_year === academicYear
-  //   );
-  //   console.log("filteredRecords");
-  //   console.log(filteredRecords);
-
-  //   // Step 2: Group by fees_structure_id and sum the total_fees
-  //   let expectedFees = 0;
-  //   filteredRecords.forEach((record) => {
-  //     const feesData = fees_structure_data.find(
-  //       (fees: any) => fees.fees_structure_id === record.fees_structure_id
-  //     );
-  //     console.log("feesData");
-  //     console.log(feesData);
-  //     if (feesData) {
-  //       expectedFees += feesData.total_fees;
-  //     }
-  //   });
-
-  //   return expectedFees;
-  // };
-
   return (
     <>
+      <ToastSnackbar ref={snackbarRef} />
       <Box
         display={"flex"}
         flexDirection={"row"}
-        justifyContent={"flex-start"}
+        justifyContent={"space-between"}
         p={2}
         pb={0}
       >
@@ -794,6 +612,19 @@ const FeeDetails: React.FC<any> = (props) => {
           onClick={() => navigate("/home")}
         >
           Home
+        </MyCustomButton>
+        <MyCustomButton
+          variant="contained"
+          startIcon={
+            !loading ? <RefreshIcon /> : <CircularProgress size={20} />
+          }
+          onClick={async () => await fetchData()}
+          disabled={loading}
+          sx={{
+            backgroundColor: "#ff825b",
+          }}
+        >
+          {loading ? "...Refreshing" : "Refresh Data"}
         </MyCustomButton>
       </Box>
       <Box display={"flex"} flexDirection={"column"} p={2} height="auto">
@@ -854,7 +685,7 @@ const FeeDetails: React.FC<any> = (props) => {
                         fontWeight={"bold"}
                         sx={{ color: "rgb(99, 100, 101)", alignSelf: "center" }}
                       >
-                        ₹ {collectedThisMonth}
+                        {/* ₹ {collectedThisMonth} */}₹ {class_fee_collection}
                       </Typography>
                     </Box>
                     <Box
@@ -946,7 +777,7 @@ const FeeDetails: React.FC<any> = (props) => {
                         fontWeight={"bold"}
                         sx={{ color: "rgb(99, 100, 101)", alignSelf: "center" }}
                       >
-                        ₹ {collectedThisMonth}
+                        {/* ₹ {collectedThisMonth} */}₹ {transport_collection}
                       </Typography>
                     </Box>
                     <Box
@@ -1492,6 +1323,7 @@ const FeeDetails: React.FC<any> = (props) => {
               columns={columns}
               rowHeight={40}
               getRowId={(row) => row.student_id}
+              loading={loading}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel} // Controls pagination behavior
               pageSizeOptions={[50, 100, 150]}

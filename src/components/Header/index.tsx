@@ -36,7 +36,7 @@ import { MyCustomButton } from "../../common/MyCustomControls";
 import { checkTokenExpiry } from "../../common/utils/checkTokenExpiry";
 import { feePaymentContext } from "../../store/cartContext";
 import { jwtDecode } from "jwt-decode";
-import userDataContext from "../../store/userContext";
+import userDataContext from "../../store/UserContext";
 
 const Header = ({ t }: { t: TFunction }) => {
   const [visible, setVisibility] = useState(false);

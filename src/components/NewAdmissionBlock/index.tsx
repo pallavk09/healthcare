@@ -28,8 +28,8 @@ import newadmissionContext, {
   newAddmissionApplicationType,
 } from "../../store/newadmissionContext";
 import { ListApplications } from "../../api/newAdmission";
-import { userDataType } from "../../store/userContext";
-import userDataContext from "../../store/userContext";
+import { userDataType } from "../../store/UserContext";
+import userDataContext from "../../store/UserContext";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",

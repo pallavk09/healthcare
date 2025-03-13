@@ -13,7 +13,7 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import moment from "moment";
 import { monthFeeTimeGap_days } from "../../Config/feeConfig";
-import userDataContext from "../../store/userContext";
+import userDataContext from "../../store/UserContext";
 import { jwtDecode } from "jwt-decode";
 import { GetFeeData } from "../../api/fees";
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";

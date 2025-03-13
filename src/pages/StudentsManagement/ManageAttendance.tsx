@@ -146,6 +146,7 @@ const ManageAttendance = () => {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        snackbarRef.current?.showSnackbar(`Error fetching data`, "error");
       } finally {
         setLoading(false);
       }
@@ -296,6 +297,7 @@ const ManageAttendance = () => {
       class_id: "",
       section_id: "",
     });
+    setRows([]);
   };
 
   const HandleSessionChange = (event: any) => {
@@ -589,6 +591,7 @@ const ManageAttendance = () => {
                   pageSizeOptions={[10, 20, 30]}
                   checkboxSelection={false}
                   disableRowSelectionOnClick
+                  loading={loading}
                   slots={{
                     toolbar: GridToolbar,
                     noRowsOverlay: () => (

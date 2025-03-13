@@ -28,7 +28,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
 import { login } from "../../service/authService";
 
-import userDataContext from "../../store/userContext";
+// import userDataContext from "../../store/UserContext";
 
 const MyCustomButton = styled(Button)(({ theme }) => ({
   fontFamily: "Motiva Sans Bold",
@@ -51,19 +51,27 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
   const [_userId, setUserId] = useState();
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
-  const ctx = useContext(userDataContext);
+  // const ctx = useContext(userDataContext);
   const [form] = Form.useForm();
 
   const snackbarRef = useRef<SnackbarHandle>(null);
 
   const onFinish = async (values: any) => {
-    const userName = values.username;
-    const password = values.password;
-    console.log(userName);
-    console.log(password);
-    const user = login(userName, password);
-    console.log(user);
-    if (user) navigate("/home");
+    try {
+      setLoading(true);
+      const userName = values.username;
+      const password = values.password;
+
+      const response = await login(userName, password);
+      response.message === "User verified"
+        ? navigate("/home")
+        : snackbarRef.current?.showSnackbar(`${response.message}`, "warning");
+    } catch (error) {
+      snackbarRef.current?.showSnackbar(`Login Error`, "error");
+    } finally {
+      setLoading(false);
+    }
+    // if (user) navigate("/home");
   };
 
   const onFinishFailed = (errorInfo: any) => {
@@ -168,7 +176,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
                   >
                     {loading ? "Wait..." : "LOGIN"}
                   </MyCustomButton>
-                  <Typography variant="caption" color="textSecondary">
+                  {/* <Typography variant="caption" color="textSecondary">
                     By using Eduern you agree our{" "}
                     <Link href="/privacypolicy.html" color="inherit">
                       Privacy Policy
@@ -177,7 +185,7 @@ const FormBlock = ({ icon, id, direction }: ContentBlockProps) => {
                     <Link href="/termsconditions.html" color="inherit">
                       Terms and Conditions
                     </Link>
-                  </Typography>
+                  </Typography> */}
                 </Box>
               </Form.Item>
             </Form>

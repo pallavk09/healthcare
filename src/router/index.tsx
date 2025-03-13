@@ -1,6 +1,10 @@
 import { Suspense, lazy } from "react";
 import { Styles } from "../styles/styles";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 
 import ProtectedRoute from "../common/ProtectedRoute";
 
@@ -35,6 +39,7 @@ import StaffManagementHome from "../pages/StaffManagement/Home";
 import TeacherSubjectAssignment from "../pages/StaffManagement/Teachers/TeacherSubjectAssignment";
 import SchoolAdmin from "../pages/SchoolAdmin";
 import GetAdmitCard from "../pages/ExamsManagement/GetAdmitCard";
+import { getCurrentUser } from "../service/authService";
 
 const Login = lazy(() => import("../pages/Login"));
 const ErrorPage = lazy(() => import("../pages/ErrorPage"));
@@ -47,96 +52,20 @@ const ManageTransport = lazy(
 const ManageFeeHeads = lazy(
   () => import("../pages/ControlSettings/ManageFeeHeads")
 );
+const user = getCurrentUser();
 const myRouter = createBrowserRouter([
   {
-    path: "/login",
-    element: <Login />,
+    path: "/",
+    element: user ? (
+      <Navigate to="/home" replace />
+    ) : (
+      <Navigate to="/login" replace />
+    ),
   },
-  // {
-  //   path: "/",
-  //   element: <RootLayout />,
-  //   errorElement: <ErrorPage />,
-  //   children: [
-  //     { index: true, element: <Home /> },
-  //     {
-  //       path: "newadmission",
-  //       element: <NewAdmissionRootLayout />,
-  //       children: [
-  //         { index: true, element: <NewAdmission /> },
-  //         {
-  //           path: "apply/:userId",
-  //           element: <AdmissionDashboard />,
-  //           // loader: AdmissionDashboardLoader,
-  //         },
-  //       ],
-  //     },
-  //     {
-  //       path: "student",
-  //       element: <StudentRootLayout />,
-  //       children: [
-  //         { index: true, element: <Login /> },
-  //         {
-  //           path: "studentregistration/:userId",
-  //           element: (
-  //             // <ProtectedRoute>
-  //             <Studentregistration />
-  //             // </ProtectedRoute>
-  //           ),
-  //           // loader: RegistrationLoader,
-  //         },
-
-  //         {
-  //           path: "studentdashboard/:userId",
-  //           element: (
-  //             // <ProtectedRoute>
-  //             <StudentDashboard />
-  //             // </ProtectedRoute>
-  //           ),
-  //           children: [
-  //             {
-  //               index: true,
-  //               element: (
-  //                 // <ProtectedRoute>
-  //                 <StudentDashboardHome />
-  //                 // </ProtectedRoute>
-  //               ),
-  //             },
-  //             {
-  //               path: "feespaymentsummary",
-  //               element: (
-  //                 // <ProtectedRoute>
-  //                 <FeesOverView />
-  //                 // </ProtectedRoute>
-  //               ),
-  //             },
-  //           ],
-  //           // element: (
-  //           //   <ProtectedRoute>
-  //           //     <StudentDashboard />
-  //           //   </ProtectedRoute>
-  //           // ),
-  //           // loader: StudentDashboardLoader,
-  //         },
-  //         {
-  //           path: ":userId/paymentcart",
-  //           element: (
-  //             <ProtectedRoute>
-  //               <FeesPaymentCart />
-  //             </ProtectedRoute>
-  //           ),
-  //         },
-  //         // {
-  //         //   path: "studentdashboard/:userId/feespayment",
-  //         //   element: (
-  //         //     <ProtectedRoute>
-  //         //       <FeesOverView />
-  //         //     </ProtectedRoute>
-  //         //   ),
-  //         // },
-  //       ],
-  //     },
-  //   ],
-  // },
+  {
+    path: "/login",
+    element: user ? <Navigate to="/home" replace /> : <Login />, // Redirect if logged in
+  },
   {
     path: "home",
     element: <RootLayoutAdmin />,
@@ -145,10 +74,10 @@ const myRouter = createBrowserRouter([
       {
         index: true,
         element: (
-          <SchoolAdmin />
-          // <ProtectedRoute allowedRoles={["admin", "teacher", "student"]}>
-          //   <SchoolAdmin />
-          // </ProtectedRoute>
+          // <SchoolAdmin />
+          <ProtectedRoute allowedRoles={["admin", "teacher", "student"]}>
+            <SchoolAdmin />
+          </ProtectedRoute>
         ),
       },
       {

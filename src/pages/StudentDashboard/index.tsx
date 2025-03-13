@@ -28,7 +28,7 @@ import { v4 as uuid } from "uuid";
 import { useNavigate } from "react-router-dom";
 import LoadingDialog from "../../common/LoadingDialog";
 import ToastSnackbar, { SnackbarHandle } from "../../common/ToastNotification";
-import userDataContext from "../../store/userContext";
+import userDataContext from "../../store/UserContext";
 import { jwtDecode } from "jwt-decode";
 import { GeneratePrevieUrl } from "../../common/utils/generatePreviewUrl";
 import { Outlet } from "react-router-dom";

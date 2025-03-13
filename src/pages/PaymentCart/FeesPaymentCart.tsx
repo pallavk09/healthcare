@@ -10,7 +10,7 @@ import {
 import { feeConfig, monthFeeTimeGap_days } from "../../Config/feeConfig";
 import { Link, useNavigate } from "react-router-dom";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import userDataContext from "../../store/userContext";
+import userDataContext from "../../store/UserContext";
 import { jwtDecode } from "jwt-decode";
 import { ListStudents } from "../../api/students";
 import formatDate from "../../common/utils/formatDate";

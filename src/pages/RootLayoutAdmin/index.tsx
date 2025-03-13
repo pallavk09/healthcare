@@ -8,7 +8,7 @@ const RootLayoutAdmin = () => {
   return (
     <>
       <MyCustomHeader />
-      {navigation.state === "loading" && (
+      {/* {navigation.state === "loading" && (
         <div
           style={{
             position: "fixed",
@@ -25,7 +25,7 @@ const RootLayoutAdmin = () => {
         >
           <CircularProgress />
         </div>
-      )}
+      )} */}
       <Outlet />
       {/* <FooterLogin /> */}
     </>

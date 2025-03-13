@@ -12,7 +12,7 @@ import newadmissionContext, {
 } from "../../../store/newadmissionContext";
 import { CreateNewApplication } from "../../../api/newAdmission";
 import { useNavigate } from "react-router-dom";
-import userDataContext from "../../../store/userContext";
+import userDataContext from "../../../store/UserContext";
 import generateUniqueId from "../../../common/utils/generateUniqueId";
 import {
   getFilePreview,

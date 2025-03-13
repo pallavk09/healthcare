@@ -33,6 +33,7 @@ const MyCustomHeader = () => {
   // const getuser = getCurrentUser();
   // getuser ? setUser(true) : setUser(false);
   const navigate = useNavigate();
+  const user = getCurrentUser();
 
   return (
     <>
@@ -57,19 +58,33 @@ const MyCustomHeader = () => {
                   marginLeft="-5rem"
                 />
               </Box>
-
-              {getCurrentUser() && (
-                <MyCustomButton
-                  variant="contained"
-                  startIcon={<ExitToAppIcon />}
-                  onClick={() => {
-                    logout();
-                    navigate("/login");
-                  }}
+              <Box
+                display={"flex"}
+                flexDirection={"row"}
+                justifyContent={"space-between"}
+                gap={1}
+              >
+                {user && (
+                  <MyCustomButton
+                    variant="contained"
+                    startIcon={<ExitToAppIcon />}
+                    onClick={() => {
+                      logout();
+                      navigate("/login");
+                      window.location.reload(); // Force a refresh to fully clear the app state
+                    }}
+                  >
+                    Logout
+                  </MyCustomButton>
+                )}
+                {/* <Typography
+                  variant="caption"
+                  color="textSecondary"
+                  alignSelf={"center"}
                 >
-                  Logout
-                </MyCustomButton>
-              )}
+                  V1.0
+                </Typography> */}
+              </Box>
             </Box>
 
             <Box

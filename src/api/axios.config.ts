@@ -12,4 +12,18 @@ const axios_instance = axios.create({
 
 axios_instance.defaults.headers.common["Content-Type"] = "application/json";
 
+// Add an interceptor to include Authorization token in all requests
+axios_instance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token"); // Retrieve token from local storage
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`; // Attach token to every request
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export default axios_instance;

@@ -6,18 +6,26 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import Router from "./router";
 import ApiProvider from "./store/contextProvider";
+import { UserProvider } from "./store/UserLoginContext";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    {/* <BrowserRouter> */}
-    <ApiProvider>
-      <Router />
-    </ApiProvider>
-    {/* </BrowserRouter> */}
+    <UserProvider>
+      <ApiProvider>
+        <Router />
+      </ApiProvider>
+    </UserProvider>
   </React.StrictMode>
+  // <React.StrictMode>
+  //   {/* <BrowserRouter> */}
+  //   <ApiProvider>
+  //     <Router />
+  //   </ApiProvider>
+  //   {/* </BrowserRouter> */}
+  // </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

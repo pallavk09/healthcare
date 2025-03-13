@@ -151,7 +151,7 @@ const UpdateStudent = async (studentData: any) => {
       return [];
     }
   } catch (error) {
-    console.log("Error Adding New Student");
+    console.log("Error Updating Student");
     console.log(error);
     return [];
   }

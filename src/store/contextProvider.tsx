@@ -3,7 +3,7 @@ import ApiContext from "./context";
 import { userAction, userState, studentData } from "../common/types";
 import { newAddmissionApplicationType } from "./newadmissionContext";
 import newadmissionContext from "./newadmissionContext";
-import userDataContext, { userDataType } from "./userContext";
+import userDataContext, { userDataType } from "./UserContext";
 import {
   cartContextType_ADMISSION_FORM,
   cartContextType_FEE,

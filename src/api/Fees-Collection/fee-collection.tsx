@@ -78,6 +78,33 @@ const GetFeeSummary = async () => {
   }
 };
 
+const GetFeeCollectionReport = async () => {
+  const response = await axios_instance.get("/student/fee-collection-report");
+  console.log(response);
+  if (response?.data?.status === "SUCCESS") {
+    return response.data;
+  } else {
+    return [];
+  }
+};
+
+const GetFeeCollectionRecords = async (newItem: any) => {
+  const { student_id } = newItem;
+  const payload = {
+    student_id,
+  };
+  const response = await axios_instance.post(
+    "/student/fee-collection-records",
+    payload
+  );
+  console.log(response);
+  if (response?.data?.status === "SUCCESS") {
+    return response.data;
+  } else {
+    return [];
+  }
+};
+
 const GetPendingFeeParticulars = async (newItem: any) => {
   const { student_id } = newItem;
   const payload = {
@@ -124,4 +151,6 @@ export {
   GetFeeSummary,
   GetPendingFeeParticulars,
   UpdateFeePayment,
+  GetFeeCollectionReport,
+  GetFeeCollectionRecords,
 };
